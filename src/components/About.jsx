@@ -14,11 +14,18 @@ import {
   Briefcase,
   GraduationCap,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+// Assuming you have 'react-router-dom' installed and configured for navigation
 
-const About = () => {
+const About = ({ onViewChange}) => {
 
-  const navigate = useNavigate();
+  // This function handles the click event for the "Shop Now" button.
+  // It directs the user to the "/shop" route.
+  const handleShopNowClick = () => {
+    if (onViewChange) {
+      onViewChange('shop')
+    }
+    
+  };
 
   const values = [
     {
@@ -56,35 +63,30 @@ const About = () => {
   ];
 
   const stats = [
-    { icon: Users, number: "__", label: "Happy Families", color: "text-pink-600" },
-    { icon: Shirt, number: "__", label: "Unique Designs", color: "text-purple-600" },
-    
-    { icon: Star, number: "__", label: "Customer Rating", color: "text-yellow-600" },
-    
-    { icon: TrendingUp, number: "__", label: "Return Customers", color: "text-cyan-600" },
+    // Note: Placeholder numbers are used here, you can fill these in dynamically.
+    { icon: Users, number: "250K+", label: "Happy Families", color: "text-pink-600" },
+    { icon: Shirt, number: "500+", label: "Unique Designs", color: "text-purple-600" },
+    { icon: Star, number: "4.9/5", label: "Customer Rating", color: "text-yellow-600" },
+    { icon: TrendingUp, number: "90%", label: "Return Customers", color: "text-cyan-600" },
   ];
 
   const timeline = [
     {
-      // year: "2015",
       title: "Our Humble Beginnings",
       description: "Started as a small family business with a dream to create quality kids clothing.",
       icon: Briefcase,
     },
     {
-      // year: "2018",
       title: "First International Order",
       description: "Expanded our reach beyond borders, serving families worldwide.",
       icon: Globe,
     },
     {
-      // year: "2021",
       title: "Award Recognition",
       description: "Won multiple awards for sustainable fashion and innovative kidswear.",
       icon: Award,
     },
     {
-      // year: "2024",
       title: "Future Ahead",
       description: "Continuing our mission to make kids fashion safe, fun, and eco-friendly.",
       icon: GraduationCap,
@@ -221,9 +223,9 @@ const About = () => {
                     <Icon className="w-4 h-4 text-white" />
                   </div>
                   <h3 className="text-xl font-semibold text-purple-500">
-                    {item.year} - {item.title}
+                    {item.title}
                   </h3>
-                  <p className="text-gray-600 ">{item.description}</p>
+                  <p className="text-gray-600 dark:text-gray-300">{item.description}</p>
                 </motion.div>
               );
             })}
@@ -254,7 +256,7 @@ const About = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-white text-purple-600 font-semibold px-6 py-3 rounded-full shadow-lg hover:bg-gray-100"
-            onClick={() => navigate("/shop")} // your route here
+            onClick={handleShopNowClick} // Calls the function to navigate to "/shop"
           >
             Shop Now
           </motion.button>
@@ -264,4 +266,4 @@ const About = () => {
   );
 }
 
-export default About
+export default About;

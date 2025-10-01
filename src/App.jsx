@@ -79,7 +79,7 @@ export default function App() {
       case 'deals':
         return <Deals />;
       case 'about':
-        return <About />;
+        return <About onViewChange={onViewChange} />;
       case 'contact':
         return <Contact />;
       default:
