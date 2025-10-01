@@ -223,10 +223,10 @@ const About = ()=> {
                   <div className="absolute -left-4 flex items-center justify-center w-8 h-8 bg-purple-500 rounded-full">
                     <Icon className="w-4 h-4 text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold text-black dark:text-white">
+                  <h3 className="text-xl font-semibold text-purple-500">
                     {item.year} - {item.title}
                   </h3>
-                  <p className="text-black dark:text-gray-300">{item.description}</p>
+                  <p className="text-gray-600 ">{item.description}</p>
                 </motion.div>
               );
             })}
