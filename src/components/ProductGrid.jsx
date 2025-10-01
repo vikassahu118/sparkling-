@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-// import { ImageWithFallback } from './figma/ImageWithFallback';
-// import { Badge, Button } from './ui';
+import { ImageWithFallback } from '../ui/ImageWithFallback';
+import { Badge } from '../ui/badge';
+import {Button} from '../ui/button';
 import { Heart, ShoppingCart, Star, Eye } from 'lucide-react';
 
-export function ProductGrid({ products, onProductClick, onAddToCart, onAddToWishlist }) {
+// ⬅️ FIX APPLIED: Set products = [] as a default value
+export function ProductGrid({ products = [], onProductClick, onAddToCart, onAddToWishlist }) {
   const [hoveredProduct, setHoveredProduct] = useState(null);
 
   const defaultProducts = [
@@ -54,7 +56,7 @@ export function ProductGrid({ products, onProductClick, onAddToCart, onAddToWish
     {
       id: '4',
       name: 'Colorful Sneakers',
-      image: 'https://images.unsplash.com/photo-1669762162480-fb67378e307b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxraWRzJTIwc2hvZXMlMjBjb2xvcmZ1bHxlbnwxfHx8fDE3NTkxNDM0MzN8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+      image: 'https://images.unsplash.com/photo-1669762162480-fb67378e307b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHxraWRzJTIwc2hvZXMlMjBjb2xvcmZ1bHxlbnwxfHx8fDE3NTkxNDM0MzN8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
       originalPrice: 2199,
       discountedPrice: 1539,
       discount: 30,
@@ -67,7 +69,7 @@ export function ProductGrid({ products, onProductClick, onAddToCart, onAddToWish
     {
       id: '5',
       name: 'Winter Cozy Jacket',
-      image: 'https://images.unsplash.com/photo-1513978121979-75bfaa6a713b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxraWRzJTIwamFja2V0JTIwd2ludGVyfGVufDF8fHx8MTc1OTE0MzQ1Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+      image: 'https://images.unsplash.com/photo-1513978121979-75bfaa6a713b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHxraWRzJTIwamFja2V0JTIwd2ludGVyfGVufDF8fHx8MTc1OTE0MzQ1Mnww&lib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
       originalPrice: 2499,
       discountedPrice: 1749,
       discount: 30,
@@ -81,7 +83,7 @@ export function ProductGrid({ products, onProductClick, onAddToCart, onAddToWish
     {
       id: '6',
       name: 'Party Princess Dress',
-      image: 'https://images.unsplash.com/photo-1694083884221-d23d8b1a83b5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxraWRzJTIwcGFydHklMjBkcmVzc3xlbnwxfHx8fDE3NTkxNDM0Nzd8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+      image: 'https://images.unsplash.com/photo-1694083884221-d23d8b1a83b5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxraWRzJTIwcGFydHklMjBkcmVzc3xlbnwxfHx8fDE3NTkxNDM0Nzd8MA&lib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
       originalPrice: 1899,
       discountedPrice: 1329,
       discount: 30,
@@ -94,6 +96,7 @@ export function ProductGrid({ products, onProductClick, onAddToCart, onAddToWish
     }
   ];
 
+  // This line is now safe because products is guaranteed to be an array (products = []).
   const productsToShow = products.length > 0 ? products : defaultProducts;
 
   return (
@@ -283,7 +286,7 @@ export function ProductGrid({ products, onProductClick, onAddToCart, onAddToWish
         </div>
 
         {/* Load More Button */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -296,7 +299,7 @@ export function ProductGrid({ products, onProductClick, onAddToCart, onAddToWish
           >
             Load More Products
           </Button>
-        </motion.div>
+        </motion.div> */}
       </div>
     </section>
   );

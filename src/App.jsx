@@ -1,52 +1,79 @@
 import React, { useState } from 'react';
-import Navbar from './components/Navbar.jsx'; // Changed back to explicit .jsx
-import Footer from './components/Footer.jsx'; // Changed back to explicit .jsx
-import HeroSection from './components/HeroSection.jsx'; // Changed back to explicit .jsx
-
+import Navbar from './components/Navbar.jsx';
+import Footer from './components/Footer.jsx';
+import HeroSection from './components/HeroSection.jsx';
+import { ProductGrid } from './components/ProductGrid.jsx' // Using named import { ProductGrid }
 
 // --- Placeholder Page Components (for demonstration) ---
-// Note: The Home placeholder is no longer needed as HeroSection takes its place
 const Shop = () => <div className="text-center py-40 text-4xl font-bold text-cyan-600">🛍️ Shop All Our Latest Styles!</div>;
 const Categories = () => <div className="text-center py-40 text-4xl font-bold text-pink-600">📂 Explore Categories</div>;
 const Deals = () => <div className="text-center py-40 text-4xl font-bold text-purple-600">🎉 Special Deals Just for You!</div>;
 const About = () => <div className="text-center py-40 text-4xl font-bold text-gray-600 dark:text-gray-300">✨ About Our Brand</div>;
 const Contact = () => <div className="text-center py-40 text-4xl font-bold text-gray-600 dark:text-gray-300">📞 Get In Touch!</div>;
 
+
+// ⬅️ NEW: Define handlers required by ProductGrid
+const handleProductAction = (action, product) => {
+    console.log(`${action} triggered for: ${product?.name || 'product'}`);
+    // Implement actual logic here (e.g., state updates, navigation)
+};
+
+
+// ⬅️ NEW COMPONENT: Combines Hero and ProductGrid for the Home View
+const HomePage = ({ onViewChange, isDarkMode }) => (
+    <>
+        <HeroSection 
+            onShopNowClick={() => onViewChange('shop')} 
+            isDarkMode={isDarkMode} 
+        />
+        {/* 🚨 Product Grid is placed directly after the Hero */}
+        <ProductGrid 
+            // Passing required handler functions
+            products={[]} // Use default internal products
+            onProductClick={(p) => handleProductAction('View', p)}
+            onAddToCart={(p) => handleProductAction('Add to Cart', p)}
+            onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
+        />
+    </>
+);
+
+
 export default function App() {
-  // 1. Core Routing State: Controls which component (page) is displayed
+  // 1. Core Routing State
   const [currentView, setCurrentView] = useState('home');
 
-  // 2. Theme State: Controls dark mode globally
+  // 2. Theme State
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // 3. Dummy Cart State: Used for the Navbar cart count
+  // 3. Dummy Cart State
   const [cartCount, setCartCount] = useState(3);
 
   // Handlers
   const toggleTheme = () => setIsDarkMode(prev => !prev);
 
-  // The central routing function passed to Navbar and Footer
   const onViewChange = (viewId) => {
     console.log(`Navigating to view: ${viewId}`);
     setCurrentView(viewId);
-    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top on page change
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Conditional Rendering Logic (The Router)
   const renderView = () => {
-    // 2. Use HeroSection for the 'home' view
-    const heroSection = (
-      <HeroSection 
-        onShopNowClick={() => onViewChange('shop')} 
-        isDarkMode={isDarkMode} 
-      />
-    );
-
     switch (currentView) {
       case 'home':
-        return heroSection;
+        // ⬅️ CHANGE: Render the new HomePage component for 'home'
+        return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} />;
       case 'shop':
-        return <Shop />;
+        // 🚨 Since 'shop' is just a different view, we can use the ProductGrid here too, 
+        // or keep the simple placeholder if 'shop' is meant to be a separate full page.
+        // If you want ProductGrid on 'shop' too:
+        return (
+            <ProductGrid
+                onProductClick={(p) => handleProductAction('View', p)}
+                onAddToCart={(p) => handleProductAction('Add to Cart', p)}
+                onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
+            />
+        );
       case 'categories':
         return <Categories />;
       case 'deals':
@@ -56,7 +83,8 @@ export default function App() {
       case 'contact':
         return <Contact />;
       default:
-        return heroSection;
+        // Default to the home page if the view is unknown
+        return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} />;
     }
   };
 
