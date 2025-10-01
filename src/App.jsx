@@ -3,12 +3,12 @@ import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
 import HeroSection from './components/HeroSection.jsx';
 import { ProductGrid } from './components/ProductGrid.jsx' // Using named import { ProductGrid }
+import About from './components/About.jsx';
 
 // --- Placeholder Page Components (for demonstration) ---
 const Shop = () => <div className="text-center py-40 text-4xl font-bold text-cyan-600">🛍️ Shop All Our Latest Styles!</div>;
 const Categories = () => <div className="text-center py-40 text-4xl font-bold text-pink-600">📂 Explore Categories</div>;
 const Deals = () => <div className="text-center py-40 text-4xl font-bold text-purple-600">🎉 Special Deals Just for You!</div>;
-const About = () => <div className="text-center py-40 text-4xl font-bold text-gray-600 dark:text-gray-300">✨ About Our Brand</div>;
 const Contact = () => <div className="text-center py-40 text-4xl font-bold text-gray-600 dark:text-gray-300">📞 Get In Touch!</div>;
 
 
