@@ -88,7 +88,7 @@ export default function Navbar({
     { id: 'categories', label: 'Categories', emoji: '📂' },
     { id: 'deals', label: 'Special Deals', emoji: '🎉' },
     { id: 'about', label: 'About Us', emoji: '✨' },
-    { id: 'contact', label: 'Contact', emoji: '📞' }
+    // { id: 'contact', label: 'Contact', emoji: '📞' }
   ];
 
   const handleNavClick = (viewId) => {

@@ -71,10 +71,10 @@ export default function Footer({ onViewChange, isDarkMode }) {
     ];
 
     const categories = [
-        // { id: 'boys', label: 'Boys Clothing', icon: '👦' },
-        { id: 'girls', label: 'Girls Clothing', icon: '👧' },
-        // { id: 'baby', label: 'Baby & Toddler', icon: '👶' },
-        // { id: 'accessories', label: 'Accessories', icon: '🎁' }
+        { id: 'boys', label: 'T-Shirts', icon: '👦' },
+        { id: 'girls', label: 'Jeans', icon: '👧' },
+        { id: 'baby', label: 'Jackets', icon: '👶' },
+        { id: 'accessories', label: 'Accessories', icon: '🎁' }
     ];
 
     const socialLinks = [
@@ -396,7 +396,7 @@ export default function Footer({ onViewChange, isDarkMode }) {
                 </div>
 
                 {/* Newsletter Signup (Uncommented and fixed for dark mode) */}
-                <motion.div
+                {/* <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -407,7 +407,7 @@ export default function Footer({ onViewChange, isDarkMode }) {
                             : 'bg-gradient-to-r from-pink-100 via-purple-100 to-cyan-100'
                     }`}
                 >
-                    {/* <div className="text-center">
+                    <div className="text-center">
                         <motion.div
                             animate={{
                                 rotate: [0, 10, -10, 0],
@@ -456,11 +456,11 @@ export default function Footer({ onViewChange, isDarkMode }) {
                                 )}
                             </motion.button>
                         </form>
-                    </div> */}
-                </motion.div>
+                    </div>
+                </motion.div> */}
 
                 {/* Bottom Bar (Uncommented and fixed for dark mode) */}
-                {/* <motion.div
+                <motion.div
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
@@ -508,7 +508,7 @@ export default function Footer({ onViewChange, isDarkMode }) {
                             </motion.button>
                         </div>
                     </div>
-                </motion.div> */}
+                </motion.div>
             </div>
         </footer>
     );
