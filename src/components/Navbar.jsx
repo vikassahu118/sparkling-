@@ -85,7 +85,7 @@ export default function Navbar({
   const navItems = [
     { id: 'home', label: 'Home', emoji: '🏠' },
     { id: 'shop', label: 'Shop', emoji: '🛍️' },
-    { id: 'categories', label: 'Categories', emoji: '📂' },
+    // { id: 'categories', label: 'Categories', emoji: '📂' },
     { id: 'deals', label: 'Special Deals', emoji: '🎉' },
     { id: 'about', label: 'About Us', emoji: '✨' },
     // { id: 'contact', label: 'Contact', emoji: '📞' }

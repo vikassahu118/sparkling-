@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
 import HeroSection from './components/HeroSection.jsx';
 import { ProductGrid } from './components/ProductGrid.jsx' // Using named import { ProductGrid }
 import About from './components/About.jsx';
+import DiscountPopup from './components/DiscountPopup.jsx';
+
+
 
 // --- Placeholder Page Components (for demonstration) ---
 const Shop = () => <div className="text-center py-40 text-4xl font-bold text-cyan-600">🛍️ Shop All Our Latest Styles!</div>;
@@ -39,6 +43,20 @@ const HomePage = ({ onViewChange, isDarkMode }) => (
 
 
 export default function App() {
+// pop up for testing
+const [isPopupVisible, setIsPopupVisible] = useState(false);
+
+  useEffect(() => {
+    // Show popup on every homepage load
+    setIsPopupVisible(true);
+  }, []);
+
+  const handleApplyCode = (code) => {
+    alert(`Discount code applied: ${code}`);
+  };
+
+
+
   // 1. Core Routing State
   const [currentView, setCurrentView] = useState('home');
 
@@ -109,6 +127,13 @@ export default function App() {
         {renderView()}
       </main>
       
+
+{/* discount popup */}
+ <DiscountPopup
+        isVisible={isPopupVisible}
+        onClose={() => setIsPopupVisible(false)}
+        onApplyCode={handleApplyCode}
+      />
 
       {/* 3. Footer: Provides additional navigation links */}
       <Footer onViewChange={onViewChange} isDarkMode={isDarkMode} />
