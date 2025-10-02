@@ -6,8 +6,7 @@ import HeroSection from './components/HeroSection.jsx';
 import { ProductGrid } from './components/ProductGrid.jsx' // Using named import { ProductGrid }
 import About from './components/About.jsx';
 import DiscountPopup from './components/DiscountPopup.jsx';
-
-
+import { Cart } from './components/Cart.jsx';
 
 // --- Placeholder Page Components (for demonstration) ---
 const Shop = () => <div className="text-center py-40 text-4xl font-bold text-cyan-600">🛍️ Shop All Our Latest Styles!</div>;
@@ -63,9 +62,17 @@ const [isPopupVisible, setIsPopupVisible] = useState(false);
   // 2. Theme State
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // 3. Dummy Cart State
-  const [cartCount, setCartCount] = useState(3);
-
+  // 3. Cart States (FIX: Defining the missing states/handlers)
+  // FIX 1: Add state for cart visibility (which was missing)
+  const [isCartOpen, setIsCartOpen] = useState(false); 
+  
+  // FIX 2: Define the other states the <Cart> component needs
+  const [cartItems, setCartItems] = useState([
+    // Placeholder item
+    { id: 1, name: "Sample Item", price: 19.99, quantity: 1 }
+  ]);
+  const [discounts, setDiscounts] = useState([]); // Or null/empty array
+  
   // Handlers
   const toggleTheme = () => setIsDarkMode(prev => !prev);
 
@@ -74,6 +81,28 @@ const [isPopupVisible, setIsPopupVisible] = useState(false);
     setCurrentView(viewId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+  
+  // FIX 3: Define the missing cart handler functions (even as placeholders)
+  const handleUpdateQuantity = (itemId, newQuantity) => {
+      console.log(`Updating item ${itemId} quantity to ${newQuantity}`);
+      // Actual state logic would go here
+  };
+  const handleRemoveItem = (itemId) => {
+      console.log(`Removing item ${itemId}`);
+      // Actual state logic would go here
+  };
+  const handleCheckout = () => {
+      console.log('Initiating checkout...');
+      // Actual state logic would go here
+  };
+  const handleApplyDiscount = (discountCode) => {
+      console.log(`Applying discount: ${discountCode}`);
+      // Actual state logic would go here
+  };
+  
+  // Update cart count based on cartItems (optional, but cleaner than a separate state)
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+
 
   // Conditional Rendering Logic (The Router)
   const renderView = () => {
@@ -99,7 +128,8 @@ const [isPopupVisible, setIsPopupVisible] = useState(false);
       case 'about':
         return <About onViewChange={onViewChange} />;
       case 'contact':
-        return <Contact />;
+        // Assuming you need to uncomment this component now
+        // return <Contact />;
       default:
         // Default to the home page if the view is unknown
         return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} />;
@@ -116,7 +146,8 @@ const [isPopupVisible, setIsPopupVisible] = useState(false);
         isDarkMode={isDarkMode}
         toggleTheme={toggleTheme}
         cartCount={cartCount}
-        onCartClick={() => console.log('Cart opened!')}
+        // FIX 4: Update onCartClick to toggle cart visibility
+        onCartClick={() => setIsCartOpen(true)}
         onSearchClick={() => console.log('Search opened!')}
         currentView={currentView}
         onViewChange={onViewChange}
@@ -126,6 +157,7 @@ const [isPopupVisible, setIsPopupVisible] = useState(false);
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {renderView()}
       </main>
+      
       
 
 {/* discount popup */}
@@ -137,6 +169,19 @@ const [isPopupVisible, setIsPopupVisible] = useState(false);
 
       {/* 3. Footer: Provides additional navigation links */}
       <Footer onViewChange={onViewChange} isDarkMode={isDarkMode} />
+
+
+      <Cart 
+        // FIX 5: This line now uses the defined state
+        isOpen={isCartOpen} 
+        onClose={() => setIsCartOpen(false)}
+        items={cartItems}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveItem}
+        onCheckout={handleCheckout}
+        appliedDiscounts={discounts}
+        onApplyDiscount={handleApplyDiscount}
+      />
     </div>
   );
 }
