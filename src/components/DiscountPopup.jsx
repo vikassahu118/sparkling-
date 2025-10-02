@@ -4,7 +4,7 @@ import { X, Gift, Sparkles } from "lucide-react";
 import { Badge } from "../ui/badge";
 
 const DiscountPopup = ({ isVisible, onClose, onApplyCode }) => {
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
+  const [timeLeft, setTimeLeft] = useState(10); // 5 minutes
   const [minimized, setMinimized] = useState(false);
   const [expired, setExpired] = useState(false);
   const [removed, setRemoved] = useState(false);
@@ -71,7 +71,7 @@ const DiscountPopup = ({ isVisible, onClose, onApplyCode }) => {
                   onClick={onClose}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors z-50"
+                  className="absolute top-3 cursor-pointer right-3 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors z-50"
                 >
                   <X className="w-5 h-5 pointer-events-none" />
                 </motion.button>
