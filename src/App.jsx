@@ -172,7 +172,7 @@ const [isPopupVisible, setIsPopupVisible] = useState(false);
 
 
       <Cart 
-        // FIX 5: This line now uses the defined state
+      isDarkMode={isDarkMode}
         isOpen={isCartOpen} 
         onClose={() => setIsCartOpen(false)}
         items={cartItems}

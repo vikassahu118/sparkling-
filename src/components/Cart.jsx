@@ -84,25 +84,32 @@ const Input = ({ placeholder, value, onChange, className = '', type = 'text' }) 
 };
 
 // --- Cart Sidebar Component ---
-export const Cart = ({ 
-  isOpen, 
-  onClose, 
-  items, 
-  onUpdateQuantity, 
-  onRemoveItem, 
+export const Cart = ({
+  isDarkMode,   // ✅ accept prop
+  isOpen,
+  onClose,
+  items,
+  onUpdateQuantity,
+  onRemoveItem,
   onCheckout,
   appliedDiscounts = [],
   onApplyDiscount
-}) => { 
+}) => {
   const [discountCode, setDiscountCode] = useState('');
   const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
 
   // Calculations
-  const subtotal = items.reduce((sum, item) => sum + (item.discountedPrice * item.quantity), 0);
-  const totalDiscount = appliedDiscounts.reduce((sum, discount) => sum + discount.discount, 0);
+  const subtotal = items.reduce(
+    (sum, item) => sum + ((item.discountedPrice ?? 0) * (item.quantity ?? 1)),
+    0
+  );
+  const totalDiscount = appliedDiscounts.reduce(
+    (sum, discount) => sum + (discount.discount ?? 0),
+    0
+  );
   const freeShippingThreshold = 999;
   const standardShippingCost = 99;
-  
+
   const shipping = subtotal >= freeShippingThreshold ? 0 : standardShippingCost;
   const total = subtotal - totalDiscount + shipping;
   const remainingForFreeShipping = freeShippingThreshold - subtotal;
@@ -110,8 +117,7 @@ export const Cart = ({
   const handleApplyDiscount = () => {
     if (!discountCode) return;
     setIsApplyingDiscount(true);
-    
-    // Simulate API call delay
+
     setTimeout(() => {
       onApplyDiscount(discountCode);
       setDiscountCode('');
@@ -123,7 +129,7 @@ export const Cart = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Overlay - High Z-INDEX */}
+          {/* Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -132,21 +138,23 @@ export const Cart = ({
             onClick={onClose}
           />
 
-          {/* Cart Sidebar - Highest Z-INDEX */}
+          {/* Cart Sidebar */}
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-white dark:bg-gray-800 z-[9999] shadow-2xl"
+            className={`fixed right-0 top-0 h-full w-full max-w-md z-[9999] shadow-2xl
+              ${isDarkMode ? "bg-gray-800 text-white" : "bg-white text-gray-900"}
+            `}
           >
             <div className="flex flex-col h-full">
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className={`flex items-center justify-between p-6 border-b ${isDarkMode ? "border-gray-700" : "border-gray-200"}`}>
                 <div className="flex items-center gap-3">
                   <ShoppingBag className="w-6 h-6 text-pink-600" />
-                  <h2 className="text-xl font-bold dark:text-white">Shopping Cart</h2>
-                  <Badge className="bg-pink-100 text-pink-600 dark:bg-pink-900 dark:text-pink-300">
+                  <h2 className="text-xl font-bold">Shopping Cart</h2>
+                  <Badge className={isDarkMode ? "bg-pink-900 text-pink-300" : "bg-pink-100 text-pink-600"}>
                     {items.length}
                   </Badge>
                 </div>
@@ -154,7 +162,7 @@ export const Cart = ({
                   variant="ghost"
                   size="sm"
                   onClick={onClose}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                  className={`p-2 rounded-full ${isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
                 >
                   <X className="w-5 h-5" />
                 </Button>
@@ -191,7 +199,7 @@ export const Cart = ({
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ delay: index * 0.05 }}
-                        className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl shadow-sm"
+                        className={`flex gap-4 p-4 rounded-2xl shadow-sm ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50' }`}
                       >
                         {/* Product Image */}
                         <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 shadow-lg">
@@ -209,29 +217,28 @@ export const Cart = ({
                           </h3>
                           <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1">
                             <span className="text-xs text-gray-500 dark:text-gray-400">
-                                Size: {item.selectedSize || item.sizes?.[0] || 'S'}
+                              Size: {item.selectedSize || item.sizes?.[0] || 'S'}
                             </span>
                             <span className="text-xs text-gray-500 dark:text-gray-400">•</span>
                             <div className="flex items-center gap-1">
-                              <div 
-                                className={`w-3 h-3 rounded-full border border-gray-300 dark:border-gray-500 ${
-                                  (item.selectedColor || item.colors?.[0] || '').toLowerCase() === 'pink' ? 'bg-pink-400' :
+                              <div
+                                className={`w-3 h-3 rounded-full border border-gray-300 dark:border-gray-500 ${(item.selectedColor || item.colors?.[0] || '').toLowerCase() === 'pink' ? 'bg-pink-400' :
                                   (item.selectedColor || item.colors?.[0] || '').toLowerCase() === 'blue' ? 'bg-blue-400' :
-                                  (item.selectedColor || item.colors?.[0] || '').toLowerCase() === 'purple' ? 'bg-purple-400' :
-                                  (item.selectedColor || item.colors?.[0] || '').toLowerCase() === 'green' ? 'bg-green-400' :
-                                  'bg-gray-400'
-                                }`}
+                                    (item.selectedColor || item.colors?.[0] || '').toLowerCase() === 'purple' ? 'bg-purple-400' :
+                                      (item.selectedColor || item.colors?.[0] || '').toLowerCase() === 'green' ? 'bg-green-400' :
+                                        'bg-gray-400'
+                                  }`}
                               />
                               <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
                                 {item.selectedColor || item.colors?.[0] || 'default'}
                               </span>
                             </div>
                           </div>
-                          
+
                           {/* Price */}
                           <div className="flex items-center gap-2 mt-2">
                             <span className="font-bold text-pink-600 dark:text-pink-400">₹{item.discountedPrice}</span>
-                            <span className="text-sm text-gray-500 dark:text-gray-400 line-through">₹{item.originalPrice}</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400 line-through">₹{item.originalPrice ?? 0}</span>
                           </div>
                         </div>
 
@@ -285,8 +292,8 @@ export const Cart = ({
                             key={index}
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-xl"
-                          >
+                            className={`flex items-center justify-between p-3 rounded-xl ${isDarkMode ? 'bg-green-900/20 text-green-300' : 'bg-green-50 text-green-700'}`}>
+
                             <div className="flex items-center gap-2">
                               <Tag className="w-4 h-4 text-green-600" />
                               <span className="text-sm font-medium text-green-700 dark:text-green-300">
@@ -307,27 +314,37 @@ export const Cart = ({
                         placeholder="Enter discount code"
                         value={discountCode}
                         onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-                        className="flex-1 text-sm"
+                        className={`flex-1 text-sm rounded-lg border px-3 py-2 
+      ${isDarkMode
+                            ? "bg-gray-700 text-gray-100 border-gray-600 placeholder-gray-400"
+                            : "bg-white text-gray-900 border-gray-300 placeholder-gray-500"}
+    `}
                       />
                       <Button
                         onClick={handleApplyDiscount}
                         disabled={!discountCode || isApplyingDiscount}
-                        className="bg-gradient-to-r from-pink-500 to-purple-600 text-white min-w-[100px] flex justify-center items-center"
+                        className={`min-w-[100px] flex justify-center items-center rounded-lg px-4 py-2 font-medium
+      ${isDarkMode
+                            ? "bg-gradient-to-r from-pink-600 to-purple-700 text-white hover:from-pink-500 hover:to-purple-600"
+                            : "bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-400 hover:to-purple-500"}
+    `}
                       >
                         {isApplyingDiscount ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                            'Apply'
+                          'Apply'
                         )}
                       </Button>
                     </div>
+
                   </div>
                 </div>
               )}
 
               {/* Cart Summary & Checkout */}
               {items.length > 0 && (
-                <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                <div className={`p-6 border-t border-gray-200 dark:border-gray-700 ${isDarkMode ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
+
                   <div className="space-y-3 mb-6">
                     <div className="flex justify-between text-sm dark:text-white">
                       <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
