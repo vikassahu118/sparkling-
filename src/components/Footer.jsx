@@ -66,7 +66,7 @@ export default function Footer({ onViewChange, isDarkMode }) {
     const quickLinks = [
         { id: 'home', label: 'Home', emoji: '🏠' },
         { id: 'shop', label: 'Shop All', emoji: '🛍️' },
-        { id: 'categories', label: 'Categories', emoji: '📂' },
+        // { id: 'categories', label: 'Categories', emoji: '📂' },
         { id: 'deals', label: 'Special Deals', emoji: '🎉' }
     ];
 
