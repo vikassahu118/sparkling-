@@ -12,7 +12,7 @@ const ImageWithFallback = ({ src, alt, className = '' }) => (
 );
 
 
-const WishlistSidebar = ({ isOpen, onClose, wishlistItems, onRemoveItem, isDarkMode }) => {
+const WishlistSidebar = ({ isOpen, onClose, wishlistItems, onRemoveItem, isDarkMode,onMoveAllToCart }) => {
     
     // Logic to prevent background scrolling (optional but good for modals)
     React.useEffect(() => {
@@ -113,7 +113,9 @@ const WishlistSidebar = ({ isOpen, onClose, wishlistItems, onRemoveItem, isDarkM
                             {/* Action Button */}
                             {wishlistItems.length > 0 && (
                                 <div className={`p-6 border-t ${borderColor} flex-shrink-0`}>
-                                    <Button className="w-full bg-pink-600 hover:bg-pink-700 text-white dark:bg-purple-600 dark:hover:bg-purple-700 transition-colors duration-300">
+                                    <Button 
+                                    onClick={onMoveAllToCart}
+                                    className="w-full bg-pink-600 hover:bg-pink-700 text-white dark:bg-purple-600 dark:hover:bg-purple-700 transition-colors duration-300">
                                         Move All to Cart
                                     </Button>
                                 </div>
