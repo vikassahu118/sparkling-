@@ -18,7 +18,10 @@ export default function Navbar({
   onCartClick, 
   onSearchClick,
   currentView,
-  onViewChange
+  onViewChange,
+  // ⬅️ Prop is correctly accepted here
+  onWishlistClick,
+  onProfileClick
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -108,7 +111,7 @@ export default function Navbar({
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center justify-between">
-            {/* Logo */}
+            {/* Logo ... (unchanged) */}
             <motion.div 
               className="flex items-center space-x-3"
               whileHover={{ scale: 1.05 }}
@@ -175,7 +178,7 @@ export default function Navbar({
               </div>
             </motion.div>
 
-            {/* Desktop Navigation */}
+            {/* Desktop Navigation ... (unchanged) */}
             <nav className="hidden lg:flex items-center space-x-2">
               {navItems.map((item) => (
                 <motion.div
@@ -256,8 +259,9 @@ export default function Navbar({
                   <Search className={`w-5 h-5 ${getIconColors()}`} />
                 </motion.button>
 
-                {/* Wishlist */}
+                {/* Wishlist ⬅️ FIX APPLIED HERE */}
                 <motion.button
+                  onClick={onWishlistClick} // 👈 ADDED onClick handler
                   whileHover={{ 
                     scale: 1.1,
                     backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.2)' : 'rgba(236, 72, 153, 0.1)',
@@ -300,6 +304,7 @@ export default function Navbar({
 
                 {/* User */}
                 <motion.button
+                onClick={onProfileClick}
                   whileHover={{ 
                     scale: 1.1,
                     backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.2)' : 'rgba(236, 72, 153, 0.1)',
@@ -312,7 +317,7 @@ export default function Navbar({
                 </motion.button>
               </motion.div>
 
-              {/* Theme Toggle */}
+              {/* Theme Toggle ... (unchanged) */}
               <motion.button
                 onClick={toggleTheme}
                 whileHover={{ 
@@ -351,7 +356,7 @@ export default function Navbar({
                 </motion.div>
               </motion.button>
 
-              {/* Mobile Menu Button */}
+              {/* Mobile Menu Button ... (unchanged) */}
               <motion.button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 whileHover={{ scale: 1.1 }}
@@ -385,6 +390,7 @@ export default function Navbar({
             className={`lg:hidden sticky top-[73px] z-40 ${getHeaderBackground()} border-b ${getHeaderBorder()} shadow-lg`}
           >
             <div className="max-w-7xl mx-auto px-4 py-4">
+              {/* Mobile Nav Links ... (unchanged) */}
               <div className="grid grid-cols-2 gap-3">
                 {navItems.map((item, index) => (
                   <motion.button
@@ -434,7 +440,10 @@ export default function Navbar({
                     isDarkMode ? 'text-purple-300' : 'text-pink-600'
                   }`} />
                 </motion.button>
+                
+                {/* Wishlist ⬅️ FIX APPLIED HERE */}
                 <motion.button
+                  onClick={onWishlistClick} // 👈 ADDED onClick handler
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   className={`p-3 rounded-xl touch-optimized transition-all duration-300 ${
@@ -445,6 +454,7 @@ export default function Navbar({
                     isDarkMode ? 'text-purple-300' : 'text-pink-600'
                   }`} />
                 </motion.button>
+                
                 <motion.button
                   onClick={onCartClick}
                   whileHover={{ scale: 1.1 }}
@@ -473,6 +483,7 @@ export default function Navbar({
                   )}
                 </motion.button>
                 <motion.button
+                onClick={onProfileClick}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   className={`p-3 rounded-xl touch-optimized transition-all duration-300 ${

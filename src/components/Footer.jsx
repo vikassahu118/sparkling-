@@ -71,10 +71,12 @@ export default function Footer({ onViewChange, isDarkMode }) {
     ];
 
     const categories = [
-        { id: 'boys', label: 'T-Shirts', icon: '👦' },
-        { id: 'girls', label: 'Jeans', icon: '👧' },
-        { id: 'baby', label: 'Jackets', icon: '👶' },
-        { id: 'accessories', label: 'Accessories', icon: '🎁' }
+        { id: 'boys', label: 'Tops', icon: '' },
+        { id: 'girls', label: 'Shirts', icon: '' },
+        { id: 'baby', label: 'Cord Sets', icon: '' },
+        { id: 'accessories', label: 'Culotte Sets', icon: '' },
+        { id: 'dresses', label: 'Dresses', icon: '' }
+
     ];
 
     const socialLinks = [
