@@ -20,7 +20,8 @@ export default function Navbar({
   currentView,
   onViewChange,
   // ⬅️ Prop is correctly accepted here
-  onWishlistClick
+  onWishlistClick,
+  onProfileClick
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -303,6 +304,7 @@ export default function Navbar({
 
                 {/* User */}
                 <motion.button
+                onClick={onProfileClick}
                   whileHover={{ 
                     scale: 1.1,
                     backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.2)' : 'rgba(236, 72, 153, 0.1)',
@@ -481,6 +483,7 @@ export default function Navbar({
                   )}
                 </motion.button>
                 <motion.button
+                onClick={onProfileClick}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   className={`p-3 rounded-xl touch-optimized transition-all duration-300 ${

@@ -10,6 +10,8 @@ import DiscountPopup from './components/DiscountPopup.jsx';
 import { Cart } from './components/Cart.jsx';
 import SearchModal from './components/Search.jsx'; 
 import WishlistSidebar from './components/Wishlist.jsx';
+// 🚨 NEW IMPORT: Importing the ProfilePage from its dedicated file
+import ProfilePage from './components/Profile.jsx'; 
 
 
 // --- Placeholder Page Components ---
@@ -44,11 +46,11 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false); 
+  // 🚨 REMOVED: isProfileOpen state is no longer needed for a full page view
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   
   // Data states
   const [wishlistItems, setWishlistItems] = useState([
-    // Placeholder wishlist item for testing
     { id: 101, name: "Sparkle Dress", price: 49.99, image: '/placeholder.jpg' }
   ]); 
   const [cartItems, setCartItems] = useState([
@@ -63,6 +65,9 @@ export default function App() {
 
   // --- Handlers ---
   const toggleTheme = () => setIsDarkMode(prev => !prev);
+  
+  // 🚨 UPDATED: Handler now changes the currentView state
+  const onProfileClick = () => onViewChange('profile'); 
 
   const onViewChange = (viewId) => {
     setCurrentView(viewId);
@@ -70,9 +75,7 @@ export default function App() {
   };
   
   const handleApplyCode = (code) => {
-    // IMPORTANT: Replacing alert() with a console log or custom modal
     console.log(`Discount code applied: ${code}`);
-    // alert(`Discount code applied: ${code}`); 
   };
 
   const handleProductAction = (action, product) => {
@@ -80,12 +83,10 @@ export default function App() {
       if (action === 'Add to Wishlist') {
           const exists = wishlistItems.some(item => item.id === product.id);
           if (!exists) {
-              // Using a simple ID for the placeholder item
               const newItem = { ...product, id: Date.now(), name: product.name || "New Item", price: product.price || 0 };
               setWishlistItems(prev => [...prev, newItem]);
           }
       }
-      // Add logic for 'Add to Cart' here
   };
   
   const handleRemoveWishlistItem = (itemId) => {
@@ -102,7 +103,6 @@ export default function App() {
 
   // --- Effects ---
   useEffect(() => {
-    // Show popup on initial load
     setIsPopupVisible(true);
   }, []);
 
@@ -126,6 +126,9 @@ export default function App() {
         return <Deals />;
       case 'about':
         return <About onViewChange={onViewChange} />;
+      // 🚨 NEW: Profile page rendering
+      case 'profile':
+        return <ProfilePage isDarkMode={isDarkMode} />;
       default:
         return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} handleProductAction={handleProductAction} />;
     }
@@ -143,6 +146,8 @@ export default function App() {
         onCartClick={() => setIsCartOpen(true)}
         onSearchClick={() => setIsSearchOpen(true)}
         onWishlistClick={() => setIsWishlistOpen(true)}
+        // 🚨 PASSED HANDLER: onProfileClick
+        onProfileClick={onProfileClick} 
         currentView={currentView}
         onViewChange={onViewChange}
       />
@@ -168,7 +173,6 @@ export default function App() {
         onRemoveItem={handleRemoveWishlistItem}
         isDarkMode={isDarkMode}
       />
-      
       
       {/* Discount Popup */}
       <DiscountPopup
