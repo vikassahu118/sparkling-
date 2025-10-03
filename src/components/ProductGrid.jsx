@@ -525,7 +525,7 @@ const PriceRangeSlider = React.memo(({ min, max, step, price, setPrice }) => {
     <div className="pt-4">
       <div className="relative flex items-center h-2">
         <input type="range" min={min} max={max} value={minVal} step={step} onChange={handleMinChange} className="thumb thumb--left" style={{ zIndex: minVal > max - 100 ? "5" : "3" }}/>
-        <input type="range" min={min} max={max} value={maxVal} step={step} onChange={handleMaxChange} className="thumb thumb--right" />
+        <input type="range" min={min} max={max} value={maxVal} step={step} onChange={handleMaxChange} className="thumb thumb--right"style={{ zIndex: minVal > max - 100 ? "5" : "3" }} />
         <div className="relative w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-md">
           <div ref={range} className="absolute h-1 rounded-md bg-pink-500" />
         </div>
