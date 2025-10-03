@@ -19,8 +19,8 @@ const ProfilePage = ({ isDarkMode, onLogout }) => (
             <div className="w-24 h-24 rounded-full bg-pink-500 dark:bg-purple-500 flex items-center justify-center text-4xl font-bold text-white mb-4 shadow-lg">
                 J
             </div>
-            <h2 className="text-3xl font-bold">Jane Doe</h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-8">jane.doe@example.com</p>
+            <h2 className="text-3xl font-bold">user</h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-8">user.com</p>
         </div>
 
         <div className="space-y-4">
