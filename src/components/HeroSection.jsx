@@ -115,7 +115,7 @@ export default function HeroSection({ onShopNowClick, isDarkMode }) { // FIX: Ch
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.4 }}
                         >
-                            <span className='text-transparent'> Sparkling Dreams for Little Bubbles</span> ✨
+                            <span className='text-transparent'> Sparkling Dreams for Little Bubble</span> ✨
                         </motion.h1>
 
                         <motion.p
