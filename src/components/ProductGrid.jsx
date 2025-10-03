@@ -20,10 +20,13 @@ const Button = ({ children, className, onClick, ...props }) => (
 );
 
 // --- Memoized Price Range Slider Component for Performance (Unchanged) ---
-const PriceRangeSlider = React.memo(({ min, max, step, price, setPrice }) => {
+const PriceRangeSlider = React.memo(({ min, max, step, price, setPrice, isDarkMode }) => {
   const [minVal, setMinVal] = useState(price.min);
   const [maxVal, setMaxVal] = useState(price.max);
   const range = useRef(null);
+  
+  // Style the thumb border based on mode
+  const thumbBorderColor = isDarkMode ? '#8b5cf6' : '#ec4899';
 
   const getPercent = useCallback((value) => Math.round(((value - min) / (max - min)) * 100), [min, max]);
 
@@ -74,14 +77,14 @@ const PriceRangeSlider = React.memo(({ min, max, step, price, setPrice }) => {
         <span className="font-medium text-gray-800 dark:text-white">₹{minVal}</span>
         <span className="font-medium text-gray-800 dark:text-white">₹{maxVal}</span>
       </div>
-       <style>{`.thumb{pointer-events:none;position:absolute;height:0;width:100%;outline:none;-webkit-appearance:none;-moz-appearance:none;appearance:none;background:transparent;}.thumb::-webkit-slider-thumb{-webkit-appearance:none;-moz-appearance:none;appearance:none;pointer-events:all;width:20px;height:20px;background-color:#fff;border-radius:50%;border:2px solid #ec4899;box-shadow:0 0 5px rgba(0,0,0,0.1);cursor:pointer;}.thumb::-moz-range-thumb{pointer-events:all;width:20px;height:20px;background-color:#fff;border-radius:50%;border:2px solid #ec4899;cursor:pointer;}`}</style>
+       <style>{`.thumb{pointer-events:none;position:absolute;height:0;width:100%;outline:none;-webkit-appearance:none;-moz-appearance:none;appearance:none;background:transparent;}.thumb::-webkit-slider-thumb{-webkit-appearance:none;-moz-appearance:none;appearance:none;pointer-events:all;width:20px;height:20px;background-color:#fff;border-radius:50%;border:2px solid ${thumbBorderColor};box-shadow:0 0 5px rgba(0,0,0,0.1);cursor:pointer;}.thumb::-moz-range-thumb{pointer-events:all;width:20px;height:20px;background-color:#fff;border-radius:50%;border:2px solid ${thumbBorderColor};cursor:pointer;}`}</style>
     </div>
   );
 });
 
 
-// --- Enhanced Filter Sidebar/Drawer Component (Unchanged) ---
-const FilterSidebar = ({ isOpen, onClose, filters, setFilters, products, defaultFilters }) => {
+// --- Enhanced Filter Sidebar/Drawer Component ---
+const FilterSidebar = ({ isOpen, onClose, filters, setFilters, products, defaultFilters, isDarkMode }) => { // 1. ACCEPT PROP
   const isMobile = window.innerWidth < 768;
   const AVAILABLE_SIZES = ['XS', 'S', 'M', 'L', 'XL'];
   const uniqueColors = useMemo(() => [...new Set(products.flatMap(p => p.colors))], [products]);
@@ -99,6 +102,11 @@ const FilterSidebar = ({ isOpen, onClose, filters, setFilters, products, default
   } : {
     visible: { x: 0 }, hidden: { x: "100%" }
   };
+  
+  // Base background for the sidebar content
+  const contentBg = isDarkMode ? 'bg-gray-800' : 'bg-white';
+  const headerText = isDarkMode ? 'text-white' : 'text-gray-800';
+  const primaryText = isDarkMode ? 'text-gray-200' : 'text-gray-700';
 
   return (
     <AnimatePresence>
@@ -107,25 +115,26 @@ const FilterSidebar = ({ isOpen, onClose, filters, setFilters, products, default
           <motion.div onClick={onClose} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="fixed inset-0 bg-black/60 z-40" />
           <motion.div
             variants={panelVariants} initial="hidden" animate="visible" exit="hidden" transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-            className={`fixed ${isMobile ? 'bottom-0 left-0 right-0 h-[85vh]' : 'top-0 right-0 h-full w-full max-w-md'} bg-white dark:bg-gray-800 shadow-2xl z-50 flex flex-col rounded-t-3xl md:rounded-none`}
+            // 2. APPLY DARK MODE CLASS
+            className={`fixed ${isMobile ? 'bottom-0 left-0 right-0 h-[85vh]' : 'top-0 right-0 h-full w-full max-w-md'} ${contentBg} shadow-2xl z-50 flex flex-col rounded-t-3xl md:rounded-none`}
           >
-            <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Filters</h3>
+            <div className={`flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700 ${contentBg}`}>
+              <h3 className={`text-xl font-bold ${headerText}`}>Filters</h3>
               <Button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><X className="w-6 h-6 text-gray-600 dark:text-gray-300" /></Button>
             </div>
             
             <div className="flex-grow p-6 overflow-y-auto space-y-8">
               <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-200">Price Range</h4>
-                <PriceRangeSlider min={500} max={5000} step={100} price={filters.price} setPrice={newPrice => setFilters(p => ({ ...p, price: newPrice }))} />
+                <h4 className={`font-semibold ${primaryText}`}>Price Range</h4>
+                <PriceRangeSlider min={500} max={5000} step={100} price={filters.price} setPrice={newPrice => setFilters(p => ({ ...p, price: newPrice }))} isDarkMode={isDarkMode} />
               </div>
               <div>
-                <h4 className="font-semibold mb-4 text-gray-700 dark:text-gray-200">Colors</h4>
+                <h4 className={`font-semibold mb-4 ${primaryText}`}>Colors</h4>
                 <div className="flex flex-wrap gap-3">{uniqueColors.map(c => <button key={c} onClick={() => handleColorSelect(c)} className={`w-9 h-9 rounded-full capitalize transition-transform duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-pink-500 ${colorMap[c]||'bg-gray-300'} ${filters.color===c?'ring-2 ring-offset-2 dark:ring-offset-gray-800 ring-pink-500':''}`} aria-label={`Filter by ${c}`} />)}</div>
               </div>
               <div>
-                <h4 className="font-semibold mb-4 text-gray-700 dark:text-gray-200">Sizes</h4>
-                <div className="flex flex-wrap gap-3">{AVAILABLE_SIZES.map(s => <button key={s} onClick={() => handleSizeToggle(s)} className={`px-4 py-2 border rounded-full font-medium transition-colors duration-200 text-sm ${filters.sizes.includes(s) ? 'bg-pink-500 text-white border-pink-500' : 'bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600'}`}>{s}</button>)}</div>
+                <h4 className={`font-semibold mb-4 ${primaryText}`}>Sizes</h4>
+                <div className="flex flex-wrap gap-3">{AVAILABLE_SIZES.map(s => <button key={s} onClick={() => handleSizeToggle(s)} className={`px-4 py-2 border rounded-full font-medium transition-colors duration-200 text-sm ${filters.sizes.includes(s) ? 'bg-pink-500 text-white border-pink-500' : 'bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600 dark:text-gray-300'}`}>{s}</button>)}</div>
               </div>
             </div>
             
@@ -141,15 +150,13 @@ const FilterSidebar = ({ isOpen, onClose, filters, setFilters, products, default
 };
 
 
-// --- Memoized Product Card for Performance ---
+// --- Memoized Product Card for Performance (Unchanged) ---
 const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToWishlist }) => {
   const [isHovered, setIsHovered] = useState(false);
   
-  // ⭐️ CRITICAL FIX: Ensure both cart and wishlist actions use the consistently named price property
   const productForAction = useMemo(() => ({
     id: product.id,
     name: product.name,
-    // Map discountedPrice to the 'price' property expected by App.jsx
     price: product.discountedPrice, 
     image: product.image,
   }), [product]);
@@ -176,8 +183,6 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
           {isHovered &&
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="absolute inset-0 bg-black/60 flex items-center justify-center gap-3">
               <Button onClick={() => onProductClick(product)} className="bg-white text-gray-800 hover:bg-gray-100 rounded-full p-3 h-12 w-12 flex items-center justify-center transform hover:scale-110 transition-transform"><Eye className="w-5 h-5" /></Button>
-              
-              {/* ✅ FIX APPLIED: Use productForAction object for Wishlist */}
               <Button onClick={() => onAddToWishlist(productForAction)} className="bg-white text-gray-800 hover:bg-gray-100 rounded-full p-3 h-12 w-12 flex items-center justify-center transform hover:scale-110 transition-transform"><Heart className="w-5 h-5" /></Button>
             </motion.div>
           }
@@ -203,8 +208,9 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
   );
 });
 
-// --- Main Product Grid Component (rest of the code is unchanged) ---
-export const ProductGrid = ({ products = [], onProductClick = () => {}, onAddToCart = () => {}, onAddToWishlist = () => {} }) => {
+// --- Main Product Grid Component ---
+// 3. ACCEPT isDarkMode PROP HERE
+export const ProductGrid = ({ products = [], onProductClick = () => {}, onAddToCart = () => {}, onAddToWishlist = () => {}, isDarkMode }) => { 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -268,6 +274,7 @@ export const ProductGrid = ({ products = [], onProductClick = () => {}, onAddToC
               {selectedCategory === 'All' ? 'All Categories' : `Showing: ${selectedCategory}`}
               <ChevronDown className={`ml-2 h-5 w-5 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </Button>
+            {/* Dropdown styling is mostly correct for dark mode */}
             <AnimatePresence>{isDropdownOpen && <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} className="origin-top-left absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 z-20"><div className="py-1">{categories.map(c => <a key={c} href="#" onClick={e => {e.preventDefault(); handleCategorySelect(c);}} className={`block px-4 py-2 text-sm ${selectedCategory === c ? 'font-bold text-pink-600 dark:text-pink-400' : 'text-gray-700 dark:text-gray-200'} hover:bg-gray-100 dark:hover:bg-gray-600`}>{c}</a>)}</div></motion.div>}</AnimatePresence>
           </div>
           <Button onClick={() => setIsFilterOpen(true)} className="relative flex items-center gap-2 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -279,6 +286,7 @@ export const ProductGrid = ({ products = [], onProductClick = () => {}, onAddToC
         <AnimatePresence>
         {activeFilterCount > 0 &&
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex justify-center items-center gap-2 mb-8 flex-wrap">
+            {/* Filter tags are styled correctly using dark:bg-gray-700 */}
             {(filters.price.min !== defaultFilters.price.min || filters.price.max !== defaultFilters.price.max) && <Badge className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 flex items-center gap-1.5">Price: ₹{filters.price.min}-{filters.price.max} <button onClick={() => removeFilter('price')}><X className="w-3.5 h-3.5" /></button></Badge>}
             {filters.color && <Badge className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 flex items-center gap-1.5 capitalize">{filters.color} <button onClick={() => removeFilter('color')}><X className="w-3.5 h-3.5" /></button></Badge>}
             {filters.sizes.map(s => <Badge key={s} className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 flex items-center gap-1.5">{s} <button onClick={() => removeFilter('size', s)}><X className="w-3.5 h-3.5" /></button></Badge>)}
@@ -298,7 +306,16 @@ export const ProductGrid = ({ products = [], onProductClick = () => {}, onAddToC
         </div>
       </div>
       
-      <FilterSidebar isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} filters={filters} setFilters={setFilters} products={productsToUse} defaultFilters={defaultFilters} />
+      {/* 4. PASS THE PROP TO THE SIDEBAR */}
+      <FilterSidebar 
+        isOpen={isFilterOpen} 
+        onClose={() => setIsFilterOpen(false)} 
+        filters={filters} 
+        setFilters={setFilters} 
+        products={productsToUse} 
+        defaultFilters={defaultFilters} 
+        isDarkMode={isDarkMode} // ⭐️ CRITICAL: Passing the dark mode state
+      />
     </section>
   );
 };

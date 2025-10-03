@@ -32,6 +32,7 @@ const HomePage = ({ onViewChange, isDarkMode, handleProductAction }) => (
             onProductClick={(p) => handleProductAction('View', p)}
             onAddToCart={(p) => handleProductAction('Add to Cart', p)}
             onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
+             isDarkMode={isDarkMode}
         />
     </>
 );
