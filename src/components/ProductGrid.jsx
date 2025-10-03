@@ -126,7 +126,7 @@ const FilterSidebar = ({ isOpen, onClose, filters, setFilters, products, default
                 <PriceRangeSlider min={500} max={5000} step={100} price={filters.price} setPrice={newPrice => setFilters(p => ({ ...p, price: newPrice }))} isDarkMode={isDarkMode} />
               </div>
               <div>
-                <h4 className={`font-semibold mb-4 ${primaryText}`}>Colors</h4>
+                <h4 className="font-semibold mb-4 text-gray-700 dark:text-gray-200">Colors</h4>
                 <div className="flex flex-wrap gap-3">{uniqueColors.map(c => <button key={c} onClick={() => handleColorSelect(c)} className={`w-9 h-9 rounded-full capitalize transition-transform duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-pink-500 ${colorMap[c]||'bg-gray-300'} ${filters.color===c?'ring-2 ring-offset-2 dark:ring-offset-gray-800 ring-pink-500':''}`} aria-label={`Filter by ${c}`} />)}</div>
               </div>
               <div>
@@ -161,7 +161,6 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
   return (
     <motion.div
       layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.3 }}
-      whileHover={{ y: -8 }}
       className="group bg-white dark:bg-gray-800 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col"
       onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}
     >
@@ -170,22 +169,24 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
           <ImageWithFallback src={product.image} alt={product.name} className="w-full h-64 object-cover" />
         </motion.div>
         
-        {/* Wishlist Heart Icon (Always visible on product card) */}
+        {/* Wishlist Heart Icon (Moved to bottom right of image) */}
         <motion.button
             onClick={() => onAddToWishlist(productForAction)}
-            className="absolute top-3 right-3 p-2 rounded-full bg-white/70 backdrop-blur-sm shadow-md transition-all duration-300 hover:scale-110 z-10"
+            // ⭐️ FIX: Changed positioning from top-3 right-3 to bottom-3 right-3
+            className="absolute bottom-3 right-3 p-3 rounded-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-xl transition-all duration-300 hover:scale-110 z-10"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
         >
             <Heart 
                 className={`w-5 h-5 transition-colors duration-300 ${
                     isWishlisted 
-                        ? 'text-red-500 fill-red-500' // ⭐️ FILLED RED
+                        ? 'text-red-500 fill-red-500' // FILLED RED
                         : 'text-gray-400 dark:text-gray-300 hover:text-red-500' // OUTLINE
                 }`} 
             />
         </motion.button>
 
+        {/* Badges (Positioned in the top left/right corners) */}
         <div className="absolute top-3 left-3 flex flex-col gap-2">
           {product.isNew && <Badge className="bg-green-500 text-white">NEW</Badge>}
           {product.isBestseller && <Badge className="bg-orange-500 text-white">BESTSELLER</Badge>}
@@ -194,12 +195,14 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
           <Badge className="bg-red-500 text-white text-sm px-3 py-1.5">{product.discount}% OFF</Badge>
         </motion.div>
         
-        {/* Quick Action Icons on Hover (View/Add to Cart) */}
+        {/* Quick Action Icons on Hover (View) */}
         <AnimatePresence>
           {isHovered &&
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="absolute inset-0 bg-black/60 flex items-center justify-center gap-3">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} 
+                className="absolute inset-0 bg-black/60 hidden sm:flex items-center justify-center gap-3"
+            >
+              {/* RESTORED VIEW BUTTON */}
               <Button onClick={() => onProductClick(product)} className="bg-white text-gray-800 hover:bg-gray-100 rounded-full p-3 h-12 w-12 flex items-center justify-center transform hover:scale-110 transition-transform"><Eye className="w-5 h-5" /></Button>
-              {/* REMOVED CART BUTTON HERE */}
             </motion.div>
           }
         </AnimatePresence>
