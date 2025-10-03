@@ -279,7 +279,8 @@ export const ProductGrid = ({ products = [], onProductClick = () => {}, onAddToC
     <section className="py-16 px-4 min-h-screen font-sans ">
       <div className="container mx-auto">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-8">
-          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-4">Featured Products 🌟</h2>
+          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text  mb-4">
+            <span className='text-transparent'>Featured Products</span> 🌟</h2>
           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">Handpicked favorites that kids love and parents trust</p>
         </motion.div>
 

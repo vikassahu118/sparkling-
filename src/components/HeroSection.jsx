@@ -110,12 +110,12 @@ export default function HeroSection({ onShopNowClick, isDarkMode }) { // FIX: Ch
                         </motion.div>
 
                         <motion.h1
-                            className="text-4xl md:text-6xl mb-6 bg-gradient-to-r from-cyan-500 via-pink-500 to-purple-500 bg-clip-text text-transparent"
+                            className="text-4xl md:text-6xl mb-6 bg-gradient-to-r from-cyan-500 via-pink-500 to-purple-500 bg-clip-text "
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.4 }}
                         >
-                            Sparkling Dreams for Little Bubbles ✨
+                            <span className='text-transparent'> Sparkling Dreams for Little Bubbles</span> ✨
                         </motion.h1>
 
                         <motion.p
