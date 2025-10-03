@@ -1,36 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+// Component Imports (Consolidated at the top)
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
 import HeroSection from './components/HeroSection.jsx';
-import { ProductGrid } from './components/ProductGrid.jsx' // Using named import { ProductGrid }
+import { ProductGrid } from './components/ProductGrid.jsx';
 import About from './components/About.jsx';
+import DiscountPopup from './components/DiscountPopup.jsx';
 import { Cart } from './components/Cart.jsx';
+import SearchModal from './components/Search.jsx'; 
+import WishlistSidebar from './components/Wishlist.jsx';
 
-// --- Placeholder Page Components (for demonstration) ---
+
+// --- Placeholder Page Components ---
 const Shop = () => <div className="text-center py-40 text-4xl font-bold text-cyan-600">🛍️ Shop All Our Latest Styles!</div>;
 const Categories = () => <div className="text-center py-40 text-4xl font-bold text-pink-600">📂 Explore Categories</div>;
 const Deals = () => <div className="text-center py-40 text-4xl font-bold text-purple-600">🎉 Special Deals Just for You!</div>;
-// const Contact = () => <div className="text-center py-40 text-4xl font-bold text-gray-600 dark:text-gray-300">📞 Get In Touch!</div>;
 
 
-// ⬅️ NEW: Define handlers required by ProductGrid
-const handleProductAction = (action, product) => {
-    console.log(`${action} triggered for: ${product?.name || 'product'}`);
-    // Implement actual logic here (e.g., state updates, navigation)
-};
-
-
-// ⬅️ NEW COMPONENT: Combines Hero and ProductGrid for the Home View
-const HomePage = ({ onViewChange, isDarkMode }) => (
+// ⬅️ Component: Combines Hero and ProductGrid for the Home View
+const HomePage = ({ onViewChange, isDarkMode, handleProductAction }) => (
     <>
         <HeroSection 
             onShopNowClick={() => onViewChange('shop')} 
             isDarkMode={isDarkMode} 
         />
-        {/* 🚨 Product Grid is placed directly after the Hero */}
         <ProductGrid 
-            // Passing required handler functions
-            products={[]} // Use default internal products
+            products={[]}
             onProductClick={(p) => handleProductAction('View', p)}
             onAddToCart={(p) => handleProductAction('Add to Cart', p)}
             onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
@@ -40,64 +36,83 @@ const HomePage = ({ onViewChange, isDarkMode }) => (
 
 
 export default function App() {
-  // 1. Core Routing State
-  const [currentView, setCurrentView] = useState('home');
-
-  // 2. Theme State
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  // 3. Cart States (FIX: Defining the missing states/handlers)
-  // FIX 1: Add state for cart visibility (which was missing)
-  const [isCartOpen, setIsCartOpen] = useState(false); 
+// =======================================================
+// ✅ APP STATE AND HANDLERS
+// =======================================================
   
-  // FIX 2: Define the other states the <Cart> component needs
+  // App-level visibility states
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false); 
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  
+  // Data states
+  const [wishlistItems, setWishlistItems] = useState([
+    // Placeholder wishlist item for testing
+    { id: 101, name: "Sparkle Dress", price: 49.99, image: '/placeholder.jpg' }
+  ]); 
   const [cartItems, setCartItems] = useState([
-    // Placeholder item
     { id: 1, name: "Sample Item", price: 19.99, quantity: 1 }
   ]);
-  const [discounts, setDiscounts] = useState([]); // Or null/empty array
+  const [discounts, setDiscounts] = useState([]);
   
-  // Handlers
+  // UI States
+  const [currentView, setCurrentView] = useState('home');
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+
+  // --- Handlers ---
   const toggleTheme = () => setIsDarkMode(prev => !prev);
 
   const onViewChange = (viewId) => {
-    console.log(`Navigating to view: ${viewId}`);
     setCurrentView(viewId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
-  // FIX 3: Define the missing cart handler functions (even as placeholders)
-  const handleUpdateQuantity = (itemId, newQuantity) => {
-      console.log(`Updating item ${itemId} quantity to ${newQuantity}`);
-      // Actual state logic would go here
+  const handleApplyCode = (code) => {
+    // IMPORTANT: Replacing alert() with a console log or custom modal
+    console.log(`Discount code applied: ${code}`);
+    // alert(`Discount code applied: ${code}`); 
   };
-  const handleRemoveItem = (itemId) => {
-      console.log(`Removing item ${itemId}`);
-      // Actual state logic would go here
-  };
-  const handleCheckout = () => {
-      console.log('Initiating checkout...');
-      // Actual state logic would go here
-  };
-  const handleApplyDiscount = (discountCode) => {
-      console.log(`Applying discount: ${discountCode}`);
-      // Actual state logic would go here
+
+  const handleProductAction = (action, product) => {
+      console.log(`${action} triggered for: ${product?.name || 'product'}`);
+      if (action === 'Add to Wishlist') {
+          const exists = wishlistItems.some(item => item.id === product.id);
+          if (!exists) {
+              // Using a simple ID for the placeholder item
+              const newItem = { ...product, id: Date.now(), name: product.name || "New Item", price: product.price || 0 };
+              setWishlistItems(prev => [...prev, newItem]);
+          }
+      }
+      // Add logic for 'Add to Cart' here
   };
   
-  // Update cart count based on cartItems (optional, but cleaner than a separate state)
+  const handleRemoveWishlistItem = (itemId) => {
+      setWishlistItems(prev => prev.filter(item => item.id !== itemId));
+  };
+  
+  // Cart Handlers
+  const handleUpdateQuantity = (itemId, newQuantity) => { /* logic */ };
+  const handleRemoveItem = (itemId) => { /* logic */ };
+  const handleCheckout = () => { /* logic */ };
+  const handleApplyDiscount = (discountCode) => { /* logic */ };
+  
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
+  // --- Effects ---
+  useEffect(() => {
+    // Show popup on initial load
+    setIsPopupVisible(true);
+  }, []);
 
-  // Conditional Rendering Logic (The Router)
+
+  // --- Router/Render Logic ---
   const renderView = () => {
     switch (currentView) {
       case 'home':
-        // ⬅️ CHANGE: Render the new HomePage component for 'home'
-        return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} />;
+        return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} handleProductAction={handleProductAction} />;
       case 'shop':
-        // 🚨 Since 'shop' is just a different view, we can use the ProductGrid here too, 
-        // or keep the simple placeholder if 'shop' is meant to be a separate full page.
-        // If you want ProductGrid on 'shop' too:
         return (
             <ProductGrid
                 onProductClick={(p) => handleProductAction('View', p)}
@@ -111,45 +126,63 @@ export default function App() {
         return <Deals />;
       case 'about':
         return <About onViewChange={onViewChange} />;
-      case 'contact':
-        // Assuming you need to uncomment this component now
-        // return <Contact />;
       default:
-        // Default to the home page if the view is unknown
-        return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} />;
+        return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} handleProductAction={handleProductAction} />;
     }
   };
 
   // The main App structure
   return (
-    // Apply dark mode class and global background style
     <div className={`${isDarkMode ? 'dark bg-gray-900 min-h-screen' : 'bg-white min-h-screen'} font-inter transition-colors duration-500`}>
 
-      {/* 1. Navbar: Controls routing, theme, and actions */}
+      {/* 1. Navbar */}
       <Navbar
         isDarkMode={isDarkMode}
         toggleTheme={toggleTheme}
         cartCount={cartCount}
-        // FIX 4: Update onCartClick to toggle cart visibility
         onCartClick={() => setIsCartOpen(true)}
-        onSearchClick={() => console.log('Search opened!')}
+        onSearchClick={() => setIsSearchOpen(true)}
+        onWishlistClick={() => setIsWishlistOpen(true)}
         currentView={currentView}
         onViewChange={onViewChange}
       />
 
-      {/* 2. Main Content Area: Renders the current 'page' */}
+      {/* 2. Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {renderView()}
       </main>
-      
-      
 
-      {/* 3. Footer: Provides additional navigation links */}
+
+       {/* Search Modal */}
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* Wishlist Sidebar */}
+      <WishlistSidebar
+        isOpen={isWishlistOpen}
+        onClose={() => setIsWishlistOpen(false)}
+        wishlistItems={wishlistItems}
+        onRemoveItem={handleRemoveWishlistItem}
+        isDarkMode={isDarkMode}
+      />
+      
+      
+      {/* Discount Popup */}
+      <DiscountPopup
+        isVisible={isPopupVisible}
+        onClose={() => setIsPopupVisible(false)}
+        onApplyCode={handleApplyCode}
+      />
+
+      {/* 3. Footer */}
       <Footer onViewChange={onViewChange} isDarkMode={isDarkMode} />
 
-
+      {/* 4. Cart */}
       <Cart 
-        // FIX 5: This line now uses the defined state
+        isDarkMode={isDarkMode}
         isOpen={isCartOpen} 
         onClose={() => setIsCartOpen(false)}
         items={cartItems}
@@ -159,148 +192,6 @@ export default function App() {
         appliedDiscounts={discounts}
         onApplyDiscount={handleApplyDiscount}
       />
-    </div>
-  );
-}
-import React, { useState, useEffect } from 'react';
-
-import Navbar from './components/Navbar.jsx';
-import Footer from './components/Footer.jsx';
-import HeroSection from './components/HeroSection.jsx';
-import { ProductGrid } from './components/ProductGrid.jsx' // Using named import { ProductGrid }
-import About from './components/About.jsx';
-import DiscountPopup from './components/DiscountPopup.jsx';
-
-
-
-// --- Placeholder Page Components (for demonstration) ---
-const Shop = () => <div className="text-center py-40 text-4xl font-bold text-cyan-600">🛍️ Shop All Our Latest Styles!</div>;
-const Categories = () => <div className="text-center py-40 text-4xl font-bold text-pink-600">📂 Explore Categories</div>;
-const Deals = () => <div className="text-center py-40 text-4xl font-bold text-purple-600">🎉 Special Deals Just for You!</div>;
-// const Contact = () => <div className="text-center py-40 text-4xl font-bold text-gray-600 dark:text-gray-300">📞 Get In Touch!</div>;
-
-
-// ⬅️ NEW: Define handlers required by ProductGrid
-const handleProductAction = (action, product) => {
-    console.log(`${action} triggered for: ${product?.name || 'product'}`);
-    // Implement actual logic here (e.g., state updates, navigation)
-};
-
-
-// ⬅️ NEW COMPONENT: Combines Hero and ProductGrid for the Home View
-const HomePage = ({ onViewChange, isDarkMode }) => (
-    <>
-        <HeroSection 
-            onShopNowClick={() => onViewChange('shop')} 
-            isDarkMode={isDarkMode} 
-        />
-        {/* 🚨 Product Grid is placed directly after the Hero */}
-        <ProductGrid 
-            // Passing required handler functions
-            products={[]} // Use default internal products
-            onProductClick={(p) => handleProductAction('View', p)}
-            onAddToCart={(p) => handleProductAction('Add to Cart', p)}
-            onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
-        />
-    </>
-);
-
-
-export default function App() {
-// pop up for testing
-const [isPopupVisible, setIsPopupVisible] = useState(false);
-
-  useEffect(() => {
-    // Show popup on every homepage load
-    setIsPopupVisible(true);
-  }, []);
-
-  const handleApplyCode = (code) => {
-    alert(`Discount code applied: ${code}`);
-  };
-
-
-
-  // 1. Core Routing State
-  const [currentView, setCurrentView] = useState('home');
-
-  // 2. Theme State
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  // 3. Dummy Cart State
-  const [cartCount, setCartCount] = useState(3);
-
-  // Handlers
-  const toggleTheme = () => setIsDarkMode(prev => !prev);
-
-  const onViewChange = (viewId) => {
-    console.log(`Navigating to view: ${viewId}`);
-    setCurrentView(viewId);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Conditional Rendering Logic (The Router)
-  const renderView = () => {
-    switch (currentView) {
-      case 'home':
-        // ⬅️ CHANGE: Render the new HomePage component for 'home'
-        return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} />;
-      case 'shop':
-        // 🚨 Since 'shop' is just a different view, we can use the ProductGrid here too, 
-        // or keep the simple placeholder if 'shop' is meant to be a separate full page.
-        // If you want ProductGrid on 'shop' too:
-        return (
-            <ProductGrid
-                onProductClick={(p) => handleProductAction('View', p)}
-                onAddToCart={(p) => handleProductAction('Add to Cart', p)}
-                onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
-            />
-        );
-      case 'categories':
-        return <Categories />;
-      case 'deals':
-        return <Deals />;
-      case 'about':
-        return <About onViewChange={onViewChange} />;
-      case 'contact':
-        return <Contact />;
-      default:
-        // Default to the home page if the view is unknown
-        return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} />;
-    }
-  };
-
-  // The main App structure
-  return (
-    // Apply dark mode class and global background style
-    <div className={`${isDarkMode ? 'dark bg-gray-900 min-h-screen' : 'bg-white min-h-screen'} font-inter transition-colors duration-500`}>
-
-      {/* 1. Navbar: Controls routing, theme, and actions */}
-      <Navbar
-        isDarkMode={isDarkMode}
-        toggleTheme={toggleTheme}
-        cartCount={cartCount}
-        onCartClick={() => console.log('Cart opened!')}
-        onSearchClick={() => console.log('Search opened!')}
-        currentView={currentView}
-        onViewChange={onViewChange}
-      />
-
-      {/* 2. Main Content Area: Renders the current 'page' */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {renderView()}
-      </main>
-      
-
-{/* discount popup */}
- <DiscountPopup
-        isVisible={isPopupVisible}
-        onClose={() => setIsPopupVisible(false)}
-        onApplyCode={handleApplyCode}
-      />
-
-      {/* 3. Footer: Provides additional navigation links */}
-      <Footer onViewChange={onViewChange} isDarkMode={isDarkMode} />
     </div>
   );
 }
