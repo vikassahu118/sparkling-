@@ -8,6 +8,7 @@ import { ProductGrid } from './components/ProductGrid.jsx';
 import About from './components/About.jsx';
 import DiscountPopup from './components/DiscountPopup.jsx';
 import { Cart } from './components/Cart.jsx';
+// 👇 FIXED IMPORT PATHS: Using the full, correct file names
 import SearchModal from './components/Search.jsx'; 
 import WishlistSidebar from './components/Wishlist.jsx';
 import ProfilePage from './components/Profile.jsx'; 
@@ -52,7 +53,7 @@ export default function App() {
     { id: 101, name: "Sparkle Dress", price: 49.99, image: '/placeholder.jpg' }
   ]); 
   
-  // ⭐️ FIX 1: Ensure initial cart item has a valid numeric price
+  // FIX 1: Initial cart state set to an empty array (as previously agreed for dynamic loading)
   const [cartItems, setCartItems] = useState([]);
   const [discounts, setDiscounts] = useState([]);
   
@@ -76,9 +77,7 @@ export default function App() {
   };
 
   const handleProductAction = (action, product) => {
-      // ⭐️ FIX 2: Added a robust default price (matching the 1199 figure you mentioned)
-      // The ProductGrid is likely passing an incomplete mock product when called.
-      // This ensures we always have a price and name.
+      // Create a robust product object with necessary properties
       const actualProduct = product && product.id ? product : {
           id: 999, // Fallback ID
           name: 'Rainbow Unicorn Dress', // Default name to match screenshot
@@ -88,39 +87,46 @@ export default function App() {
 
       console.log(`${action} triggered for: ${actualProduct?.name || 'product'} (ID: ${actualProduct.id})`);
 
+      // WISHLIST LOGIC
       if (action === 'Add to Wishlist') {
           const exists = wishlistItems.some(item => item.id === actualProduct.id);
           if (!exists) {
-              const newItem = { ...actualProduct, id: Date.now(), name: actualProduct.name, price: actualProduct.price };
+              // Note: Using Date.now() for unique ID for items added directly, 
+              // but relying on product.id when available for cart/wishlist tracking.
+              const newItem = { 
+                ...actualProduct, 
+                id: actualProduct.id || Date.now(), 
+                name: actualProduct.name, 
+                price: actualProduct.price 
+              };
               setWishlistItems(prev => [...prev, newItem]);
+              setIsWishlistOpen(true);
+          } else {
+            console.log("Item already in wishlist.");
           }
       } 
       
-      // 🚨 CORE FIX: ADD TO CART LOGIC
+      // ADD TO CART LOGIC
       else if (action === 'Add to Cart') {
           setCartItems(prevItems => {
               const existingItem = prevItems.find(item => item.id === actualProduct.id);
 
               if (existingItem) {
-                  // Item exists: Increase quantity
                   return prevItems.map(item =>
                       item.id === actualProduct.id
                           ? { ...item, quantity: item.quantity + 1 }
                           : item
                   );
               } else {
-                  // Item does not exist: Add new item
                   const newItem = {
                       id: actualProduct.id,
                       name: actualProduct.name,
-                      // ⭐️ IMPORTANT: Use the safe price here!
                       price: actualProduct.price,
                       quantity: 1
                   };
                   return [...prevItems, newItem];
               }
           });
-          // Open the cart sidebar immediately after adding an item
           setIsCartOpen(true);
       }
   };
@@ -130,12 +136,11 @@ export default function App() {
   };
   
   // ------------------------------------------
-  // ✅ IMPLEMENTED CART HANDLERS
+  // CART HANDLERS
   // ------------------------------------------
 
   const handleUpdateQuantity = (itemId, newQuantity) => { 
     if (newQuantity <= 0) {
-        // If quantity is zero or less, treat it as a removal
         handleRemoveItem(itemId);
         return;
     }
@@ -157,16 +162,44 @@ export default function App() {
 
   const handleCheckout = () => { 
     console.log('Initiating checkout...');
-    // In a real app, this would redirect to a checkout page or process payment
     alert('Checkout initiated! (This is a placeholder action)');
   };
 
   const handleApplyDiscount = (discountCode) => { 
     console.log(`Applying discount: ${discountCode}`);
-    // In a real app, logic to validate code and update discounts state would go here
     setDiscounts(prev => [...prev, { code: discountCode, amount: 5.00 }]);
   };
-  // ------------------------------------------
+  
+  // MOVE ALL TO CART LOGIC (RESTORED)
+  const handleMoveAllToCart = () => {
+    if (wishlistItems.length === 0) return;
+
+    setCartItems(prevCart => {
+        let updatedCart = [...prevCart];
+        
+        wishlistItems.forEach(wishItem => {
+            const existingItemIndex = updatedCart.findIndex(cartItem => cartItem.id === wishItem.id);
+            
+            if (existingItemIndex !== -1) {
+                // Item exists: Increase quantity by 1 
+                updatedCart[existingItemIndex] = {
+                    ...updatedCart[existingItemIndex],
+                    quantity: updatedCart[existingItemIndex].quantity + 1,
+                };
+            } else {
+                // Item is new: Add to cart
+                updatedCart.push({ ...wishItem, quantity: 1 });
+            }
+        });
+        return updatedCart;
+    });
+
+    // Clear the wishlist and open the cart
+    setWishlistItems([]);
+    setIsWishlistOpen(false);
+    setIsCartOpen(true);
+    console.log('Moved all items from wishlist to cart.');
+  };
   
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
@@ -232,12 +265,14 @@ export default function App() {
         isDarkMode={isDarkMode}
       />
 
-      {/* Wishlist Sidebar */}
+      {/* 3. Wishlist Sidebar */}
       <WishlistSidebar
         isOpen={isWishlistOpen}
         onClose={() => setIsWishlistOpen(false)}
         wishlistItems={wishlistItems}
         onRemoveItem={handleRemoveWishlistItem}
+        // 👇 CRITICAL FIX: Restoring the handler for "Move All to Cart"
+        onMoveAllToCart={handleMoveAllToCart}
         isDarkMode={isDarkMode}
       />
       
@@ -248,10 +283,10 @@ export default function App() {
         onApplyCode={handleApplyCode}
       />
 
-      {/* 3. Footer */}
+      {/* 4. Footer */}
       <Footer onViewChange={onViewChange} isDarkMode={isDarkMode} />
 
-      {/* 4. Cart */}
+      {/* 5. Cart */}
       <Cart 
         isDarkMode={isDarkMode}
         isOpen={isCartOpen} 

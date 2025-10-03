@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ShoppingCart, Star, Eye, ChevronDown, Filter, X } from 'lucide-react';
 
 // --- Helper & UI Components (Unchanged) ---
-
 const ImageWithFallback = ({ src, alt, className }) => {
   const [imgSrc, setImgSrc] = useState(src);
   const placeholder = `https://placehold.co/600x400/f7f7f7/cbd5e0?text=Image+Not+Found`;
@@ -146,14 +145,13 @@ const FilterSidebar = ({ isOpen, onClose, filters, setFilters, products, default
 const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToWishlist }) => {
   const [isHovered, setIsHovered] = useState(false);
   
-  // ⭐️ FIX: Create the product object with the correct 'price' property
-  const productForCart = useMemo(() => ({
+  // ⭐️ CRITICAL FIX: Ensure both cart and wishlist actions use the consistently named price property
+  const productForAction = useMemo(() => ({
     id: product.id,
     name: product.name,
-    // CRITICAL: Map discountedPrice to the 'price' property expected by App.jsx
+    // Map discountedPrice to the 'price' property expected by App.jsx
     price: product.discountedPrice, 
     image: product.image,
-    // Keep other details if needed for display in cart
   }), [product]);
 
   return (
@@ -178,8 +176,9 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
           {isHovered &&
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="absolute inset-0 bg-black/60 flex items-center justify-center gap-3">
               <Button onClick={() => onProductClick(product)} className="bg-white text-gray-800 hover:bg-gray-100 rounded-full p-3 h-12 w-12 flex items-center justify-center transform hover:scale-110 transition-transform"><Eye className="w-5 h-5" /></Button>
-              {/* NOTE: Wishlist action uses the original product object */}
-              <Button onClick={() => onAddToWishlist(product)} className="bg-white text-gray-800 hover:bg-gray-100 rounded-full p-3 h-12 w-12 flex items-center justify-center transform hover:scale-110 transition-transform"><Heart className="w-5 h-5" /></Button>
+              
+              {/* ✅ FIX APPLIED: Use productForAction object for Wishlist */}
+              <Button onClick={() => onAddToWishlist(productForAction)} className="bg-white text-gray-800 hover:bg-gray-100 rounded-full p-3 h-12 w-12 flex items-center justify-center transform hover:scale-110 transition-transform"><Heart className="w-5 h-5" /></Button>
             </motion.div>
           }
         </AnimatePresence>
@@ -195,8 +194,7 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
           <span className="text-sm text-gray-500 line-through">₹{product.originalPrice}</span>
         </div>
         <div className="mt-auto">
-          {/* ⭐️ CRITICAL FIX: Pass the modified object with the 'price' property */}
-          <Button onClick={() => onAddToCart(productForCart)} className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white rounded-xl py-3 font-medium flex items-center justify-center">
+          <Button onClick={() => onAddToCart(productForAction)} className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white rounded-xl py-3 font-medium flex items-center justify-center">
             <ShoppingCart className="w-4 h-4 mr-2" /> Add to Cart
           </Button>
         </div>
@@ -205,7 +203,7 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
   );
 });
 
-// --- Main Product Grid Component (Unchanged) ---
+// --- Main Product Grid Component (rest of the code is unchanged) ---
 export const ProductGrid = ({ products = [], onProductClick = () => {}, onAddToCart = () => {}, onAddToWishlist = () => {} }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
