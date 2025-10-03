@@ -17,33 +17,47 @@ const Deals = () => <div className="text-center py-40 text-4xl font-bold text-pu
 
 // ⬅️ NEW: Define handlers required by ProductGrid
 const handleProductAction = (action, product) => {
-    console.log(`${action} triggered for: ${product?.name || 'product'}`);
-    // Implement actual logic here (e.g., state updates, navigation)
+  console.log(`${action} triggered for: ${product?.name || 'product'}`);
+  // Implement actual logic here (e.g., state updates, navigation)
 };
 
 
 // ⬅️ NEW COMPONENT: Combines Hero and ProductGrid for the Home View
 const HomePage = ({ onViewChange, isDarkMode }) => (
-    <>
-        <HeroSection 
-            onShopNowClick={() => onViewChange('shop')} 
-            isDarkMode={isDarkMode} 
-        />
-        {/* 🚨 Product Grid is placed directly after the Hero */}
-        <ProductGrid 
-            // Passing required handler functions
-            products={[]} // Use default internal products
-            onProductClick={(p) => handleProductAction('View', p)}
-            onAddToCart={(p) => handleProductAction('Add to Cart', p)}
-            onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
-        />
-    </>
+  <>
+    <HeroSection
+      onShopNowClick={() => onViewChange('shop')}
+      isDarkMode={isDarkMode}
+    />
+    {/* 🚨 Product Grid is placed directly after the Hero */}
+    <ProductGrid
+      // Passing required handler functions
+      products={[]} // Use default internal products
+      onProductClick={(p) => handleProductAction('View', p)}
+      onAddToCart={(p) => handleProductAction('Add to Cart', p)}
+      onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
+    />
+  </>
 );
 
 
 export default function App() {
-// pop up for testing
-const [isPopupVisible, setIsPopupVisible] = useState(false);
+  // catogries dropdown
+   const handleProductClick = (product) => {
+    console.log("Product clicked:", product.name);
+  };
+
+  const handleAddToCart = (product) => {
+    console.log("Added to cart:", product.name);
+  };
+
+  const handleAddToWishlist = (product) => {
+    console.log("Added to wishlist:", product.name);
+  };
+
+
+  // pop up for testing
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
 
   useEffect(() => {
     // Show popup on every homepage load
@@ -64,15 +78,15 @@ const [isPopupVisible, setIsPopupVisible] = useState(false);
 
   // 3. Cart States (FIX: Defining the missing states/handlers)
   // FIX 1: Add state for cart visibility (which was missing)
-  const [isCartOpen, setIsCartOpen] = useState(false); 
-  
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
   // FIX 2: Define the other states the <Cart> component needs
   const [cartItems, setCartItems] = useState([
     // Placeholder item
     { id: 1, name: "Sample Item", price: 19.99, quantity: 1 }
   ]);
   const [discounts, setDiscounts] = useState([]); // Or null/empty array
-  
+
   // Handlers
   const toggleTheme = () => setIsDarkMode(prev => !prev);
 
@@ -81,25 +95,25 @@ const [isPopupVisible, setIsPopupVisible] = useState(false);
     setCurrentView(viewId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  
+
   // FIX 3: Define the missing cart handler functions (even as placeholders)
   const handleUpdateQuantity = (itemId, newQuantity) => {
-      console.log(`Updating item ${itemId} quantity to ${newQuantity}`);
-      // Actual state logic would go here
+    console.log(`Updating item ${itemId} quantity to ${newQuantity}`);
+    // Actual state logic would go here
   };
   const handleRemoveItem = (itemId) => {
-      console.log(`Removing item ${itemId}`);
-      // Actual state logic would go here
+    console.log(`Removing item ${itemId}`);
+    // Actual state logic would go here
   };
   const handleCheckout = () => {
-      console.log('Initiating checkout...');
-      // Actual state logic would go here
+    console.log('Initiating checkout...');
+    // Actual state logic would go here
   };
   const handleApplyDiscount = (discountCode) => {
-      console.log(`Applying discount: ${discountCode}`);
-      // Actual state logic would go here
+    console.log(`Applying discount: ${discountCode}`);
+    // Actual state logic would go here
   };
-  
+
   // Update cart count based on cartItems (optional, but cleaner than a separate state)
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
@@ -115,11 +129,18 @@ const [isPopupVisible, setIsPopupVisible] = useState(false);
         // or keep the simple placeholder if 'shop' is meant to be a separate full page.
         // If you want ProductGrid on 'shop' too:
         return (
-            <ProductGrid
-                onProductClick={(p) => handleProductAction('View', p)}
-                onAddToCart={(p) => handleProductAction('Add to Cart', p)}
-                onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
-            />
+          // <ProductGrid
+          //     onProductClick={(p) => handleProductAction('View', p)}
+          //     onAddToCart={(p) => handleProductAction('Add to Cart', p)}
+          //     onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
+          // />
+
+          <ProductGrid
+            onProductClick={handleProductClick}
+            onAddToCart={handleAddToCart}
+            onAddToWishlist={handleAddToWishlist}
+          />
+
         );
       case 'categories':
         return <Categories />;
@@ -128,8 +149,8 @@ const [isPopupVisible, setIsPopupVisible] = useState(false);
       case 'about':
         return <About onViewChange={onViewChange} />;
       case 'contact':
-        // Assuming you need to uncomment this component now
-        // return <Contact />;
+      // Assuming you need to uncomment this component now
+      // return <Contact />;
       default:
         // Default to the home page if the view is unknown
         return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} />;
@@ -157,11 +178,11 @@ const [isPopupVisible, setIsPopupVisible] = useState(false);
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {renderView()}
       </main>
-      
-      
 
-{/* discount popup */}
- <DiscountPopup
+
+
+      {/* discount popup */}
+      <DiscountPopup
         isVisible={isPopupVisible}
         onClose={() => setIsPopupVisible(false)}
         onApplyCode={handleApplyCode}
@@ -171,9 +192,9 @@ const [isPopupVisible, setIsPopupVisible] = useState(false);
       <Footer onViewChange={onViewChange} isDarkMode={isDarkMode} />
 
 
-      <Cart 
-      isDarkMode={isDarkMode}
-        isOpen={isCartOpen} 
+      <Cart
+        isDarkMode={isDarkMode}
+        isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         items={cartItems}
         onUpdateQuantity={handleUpdateQuantity}

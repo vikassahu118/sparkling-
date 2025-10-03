@@ -16,7 +16,10 @@ import {
 } from "lucide-react";
 // Assuming you have 'react-router-dom' installed and configured for navigation
 
-const About = ({ onViewChange}) => {
+const About = ({ onViewChange,isDarkMode }) => {
+
+
+   
 
   // This function handles the click event for the "Shop Now" button.
   // It directs the user to the "/shop" route.
@@ -24,7 +27,7 @@ const About = ({ onViewChange}) => {
     if (onViewChange) {
       onViewChange('shop')
     }
-    
+
   };
 
   const values = [
@@ -104,10 +107,10 @@ const About = ({ onViewChange}) => {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-              Our Core Values 💝
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text  mb-4">
+              <span className="text-transparent">Our Core Values</span> 💝
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            <p className="text-lg text-black dark:text-gray-300 max-w-2xl mx-auto">
               The principles that guide everything we do, from design to delivery
             </p>
           </motion.div>
@@ -147,7 +150,12 @@ const About = ({ onViewChange}) => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-gradient-to-br from-purple-50 via-pink-50 to-cyan-50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-cyan-900/20">
+      <section
+        className={`py-16 bg-gradient-to-br ${isDarkMode ? "from-purple-700 to-cyan-700" : "from-pink-300 to-purple-300"
+          } from-purple-50 via-pink-50 to-cyan-50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-cyan-900/20`}
+      >
+
+
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -155,15 +163,15 @@ const About = ({ onViewChange}) => {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-cyan-600 to-purple-600 bg-clip-text text-transparent mb-4">
-              Our Achievements 🏆
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-cyan-600 to-purple-600 bg-clip-text  mb-4">
+              <span className="text-transparent">Our Achievements</span> 🏆
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-300">
               Numbers that showcase our commitment to excellence
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6  `}>
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
@@ -174,7 +182,9 @@ const About = ({ onViewChange}) => {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ scale: 1.1, y: -5 }}
-                  className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl p-6 shadow-lg text-center border border-pink-200/50 dark:border-purple-700/50"
+                  className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl p-6 shadow-lg text-center border border-pink-200/50 dark:border-purple-700/50
+                    `}
+                  
                 >
                   <div
                     className={`inline-flex items-center justify-center w-12 h-12 ${stat.color} bg-opacity-10 rounded-xl mb-3`}
