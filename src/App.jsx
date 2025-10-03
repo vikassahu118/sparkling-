@@ -8,7 +8,7 @@ import { ProductGrid } from './components/ProductGrid.jsx';
 import About from './components/About.jsx';
 import DiscountPopup from './components/DiscountPopup.jsx';
 import { Cart } from './components/Cart.jsx';
-// 👇 FIXED IMPORT PATHS: Using the full, correct file names
+// 👇 FIX 1: Corrected component file paths
 import SearchModal from './components/Search.jsx'; 
 import WishlistSidebar from './components/Wishlist.jsx';
 import ProfilePage from './components/Profile.jsx'; 
@@ -21,7 +21,8 @@ const Deals = () => <div className="text-center py-40 text-4xl font-bold text-pu
 
 
 // ⬅️ Component: Combines Hero and ProductGrid for the Home View
-const HomePage = ({ onViewChange, isDarkMode, handleProductAction }) => (
+// FIX 2: Added missing 'wishlistItems' prop
+const HomePage = ({ onViewChange, isDarkMode, handleProductAction, wishlistItems }) => ( 
     <>
         <HeroSection 
             onShopNowClick={() => onViewChange('shop')} 
@@ -32,7 +33,8 @@ const HomePage = ({ onViewChange, isDarkMode, handleProductAction }) => (
             onProductClick={(p) => handleProductAction('View', p)}
             onAddToCart={(p) => handleProductAction('Add to Cart', p)}
             onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
-             isDarkMode={isDarkMode}
+            isDarkMode={isDarkMode} // Passed for filter sidebar
+            wishlistItems={wishlistItems} // Passed for heart coloring
         />
     </>
 );
@@ -50,11 +52,7 @@ export default function App() {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   
   // Data states
-  const [wishlistItems, setWishlistItems] = useState([
-    { id: 101, name: "Sparkle Dress", price: 49.99, image: '/placeholder.jpg' }
-  ]); 
-  
-  // FIX 1: Initial cart state set to an empty array (as previously agreed for dynamic loading)
+  const [wishlistItems, setWishlistItems] = useState([]); 
   const [cartItems, setCartItems] = useState([]);
   const [discounts, setDiscounts] = useState([]);
   
@@ -88,23 +86,28 @@ export default function App() {
 
       console.log(`${action} triggered for: ${actualProduct?.name || 'product'} (ID: ${actualProduct.id})`);
 
-      // WISHLIST LOGIC
+      // WISHLIST LOGIC (Toggle: Add if missing, remove if present)
       if (action === 'Add to Wishlist') {
-          const exists = wishlistItems.some(item => item.id === actualProduct.id);
-          if (!exists) {
-              // Note: Using Date.now() for unique ID for items added directly, 
-              // but relying on product.id when available for cart/wishlist tracking.
-              const newItem = { 
-                ...actualProduct, 
-                id: actualProduct.id || Date.now(), 
-                name: actualProduct.name, 
-                price: actualProduct.price 
-              };
-              setWishlistItems(prev => [...prev, newItem]);
-              setIsWishlistOpen(true);
-          } else {
-            console.log("Item already in wishlist.");
-          }
+          setWishlistItems(prev => {
+              const exists = prev.some(item => item.id === actualProduct.id);
+              if (exists) {
+                  // Remove the item (heart toggles off)
+                  console.log("Item removed from wishlist.");
+                  return prev.filter(item => item.id !== actualProduct.id);
+              } else {
+                  // Add the item (heart toggles on)
+                  const newItem = { 
+                    ...actualProduct, 
+                    id: actualProduct.id || Date.now(), 
+                    name: actualProduct.name, 
+                    price: actualProduct.price 
+                  };
+                  // Open sidebar ONLY when adding
+                  setIsWishlistOpen(true); 
+                  console.log("Item added to wishlist.");
+                  return [...prev, newItem];
+              }
+          });
       } 
       
       // ADD TO CART LOGIC
@@ -137,7 +140,7 @@ export default function App() {
   };
   
   // ------------------------------------------
-  // CART HANDLERS
+  // CART HANDLERS (Unchanged)
   // ------------------------------------------
 
   const handleUpdateQuantity = (itemId, newQuantity) => { 
@@ -171,7 +174,7 @@ export default function App() {
     setDiscounts(prev => [...prev, { code: discountCode, amount: 5.00 }]);
   };
   
-  // MOVE ALL TO CART LOGIC (RESTORED)
+  // MOVE ALL TO CART LOGIC (Unchanged)
   const handleMoveAllToCart = () => {
     if (wishlistItems.length === 0) return;
 
@@ -182,20 +185,17 @@ export default function App() {
             const existingItemIndex = updatedCart.findIndex(cartItem => cartItem.id === wishItem.id);
             
             if (existingItemIndex !== -1) {
-                // Item exists: Increase quantity by 1 
                 updatedCart[existingItemIndex] = {
                     ...updatedCart[existingItemIndex],
                     quantity: updatedCart[existingItemIndex].quantity + 1,
                 };
             } else {
-                // Item is new: Add to cart
                 updatedCart.push({ ...wishItem, quantity: 1 });
             }
         });
         return updatedCart;
     });
 
-    // Clear the wishlist and open the cart
     setWishlistItems([]);
     setIsWishlistOpen(false);
     setIsCartOpen(true);
@@ -214,13 +214,20 @@ export default function App() {
   const renderView = () => {
     switch (currentView) {
       case 'home':
-        return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} handleProductAction={handleProductAction} />;
+        return <HomePage 
+            onViewChange={onViewChange} 
+            isDarkMode={isDarkMode} 
+            handleProductAction={handleProductAction} 
+            wishlistItems={wishlistItems} // ⭐️ FIX: Passed wishlistItems here
+        />;
       case 'shop':
         return (
             <ProductGrid
                 onProductClick={(p) => handleProductAction('View', p)}
                 onAddToCart={(p) => handleProductAction('Add to Cart', p)}
                 onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
+                isDarkMode={isDarkMode} // ⭐️ FIX: Passed dark mode here
+                wishlistItems={wishlistItems} // ⭐️ FIX: Passed wishlistItems here
             />
         );
       case 'categories':
@@ -232,7 +239,7 @@ export default function App() {
       case 'profile':
         return <ProfilePage isDarkMode={isDarkMode} />;
       default:
-        return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} handleProductAction={handleProductAction} />;
+        return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} handleProductAction={handleProductAction} wishlistItems={wishlistItems} />;
     }
   };
 
@@ -272,7 +279,6 @@ export default function App() {
         onClose={() => setIsWishlistOpen(false)}
         wishlistItems={wishlistItems}
         onRemoveItem={handleRemoveWishlistItem}
-        // 👇 CRITICAL FIX: Restoring the handler for "Move All to Cart"
         onMoveAllToCart={handleMoveAllToCart}
         isDarkMode={isDarkMode}
       />
