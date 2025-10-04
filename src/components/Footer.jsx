@@ -75,7 +75,8 @@ export default function Footer({ onViewChange, isDarkMode }) {
         { id: 'girls', label: 'Shirts', icon: '' },
         { id: 'baby', label: 'Cord Sets', icon: '' },
         { id: 'accessories', label: 'Culotte Sets', icon: '' },
-        { id: 'dresses', label: 'Dresses', icon: '' }
+        { id: 'dresses', label: 'Dresses', icon: '' },
+        { id: 'pants', label: 'Pants', icon: '' }
 
     ];
 
@@ -262,7 +263,7 @@ export default function Footer({ onViewChange, isDarkMode }) {
                                         boxShadow: '0 8px 25px rgba(236, 72, 153, 0.3)'
                                     }}
                                     whileTap={{ scale: 0.9 }}
-                                    className={`p-3 rounded-2xl transition-all duration-300 ${getCardBg()} ${getTextColor('text-gray-600')} ${social.color} ${social.bg} shadow-lg relative group`}
+                                    className={`p-3 cursor-pointer rounded-2xl transition-all duration-300 ${getCardBg()} ${getTextColor('text-gray-600')} ${social.color} ${social.bg} shadow-lg relative group`}
                                 >
                                     <social.icon className="w-5 h-5" />
                                     <ExternalLink className="w-3 h-3 absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity text-pink-500" />
@@ -302,7 +303,7 @@ export default function Footer({ onViewChange, isDarkMode }) {
                                         backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.1)' : 'rgba(236, 72, 153, 0.1)'
                                     }}
                                     whileTap={{ scale: 0.95 }}
-                                    className={`flex items-center gap-3 ${getTextColor('text-gray-600')} ${getLinkHoverColor()} transition-all duration-300 p-2 rounded-xl w-full text-left`}
+                                    className={`flex cursor-pointer  items-center gap-3 ${getTextColor('text-gray-600')} ${getLinkHoverColor()} transition-all duration-300 p-2 rounded-xl w-full text-left`}
                                 >
                                     <span className="text-lg">{link.emoji}</span>
                                     {link.label}
@@ -342,7 +343,7 @@ export default function Footer({ onViewChange, isDarkMode }) {
                                         backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.1)' : 'rgba(236, 72, 153, 0.1)'
                                     }}
                                     whileTap={{ scale: 0.95 }}
-                                    className={`flex items-center gap-3 ${getTextColor('text-gray-600')} ${getLinkHoverColor()} transition-all duration-300 p-2 rounded-xl w-full text-left`}
+                                    className={`flex cursor-pointer items-center gap-3 ${getTextColor('text-gray-600')} ${getLinkHoverColor()} transition-all duration-300 p-2 rounded-xl w-full text-left`}
                                 >
                                     <span className="text-lg">{category.icon}</span>
                                     {category.label}
@@ -371,7 +372,7 @@ export default function Footer({ onViewChange, isDarkMode }) {
                         <div className="space-y-3">
                             <motion.button
                                 onClick={() => console.log('Opening email client! 📧')}
-                                className={`flex items-center gap-3 ${getTextColor('text-gray-600')} ${getLinkHoverColor()} transition-colors p-2 rounded-xl hover:bg-pink-50 dark:hover:bg-purple-900/20 w-full text-left`}
+                                className={`flex cursor-pointer items-center gap-3 ${getTextColor('text-gray-600')} ${getLinkHoverColor()} transition-colors p-2 rounded-xl hover:bg-pink-50 dark:hover:bg-purple-900/20 w-full text-left`}
                                 whileHover={{ x: 5 }}
                             >
                                 <Mail className="w-5 h-5 text-pink-500" />
@@ -379,7 +380,7 @@ export default function Footer({ onViewChange, isDarkMode }) {
                             </motion.button>
                             <motion.button
                                 onClick={() => console.log('Ready to call! 📞')}
-                                className={`flex items-center gap-3 ${getTextColor('text-gray-600')} ${getLinkHoverColor()} transition-colors p-2 rounded-xl hover:bg-pink-50 dark:hover:bg-purple-900/20 w-full text-left`}
+                                className={`flex cursor-pointer items-center gap-3 ${getTextColor('text-gray-600')} ${getLinkHoverColor()} transition-colors p-2 rounded-xl hover:bg-pink-50 dark:hover:bg-purple-900/20 w-full text-left`}
                                 whileHover={{ x: 5 }}
                             >
                                 <Phone className="w-5 h-5 text-pink-500" />
@@ -387,7 +388,7 @@ export default function Footer({ onViewChange, isDarkMode }) {
                             </motion.button>
                             <motion.button
                                 onClick={() => console.log('Opening location in maps! 📍')}
-                                className={`flex items-center gap-3 ${getTextColor('text-gray-600')} ${getLinkHoverColor()} transition-colors p-2 rounded-xl hover:bg-pink-50 dark:hover:bg-purple-900/20 w-full text-left`}
+                                className={`flex cursor-pointer items-center gap-3 ${getTextColor('text-gray-600')} ${getLinkHoverColor()} transition-colors p-2 rounded-xl hover:bg-pink-50 dark:hover:bg-purple-900/20 w-full text-left`}
                                 whileHover={{ x: 5 }}
                             >
                                 <MapPin className="w-5 h-5 text-pink-500" />
