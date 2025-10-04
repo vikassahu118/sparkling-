@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// Component Imports (Consolidated at the top)
+// Component Imports 
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
 import HeroSection from './components/HeroSection.jsx';
@@ -8,10 +8,12 @@ import { ProductGrid } from './components/ProductGrid.jsx';
 import About from './components/About.jsx';
 import DiscountPopup from './components/DiscountPopup.jsx';
 import { Cart } from './components/Cart.jsx';
-// 👇 FIX 1: Corrected component file paths
 import SearchModal from './components/Search.jsx'; 
 import WishlistSidebar from './components/Wishlist.jsx';
-import ProfilePage from './components/Profile.jsx'; 
+import ProfilePage from './components/EditProfilePage.jsx'; 
+import AdminPage from './components/admin/AdminPage.jsx'; 
+import AdminLogin from './components/admin/AdminLogin.jsx'; 
+import CustomerAuth from './components/CustomerAuth.jsx';
 
 
 // --- Placeholder Page Components ---
@@ -21,7 +23,6 @@ const Deals = () => <div className="text-center py-40 text-4xl font-bold text-pu
 
 
 // ⬅️ Component: Combines Hero and ProductGrid for the Home View
-// FIX 2: Added missing 'wishlistItems' prop
 const HomePage = ({ onViewChange, isDarkMode, handleProductAction, wishlistItems }) => ( 
     <>
         <HeroSection 
@@ -33,8 +34,8 @@ const HomePage = ({ onViewChange, isDarkMode, handleProductAction, wishlistItems
             onProductClick={(p) => handleProductAction('View', p)}
             onAddToCart={(p) => handleProductAction('Add to Cart', p)}
             onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
-            isDarkMode={isDarkMode} // Passed for filter sidebar
-            wishlistItems={wishlistItems} // Passed for heart coloring
+            isDarkMode={isDarkMode} 
+            wishlistItems={wishlistItems} 
         />
     </>
 );
@@ -51,6 +52,10 @@ export default function App() {
   const [isCartOpen, setIsCartOpen] = useState(false); 
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   
+  // State for Authentication/Role Tracking
+  const [currentUserRole, setCurrentUserRole] = useState(null); // 'admin', 'product_manager', 'user', or null
+  const [currentUserName, setCurrentUserName] = useState(null); 
+  
   // Data states
   const [wishlistItems, setWishlistItems] = useState([]); 
   const [cartItems, setCartItems] = useState([]);
@@ -64,7 +69,39 @@ export default function App() {
   // --- Handlers ---
   const toggleTheme = () => setIsDarkMode(prev => !prev);
   
-  const onProfileClick = () => onViewChange('profile'); 
+  // ⭐️ CRITICAL FIX: Profile Click Logic is now ONLY for general users
+  const onProfileClick = () => {
+    // 1. Logged in as a standard Customer: Go to Profile Page
+    if (currentUserRole === 'user') {
+        onViewChange('profile'); 
+    } 
+    // 2. Not logged in (or logged in as Admin/Manager—who shouldn't use this button): Go to Customer Login/Signup
+    else {
+        onViewChange('user_auth'); 
+    }
+  };
+
+  // Handler for Customer Login Success
+  const handleCustomerLoginSuccess = (name, role) => {
+    setCurrentUserName(name);
+    setCurrentUserRole(role);
+    onViewChange('profile'); // Redirect to profile page
+  }
+
+  // Handler for Admin/Manager Login Success (Used by AdminLogin component)
+  const handleManagerLoginSuccess = (role) => {
+    setCurrentUserName(role.toUpperCase().replace('_', ' '));
+    setCurrentUserRole(role);
+    onViewChange('admin'); // Redirect to admin dashboard
+  };
+  
+  // Generic Logout Handler
+  const handleLogout = () => {
+    setCurrentUserRole(null);
+    setCurrentUserName(null);
+    onViewChange('home');
+  };
+
 
   const onViewChange = (viewId) => {
     setCurrentView(viewId);
@@ -91,20 +128,15 @@ export default function App() {
           setWishlistItems(prev => {
               const exists = prev.some(item => item.id === actualProduct.id);
               if (exists) {
-                  // Remove the item (heart toggles off)
-                  console.log("Item removed from wishlist.");
                   return prev.filter(item => item.id !== actualProduct.id);
               } else {
-                  // Add the item (heart toggles on)
                   const newItem = { 
                     ...actualProduct, 
                     id: actualProduct.id || Date.now(), 
                     name: actualProduct.name, 
                     price: actualProduct.price 
                   };
-                  // Open sidebar ONLY when adding
                   setIsWishlistOpen(true); 
-                  console.log("Item added to wishlist.");
                   return [...prev, newItem];
               }
           });
@@ -156,12 +188,10 @@ export default function App() {
                 : item
         );
     });
-    console.log(`Updated item ${itemId} quantity to ${newQuantity}`);
   };
 
   const handleRemoveItem = (itemId) => { 
     setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
-    console.log(`Removed item ${itemId} from cart.`);
   };
 
   const handleCheckout = () => { 
@@ -174,7 +204,6 @@ export default function App() {
     setDiscounts(prev => [...prev, { code: discountCode, amount: 5.00 }]);
   };
   
-  // MOVE ALL TO CART LOGIC (Unchanged)
   const handleMoveAllToCart = () => {
     if (wishlistItems.length === 0) return;
 
@@ -199,7 +228,6 @@ export default function App() {
     setWishlistItems([]);
     setIsWishlistOpen(false);
     setIsCartOpen(true);
-    console.log('Moved all items from wishlist to cart.');
   };
   
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
@@ -212,13 +240,18 @@ export default function App() {
 
   // --- Router/Render Logic ---
   const renderView = () => {
+    // ⭐️ Check if the user is an Admin/Manager: if so, ONLY show the admin page
+    if (currentView === 'admin' && (currentUserRole === 'admin' || currentUserRole === 'product_manager' || currentUserRole === 'finance_manager')) {
+        return <AdminPage isDarkMode={isDarkMode} onViewChange={onViewChange} userRole={currentUserRole} />;
+    }
+    
     switch (currentView) {
       case 'home':
         return <HomePage 
             onViewChange={onViewChange} 
             isDarkMode={isDarkMode} 
             handleProductAction={handleProductAction} 
-            wishlistItems={wishlistItems} // ⭐️ FIX: Passed wishlistItems here
+            wishlistItems={wishlistItems}
         />;
       case 'shop':
         return (
@@ -226,8 +259,8 @@ export default function App() {
                 onProductClick={(p) => handleProductAction('View', p)}
                 onAddToCart={(p) => handleProductAction('Add to Cart', p)}
                 onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
-                isDarkMode={isDarkMode} // ⭐️ FIX: Passed dark mode here
-                wishlistItems={wishlistItems} // ⭐️ FIX: Passed wishlistItems here
+                isDarkMode={isDarkMode}
+                wishlistItems={wishlistItems}
             />
         );
       case 'categories':
@@ -236,8 +269,17 @@ export default function App() {
         return <Deals />;
       case 'about':
         return <About onViewChange={onViewChange} />;
+      
+      // Standard Customer Routes
       case 'profile':
-        return <ProfilePage isDarkMode={isDarkMode} />;
+        return <ProfilePage isDarkMode={isDarkMode} onLogout={handleLogout} />;
+      case 'user_auth':
+        return <CustomerAuth isDarkMode={isDarkMode} onLoginSuccess={handleCustomerLoginSuccess} />;
+
+      // ⭐️ Admin/Manager Routes (Accessed via hidden URL/direct routing)
+      case 'admin_login': 
+        return <AdminLogin isDarkMode={isDarkMode} onLoginSuccess={handleManagerLoginSuccess} />;
+      
       default:
         return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} handleProductAction={handleProductAction} wishlistItems={wishlistItems} />;
     }
@@ -255,7 +297,7 @@ export default function App() {
         onCartClick={() => setIsCartOpen(true)}
         onSearchClick={() => setIsSearchOpen(true)}
         onWishlistClick={() => setIsWishlistOpen(true)}
-        onProfileClick={onProfileClick} 
+        onProfileClick={onProfileClick} // Now only routes general customers
         currentView={currentView}
         onViewChange={onViewChange}
       />
