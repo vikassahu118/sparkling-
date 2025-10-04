@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ShoppingCart, Star, Eye, ChevronDown, Filter, X } from 'lucide-react';
@@ -21,6 +19,7 @@ const Button = ({ children, className, onClick, ...props }) => (
   </button>
 );
 
+// --- Memoized Price Range Slider Component for Performance (Unchanged) ---
 const PriceRangeSlider = React.memo(({ min, max, step, price, setPrice, isDarkMode }) => {
   const [minVal, setMinVal] = useState(price.min);
   const [maxVal, setMaxVal] = useState(price.max);
@@ -53,6 +52,8 @@ const PriceRangeSlider = React.memo(({ min, max, step, price, setPrice, isDarkMo
   );
 });
 
+
+// --- Enhanced Filter Sidebar/Drawer Component (Unchanged) ---
 const FilterSidebar = ({ isOpen, onClose, filters, setFilters, products, defaultFilters, isDarkMode }) => {
   const isMobile = window.innerWidth < 768;
   const AVAILABLE_SIZES = ['XS', 'S', 'M', 'L', 'XL'];
@@ -78,9 +79,18 @@ const FilterSidebar = ({ isOpen, onClose, filters, setFilters, products, default
   );
 };
 
+
+// --- Memoized Product Card for Performance (Unchanged) ---
 const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToWishlist, isWishlisted }) => { 
   const [isHovered, setIsHovered] = useState(false);
-  const productForAction = useMemo(() => ({ id: product.id, name: product.name, price: product.discountedPrice, image: product.image }), [product]);
+  
+  const productForAction = useMemo(() => ({
+    id: product.id,
+    name: product.name,
+    price: product.discountedPrice, 
+    image: product.image,
+  }), [product]);
+
   return (
     <motion.div layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="group bg-white dark:bg-gray-800 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       <div className="relative overflow-hidden">
@@ -100,69 +110,176 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
   );
 });
 
+// --- Main Product Grid Component ---
 export const ProductGrid = ({ products = [], onProductClick = () => {}, onAddToCart = () => {}, onAddToWishlist = () => {}, isDarkMode, wishlistItems = [] }) => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const dropdownRef = useRef(null); // Ref for the dropdown
+    // ⭐️ Ref to track the dropdown container
+    const dropdownRef = useRef(null); 
+    
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState('All');
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    
+    // Determine the max/min bounds for the price slider based on available products
+    const maxProductPrice = useMemo(() => Math.max(...products.map(p => p.originalPrice || 0), 5000), [products]);
+    const minProductPrice = useMemo(() => Math.min(...products.map(p => p.originalPrice || 500), 500), [products]);
 
-  const maxProductPrice = useMemo(() => Math.max(...products.map(p => p.originalPrice || 0), 5000), [products]);
-  const minProductPrice = useMemo(() => Math.min(...products.map(p => p.originalPrice || 500), 500), [products]);
+    const defaultFilters = useMemo(() => ({
+        price: { min: minProductPrice, max: maxProductPrice }, 
+        color: null, 
+        sizes: [],
+    }), [minProductPrice, maxProductPrice]);
 
-  const defaultFilters = useMemo(() => ({ price: { min: minProductPrice, max: maxProductPrice }, color: null, sizes: [] }), [minProductPrice, maxProductPrice]);
-  const [filters, setFilters] = useState(defaultFilters);
-  
-  useEffect(() => { setFilters(defaultFilters); }, [defaultFilters]);
+    const [filters, setFilters] = useState(defaultFilters);
+    
+    // Reset filters when the list of products changes (e.g., after initial load or admin update)
+    useEffect(() => {
+      setFilters(defaultFilters);
+    }, [defaultFilters]);
 
-  // ⭐ FIX: Add effect to close dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
+    // ⭐️ EFFECT to handle click outside
+    useEffect(() => {
+        function handleClickOutside(event) {
+            // Check if the dropdown is open AND if the click happened outside the dropdown element
+            if (isDropdownOpen && dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsDropdownOpen(false);
+            }
+        }
+        
+        // Bind the event listener
+        document.addEventListener("mousedown", handleClickOutside);
+        // Unbind the event listener on cleanup
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isDropdownOpen]); // Re-run effect whenever dropdown state changes
+
+    // USE PRODUCTS PROP DIRECTLY
+    const productsToUse = products; 
+    const categories = useMemo(() => ['All', ...new Set(productsToUse.map(p => p.category))], [productsToUse]);
+
+    const filteredProducts = useMemo(() => {
+        return productsToUse.filter(p => 
+            (selectedCategory === 'All' || p.category === selectedCategory) &&
+            (p.discountedPrice >= filters.price.min && p.discountedPrice <= filters.price.max) &&
+            (!filters.color || (p.colors && p.colors.includes(filters.color))) && 
+            (filters.sizes.length === 0 || p.sizes.some(s => filters.sizes.includes(s)))
+        );
+    }, [selectedCategory, filters, productsToUse]);
+
+    const activeFilterCount = useMemo(() => {
+        let count = 0;
+        if (filters.price.min !== defaultFilters.price.min || filters.price.max !== defaultFilters.price.max) count++;
+        if (filters.color) count++;
+        if (filters.sizes.length > 0) count++;
+        return count;
+    }, [filters, defaultFilters]);
+
+    const handleCategorySelect = (category) => {
+        setSelectedCategory(category);
+        setIsDropdownOpen(false); // Close after selection
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [dropdownRef]);
 
-  const productsToUse = products; 
-  const categories = useMemo(() => ['All', ...new Set(productsToUse.map(p => p.category))], [productsToUse]);
+    const removeFilter = (type, value = null) => {
+        if (type === 'price') setFilters(p => ({ ...p, price: defaultFilters.price }));
+        if (type === 'color') setFilters(p => ({ ...p, color: null }));
+        if (type === 'size') setFilters(p => ({ ...p, sizes: p.sizes.filter(s => s !== value) }));
+    };
 
-  const filteredProducts = useMemo(() => {
-    return productsToUse.filter(p => (selectedCategory === 'All' || p.category === selectedCategory) && (p.discountedPrice >= filters.price.min && p.discountedPrice <= filters.price.max) && (!filters.color || (p.colors && p.colors.includes(filters.color))) && (filters.sizes.length === 0 || p.sizes.some(s => filters.sizes.includes(s))));
-  }, [selectedCategory, filters, productsToUse]);
+    return (
+        <section className="py-16 px-4 min-h-screen font-sans ">
+            <div className="container mx-auto">
+                <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-8">
+                    <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-4">Featured Products 🌟</h2>
+                    <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">Handpicked favorites that kids love and parents trust</p>
+                </motion.div>
 
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (filters.price.min !== defaultFilters.price.min || filters.price.max !== defaultFilters.price.max) count++;
-    if (filters.color) count++;
-    if (filters.sizes.length > 0) count++;
-    return count;
-  }, [filters, defaultFilters]);
+                <div className="flex justify-center items-center gap-4 mb-4">
+                    {/* ⭐️ DROPDOWN CONTAINER ATTACHED TO REF */}
+                    <div className="relative" ref={dropdownRef}> 
+                        <Button onClick={() => setIsDropdownOpen(p => !p)} className="inline-flex items-center justify-center min-w-[200px] rounded-full border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            {selectedCategory === 'All' ? 'All Categories' : `Showing: ${selectedCategory}`}
+                            <ChevronDown className={`ml-2 h-5 w-5 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                        </Button>
+                        <AnimatePresence>
+                            {isDropdownOpen && 
+                                <motion.div 
+                                    initial={{ opacity: 0, y: -10 }} 
+                                    animate={{ opacity: 1, y: 0 }} 
+                                    exit={{ opacity: 0, y: -10 }} 
+                                    transition={{ duration: 0.2 }} 
+                                    className="origin-top-left absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 z-20"
+                                >
+                                    <div className="py-1">
+                                        {categories.map(c => 
+                                            <a 
+                                                key={c} 
+                                                href="#" 
+                                                onClick={e => {e.preventDefault(); handleCategorySelect(c);}} 
+                                                className={`block px-4 py-2 text-sm ${selectedCategory === c ? 'font-bold text-pink-600 dark:text-pink-400' : 'text-gray-700 dark:text-gray-200'} hover:bg-gray-100 dark:hover:bg-gray-600`}
+                                            >
+                                                {c}
+                                            </a>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            }
+                        </AnimatePresence>
+                    </div>
+                    
+                    <Button onClick={() => setIsFilterOpen(true)} className="relative flex items-center gap-2 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <Filter className="h-4 w-4" /> Filters
+                        {activeFilterCount > 0 && <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-xs font-bold text-white">{activeFilterCount}</span>}
+                    </Button>
+                </div>
+                
+                <AnimatePresence>
+                {activeFilterCount > 0 &&
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex justify-center items-center gap-2 mb-8 flex-wrap">
+                        {(filters.price.min !== defaultFilters.price.min || filters.price.max !== defaultFilters.price.max) && <Badge className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 flex items-center gap-1.5">Price: ₹{filters.price.min}-{filters.price.max} <button onClick={() => removeFilter('price')}><X className="w-3.5 h-3.5" /></button></Badge>}
+                        {filters.color && <Badge className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 flex items-center gap-1.5 capitalize">{filters.color} <button onClick={() => removeFilter('color')}><X className="w-3.5 h-3.5" /></button></Badge>}
+                        {filters.sizes.map(s => <Badge key={s} className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 flex items-center gap-1.5">{s} <button onClick={() => removeFilter('size', s)}><X className="w-3.5 h-3.5" /></button></Badge>)}
+                    </motion.div>
+                }
+                </AnimatePresence>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    {filteredProducts.length > 0 ? (
+                        filteredProducts.map(product => {
+                            const isProductWishlisted = wishlistItems.some(item => item.id === product.id);
 
-  return (
-    <section className="py-16 px-4 min-h-screen font-sans">
-      <div className="container mx-auto">
-        <div className="text-center mb-8"><h2 className="text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text  mb-4"><span className='text-transparent'> Featured Products</span> 🌟</h2></div>
-        <div className="flex justify-center items-center gap-4 mb-4">
-          {/* ⭐ FIX: Attach ref to the dropdown container */}
-          <div className="relative" ref={dropdownRef}>
-            <Button onClick={() => setIsDropdownOpen(p => !p)} className="inline-flex items-center justify-center min-w-[200px] rounded-full border dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
-              {selectedCategory === 'All' ? 'All Categories' : `Showing: ${selectedCategory}`} <ChevronDown className={`ml-2 h-5 w-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-            </Button>
-            <AnimatePresence>{isDropdownOpen && <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="origin-top-left absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 z-20"><div className="py-1">{categories.map(c => <a key={c} href="#" onClick={e => {e.preventDefault(); setSelectedCategory(c); setIsDropdownOpen(false);}} className={`block px-4 py-2 text-sm ${selectedCategory === c ? 'font-bold text-pink-600 dark:text-pink-400' : 'dark:text-gray-200'} hover:bg-gray-100 dark:hover:bg-gray-600`}>{c}</a>)}</div></motion.div>}</AnimatePresence>
-          </div>
-          <Button onClick={() => setIsFilterOpen(true)} className="relative flex items-center gap-2 rounded-full border dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
-            <Filter className="h-4 w-4" /> Filters {activeFilterCount > 0 && <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-xs font-bold text-white">{activeFilterCount}</span>}
-          </Button>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {filteredProducts.map(product => (<ProductCard key={product.id} product={product} onProductClick={onProductClick} onAddToCart={onAddToCart} onAddToWishlist={onAddToWishlist} isWishlisted={wishlistItems.some(item => item.id === product.id)} />))}
-        </div>
-      </div>
-      <FilterSidebar isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} filters={filters} setFilters={setFilters} products={productsToUse} defaultFilters={defaultFilters} isDarkMode={isDarkMode} />
-    </section>
-  );
+                            return (
+                                <ProductCard 
+                                    key={product.id} 
+                                    product={product} 
+                                    onProductClick={onProductClick} 
+                                    onAddToCart={onAddToCart} 
+                                    onAddToWishlist={onAddToWishlist} 
+                                    isWishlisted={isProductWishlisted} 
+                                />
+                            );
+                        })
+                    ) : (
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="col-span-full text-center py-12">
+                            <h3 className="text-2xl font-semibold text-gray-700 dark:text-gray-200">No Products Found 😔</h3>
+                            <p className="text-gray-500 mt-2">Try adjusting your filters to find what you're looking for!</p>
+                        </motion.div>
+                    )}
+                </div>
+            </div>
+            
+            <FilterSidebar 
+              isOpen={isFilterOpen} 
+              onClose={() => setIsFilterOpen(false)} 
+              filters={filters} 
+              setFilters={setFilters} 
+              products={productsToUse} 
+              defaultFilters={defaultFilters} 
+              isDarkMode={isDarkMode} 
+              min={minProductPrice} 
+              max={maxProductPrice} 
+            />
+        </section>
+    );
 };
 
 // --- Helper & UI Components (Unchanged) ---

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Users, Package, TrendingUp, X, ChevronRight, Edit3, Trash2, DollarSign, BarChart2, Zap, CornerDownRight, Plus, MapPin, Phone, Mail, Save, Tag } from 'lucide-react';
+import { ShoppingBag, Users, Package, TrendingUp, X, ChevronRight, Edit3, Trash2, DollarSign, BarChart2, Zap, CornerDownRight, Plus, MapPin, Phone, Mail, Save, Tag, Image as ImageIcon } from 'lucide-react'; // Added Image icon
 
 // NOTE: This dashboard uses mock data and pure local state management. 
 
@@ -31,8 +31,8 @@ const MOCK_DAILY_SALES = [
 
 // Reusable Dashboard Card Component (Unchanged)
 const DashboardCard = ({ title, value, icon: Icon, colorClass, linkLabel, onClick }) => (
-    <motion.div
-        whileHover={{ y: -5, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}
+    <motion.div 
+        whileHover={{ y: -5, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }} 
         className={`rounded-2xl p-6 shadow-xl transition-all duration-300 ${colorClass}`}
     >
         <div className="flex justify-between items-start">
@@ -50,7 +50,7 @@ const DashboardCard = ({ title, value, icon: Icon, colorClass, linkLabel, onClic
     </motion.div>
 );
 
-const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }) => {
+const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }) => { 
     // Shared Refund State
     const [refundQueue, setRefundQueue] = useState(MOCK_REFUND_QUEUE);
 
@@ -62,7 +62,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
 
     const [activeSection, setActiveSection] = useState(initialSection);
     // FIX: Orders and Users remain local state within AdminPage, mock data is used here
-    const [orders, setOrders] = useState(MOCK_ORDERS);
+    const [orders, setOrders] = useState(MOCK_ORDERS); 
     const [users, setUsers] = useState(MOCK_USERS);
 
     const containerClasses = isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900';
@@ -102,7 +102,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
         if (!userRole) return [];
         return allNavItems.filter(item => item.roles.includes(userRole));
     }, [userRole, allNavItems]);
-
+    
     // Fallback to the first available section if the current one is restricted
     useEffect(() => {
         if (activeSection === 'dashboard' && userRole !== 'admin') {
@@ -114,7 +114,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
     return (
         <div className={`min-h-screen flex ${containerClasses}`}>
             {/* Sidebar */}
-            <motion.div
+            <motion.div 
                 initial={{ x: -50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.3 }}
                 className={`w-64 p-6 flex flex-col ${sidebarClasses} sticky top-0 h-screen`}
             >
@@ -127,10 +127,11 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
                             key={item.id}
                             onClick={() => setActiveSection(item.id)}
                             whileHover={{ x: 5 }}
-                            className={`w-full text-left flex items-center p-3 rounded-xl transition-all duration-200 ${activeSection === item.id
+                            className={`w-full text-left flex items-center p-3 rounded-xl transition-all duration-200 ${
+                                activeSection === item.id
                                     ? 'bg-pink-500 text-white shadow-lg'
                                     : 'text-gray-400 hover:bg-gray-700/50 hover:text-white dark:text-gray-300 dark:hover:bg-gray-700'
-                                }`}
+                            }`}
                         >
                             <item.icon className="w-5 h-5 mr-3" />
                             <span className="font-medium">{item.label}</span>
@@ -139,11 +140,11 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
                 </nav>
                 <div className="pt-6 border-t border-gray-700/50">
                     <motion.button
-                        onClick={() => onViewChange('admin_login')}
+                        onClick={() => onViewChange('admin_login')} 
                         className={`w-full text-left flex items-center p-3 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors`}
                     >
                         <X className="w-5 h-5 mr-3" />
-                        <span className="font-medium">Logout Admin</span>
+                        <span className="font-medium">Exit Admin</span>
                     </motion.button>
                 </div>
             </motion.div>
@@ -168,16 +169,16 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
 const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, userRole }) => {
     // ... (content of Dashboard)
     const canViewFinance = userRole === 'admin' || userRole === 'finance_manager';
-
-    const totalRevenue = 52100.00;
+    
+    const totalRevenue = 52100.00; 
     const netProfit = 18500.00;
     const pendingTickets = 14;
-
+    
     const totalOrders = orders.length;
     const lowStockItems = products.filter(p => p.stock <= 10 && p.stock > 0).length;
     const outOfStockItems = products.filter(p => p.stock === 0).length;
-    const totalSells = 1250;
-    const totalTraffic = 8900;
+    const totalSells = 1250; 
+    const totalTraffic = 8900; 
 
     const financeCards = [
         { title: "Total Revenue", value: `₹${totalRevenue.toLocaleString()}`, icon: DollarSign, colorClass: "bg-gradient-to-r from-pink-500 to-purple-600 text-white", linkLabel: "View Sales", section: 'finance' },
@@ -192,7 +193,7 @@ const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, user
         { title: "Stock Alerts", value: lowStockItems + outOfStockItems, icon: Package, colorClass: "bg-gradient-to-r from-orange-500 to-red-600 text-white", linkLabel: "Fix Inventory", section: 'products' },
         { title: "Active Users", value: users.length, icon: Users, colorClass: "bg-gradient-to-r from-green-500 to-teal-600 text-white", linkLabel: "View Users", section: 'users' },
     ];
-
+    
     const renderedCards = [...financeCards, ...operationalCards].filter(card => {
         if (card.section === 'finance' && !canViewFinance) return false;
         if (card.section === 'products' && userRole === 'finance_manager') return false;
@@ -205,18 +206,18 @@ const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, user
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="space-y-10">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {renderedCards.map((card, index) => (
-                    <DashboardCard
+                    <DashboardCard 
                         key={index}
-                        title={card.title}
-                        value={card.value}
-                        icon={card.icon}
+                        title={card.title} 
+                        value={card.value} 
+                        icon={card.icon} 
                         colorClass={card.colorClass}
                         linkLabel={card.linkLabel}
                         onClick={() => setActiveSection(card.section)}
                     />
                 ))}
             </div>
-
+            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {(userRole === 'admin' || userRole === 'product_manager') && (
                     <div className="p-6 rounded-2xl bg-white dark:bg-gray-800 shadow-lg">
@@ -233,7 +234,7 @@ const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, user
                         </ul>
                     </div>
                 )}
-
+                
                 {(userRole === 'admin' || userRole === 'product_manager') && (
                     <div className="p-6 rounded-2xl bg-white dark:bg-gray-800 shadow-lg">
                         <h3 className="text-xl font-bold mb-4 text-cyan-500 dark:text-cyan-400">Recent Orders</h3>
@@ -254,20 +255,21 @@ const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, user
 
 // --- Product Management Modal Component (New) ---
 const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
-    // ... (content of ProductFormModal - Unchanged)
+    // Determine if we are adding a new product or editing an existing one
     const isEditing = !!product;
-
+    
     // NOTE: Added discountedPrice, originalPrice, and discount to initial state
-    const [formData, setFormData] = useState(product ? {
+    const [formData, setFormData] = useState(product ? { 
         ...product, // Use existing product data
         originalPrice: product.originalPrice || product.price, // Fallback for price property
         discountedPrice: product.discountedPrice || product.price,
         images: product.images || [],
-        newImageColor: '',
+        newImageColor: '', 
         newImageUrl: '',
+        newImageFile: null, // ⭐️ NEW: State for file upload
     } : {
         // Initial state for new product
-        id: Date.now().toString(), name: '', price: 0, stock: 0, category: 'Tops', description: '', images: [], newImageColor: '', newImageUrl: '', discountedPrice: 0, originalPrice: 0, discount: 0, rating: 4.5, reviews: 0, colors: [], sizes: ['S', 'M'],
+        id: Date.now().toString(), name: '', price: 0, stock: 0, category: 'Tops', description: '', images: [], newImageColor: '', newImageUrl: '', discountedPrice: 0, originalPrice: 0, discount: 0, rating: 4.5, reviews: 0, colors: [], sizes: ['S', 'M'], newImageFile: null
     });
 
     // List of common colors and their Tailwind classes
@@ -296,7 +298,7 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
         // Recalculate discount whenever price fields change
         const discountValue = calculateDiscount(formData.originalPrice, formData.discountedPrice);
         if (discountValue !== formData.discount) {
-            setFormData(p => ({ ...p, discount: discountValue }));
+             setFormData(p => ({ ...p, discount: discountValue }));
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formData.originalPrice, formData.discountedPrice, calculateDiscount]);
@@ -304,21 +306,37 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
     const handleChange = (e) => {
         const { name, value, type } = e.target;
         const finalValue = type === 'number' ? Number(value) : value;
-
+        
         setFormData(p => ({
             ...p,
             [name]: finalValue
         }));
     };
-
+    
     const handleColorSelect = (colorValue) => {
         setFormData(p => ({
             ...p,
             newImageColor: colorValue
         }));
     };
-
+    
+    // ⭐️ NEW HANDLER: Reads the uploaded file and converts it to Base64 URL
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                // reader.result is the Base64 data URL
+                setFormData(p => ({ ...p, newImageUrl: reader.result }));
+            };
+            reader.readAsDataURL(file);
+        } else {
+             setFormData(p => ({ ...p, newImageUrl: '' }));
+        }
+    };
+    
     const handleImageAdd = () => {
+        // ⭐️ CHECK FOR Base64 URL instead of external URL
         if (formData.newImageUrl && formData.newImageColor) {
             // Check if color already exists
             if (formData.images.some(img => img.color === formData.newImageColor)) {
@@ -333,10 +351,10 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                 colors: [...new Set([...p.colors, p.newImageColor])], // Auto-update colors array
             }));
         } else {
-            alert('Please select a color and provide an Image URL.');
+            alert('Please select a color and upload an Image.');
         }
     };
-
+    
     const handleImageRemove = (index) => {
         setFormData(p => {
             const newImages = p.images.filter((_, i) => i !== index);
@@ -349,7 +367,7 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
             };
         });
     };
-
+    
     const handleSubmit = (e) => {
         e.preventDefault();
         // Set the primary price used in cart/wishlist to the discounted price
@@ -357,7 +375,7 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
         onSave(dataToSave);
         onClose();
     };
-
+    
     const inputClasses = `w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:text-white`;
     const headerClasses = isDarkMode ? 'text-purple-400' : 'text-pink-600';
 
@@ -380,10 +398,10 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                     <div className="space-y-4">
                         <label className="block font-semibold">Name</label>
                         <input type="text" name="name" value={formData.name} onChange={handleChange} className={inputClasses} required />
-
+                        
                         <label className="block font-semibold">Description</label>
                         <textarea name="description" value={formData.description} onChange={handleChange} className={inputClasses} rows="4" required />
-
+                        
                         <label className="block font-semibold">Category</label>
                         <select name="category" value={formData.category} onChange={handleChange} className={inputClasses} required>
                             <option value="Tops">Tops</option>
@@ -416,11 +434,11 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                             </div>
                         </div>
                     </div>
-
+                    
                     {/* Column 2: Photos and Colors */}
                     <div className="space-y-4">
                         <label className="block font-semibold">1. Select Color & Add Photo ({formData.images.length})</label>
-
+                        
                         {/* ⭐️ Color Selector Palette */}
                         <div className="flex flex-wrap gap-2 p-3 rounded-lg border dark:border-gray-700">
                             {AVAILABLE_COLORS.map(color => (
@@ -428,36 +446,50 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                                     key={color.value}
                                     type="button"
                                     onClick={() => handleColorSelect(color.value)}
-                                    className={`w-8 h-8 rounded-full shadow-md transition-all duration-150 ${color.class} ${formData.newImageColor === color.value
-                                            ? 'ring-4 ring-offset-2 ring-pink-500 dark:ring-offset-gray-800'
+                                    className={`w-8 h-8 rounded-full shadow-md transition-all duration-150 ${color.class} ${
+                                        formData.newImageColor === color.value 
+                                            ? 'ring-4 ring-offset-2 ring-pink-500 dark:ring-offset-gray-800' 
                                             : 'hover:scale-110'
-                                        }`}
+                                    }`}
                                     aria-label={`Select color ${color.name}`}
                                     title={color.name}
                                 />
                             ))}
                         </div>
-
-                        {/* Image Input */}
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                name="newImageUrl"
-                                placeholder="Image URL (mock)"
-                                value={formData.newImageUrl}
-                                onChange={handleChange}
+                        
+                        {/* ⭐️ FIX: File Upload Input */}
+                        <label className="block font-semibold">2. Upload Image File</label>
+                        <div className="flex items-center gap-2">
+                            <input 
+                                type="file" 
+                                accept="image/*"
+                                onChange={handleFileChange} 
                                 className={`${inputClasses} flex-grow`}
                             />
-                            {/* Removed text input for color name */}
-                            <button type="button" onClick={handleImageAdd} className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600"><Plus className="w-5 h-5" /></button>
                         </div>
-
+                        
+                        {/* ⭐️ Current Image Preview */}
+                        {formData.newImageUrl && formData.newImageColor && (
+                            <div className="flex items-center gap-2 p-2 border rounded-lg dark:border-gray-700">
+                                <img src={formData.newImageUrl} alt="Preview" className="w-12 h-12 object-cover rounded-md" />
+                                <span className="text-sm">Ready to add: **{formData.newImageColor.toUpperCase()}**</span>
+                            </div>
+                        )}
+                        
+                        {/* Add Button */}
+                        <button type="button" onClick={handleImageAdd} className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold flex items-center justify-center">
+                            <Plus className="w-5 h-5 mr-2" /> Add Photo to Product
+                        </button>
+                        
+                        
                         {/* Image List */}
                         <div className="space-y-2 max-h-40 overflow-y-auto p-2 border rounded-lg dark:border-gray-700">
                             {formData.images.map((img, index) => (
                                 <div key={index} className="flex justify-between items-center p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
-                                    <span className="text-sm font-medium">{img.color.toUpperCase()}</span>
-                                    <span className="text-xs text-gray-500 truncate mx-2">{img.url.substring(0, 30)}...</span>
+                                    <div className="flex items-center gap-2">
+                                        <ImageIcon className="w-4 h-4" />
+                                        <span className="text-sm font-medium">{img.color.toUpperCase()}</span>
+                                    </div>
                                     <button type="button" onClick={() => handleImageRemove(index)} className="text-red-500 hover:text-red-700">
                                         <Trash2 className="w-4 h-4" />
                                     </button>
@@ -465,14 +497,14 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                             ))}
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Current Colors: {formData.colors.length > 0 ? formData.colors.join(', ') : 'None'}</p>
-
+                        
                         {/* Status/Rating (Static for simplicity, but included in data model) */}
-                        <div className="grid grid-cols-2 gap-4 pt-2">
+                         <div className="grid grid-cols-2 gap-4 pt-2">
                             <div>
                                 <label className="block font-semibold">Rating (Mock)</label>
                                 <p className="p-2 font-medium text-yellow-500">{formData.rating || 'N/A'}</p>
                             </div>
-                            <div>
+                             <div>
                                 <label className="block font-semibold">Reviews (Mock)</label>
                                 <p className="p-2 font-medium">{formData.reviews || 0}</p>
                             </div>
@@ -493,11 +525,10 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
 
 // --- Product Management Section (Product Manager/Admin) ---
 const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses, userRole }) => {
-    // ... (content of ProductManagement - Unchanged)
     const [activeTab, setActiveTab] = useState('products');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [productToEdit, setProductToEdit] = useState(null); // Holds product data if editing
-
+    
     // Admin can manage coupons; Product Manager can only see the Product Inventory tab
     const canManageCoupons = userRole === 'admin';
     const canEditProducts = userRole === 'admin' || userRole === 'product_manager';
@@ -518,7 +549,7 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
             console.log(`Deleted product ${product.id}`);
         }
     };
-
+    
     const handleProductSave = (formData) => {
         // Ensure price fields are numeric and map 'price' to 'discountedPrice' for consistency
         const savedData = {
@@ -543,12 +574,12 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
 
     return (
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
-
-            <ProductFormModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                isDarkMode={isDarkMode}
-                product={productToEdit}
+            
+            <ProductFormModal 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+                isDarkMode={isDarkMode} 
+                product={productToEdit} 
                 onSave={handleProductSave}
             />
 
@@ -563,18 +594,18 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
                     </button>
                 )}
             </div>
-
+            
             {activeTab === 'products' && (
                 <div className="space-y-6">
                     {canEditProducts && (
-                        <button
+                        <button 
                             className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold transition-colors"
                             onClick={() => handleAction('Add', null)}
                         >
                             + Add New Product
                         </button>
                     )}
-
+                    
                     <div className={`overflow-x-auto ${cardBaseClasses} rounded-xl shadow-lg`}>
                         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead className="bg-gray-100 dark:bg-gray-700">
@@ -623,7 +654,7 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
 
 // --- Order Management Section (Product Manager/Admin) ---
 const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBaseClasses, userRole }) => {
-    // ... (content of OrderManagement - Unchanged)
+    // ... (content of OrderManagement)
     const canManageOrders = userRole === 'admin' || userRole === 'product_manager';
     const [selectedOrder, setSelectedOrder] = useState(null); // For detail view
 
@@ -632,12 +663,12 @@ const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBa
         console.log(`Order ${orderId} tracking status updated to ${newStatus}`);
         setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
     };
-
+    
     // Mock function to raise a refund request
     const handleRefundRequest = (order) => {
         const refundReason = prompt(`Reason for refund/return request for Order ${order.id}?`);
         if (refundReason) {
-            const newRequest = {
+             const newRequest = {
                 id: 'R' + Date.now(),
                 orderId: order.id,
                 customer: order.customer,
@@ -650,7 +681,7 @@ const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBa
             alert(`Refund request for Order ${order.id} sent to Finance Manager.`);
         }
     };
-
+    
     const getStatusBadge = (status) => {
         let classes = "px-2 py-0.5 rounded-full text-xs font-semibold";
         if (status === 'Delivered') return <span className={`bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 ${classes}`}>{status}</span>;
@@ -662,7 +693,7 @@ const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBa
 
     return (
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
-
+            
             {/* Order Detail Modal */}
             {selectedOrder && (
                 <OrderDetailModal order={selectedOrder} isDarkMode={isDarkMode} onClose={() => setSelectedOrder(null)} />
@@ -683,7 +714,7 @@ const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBa
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {orders.map((o) => (
                             <tr key={o.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                <td
+                                <td 
                                     className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-pink-600 dark:text-pink-400 cursor-pointer hover:underline"
                                     onClick={() => setSelectedOrder(o)} // Open detail modal
                                 >
@@ -696,8 +727,8 @@ const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBa
                                 </td>
                                 {canManageOrders && (
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                        <select
-                                            value={o.status}
+                                        <select 
+                                            value={o.status} 
                                             onChange={(e) => handleStatusUpdate(o.id, e.target.value)}
                                             className="p-1 rounded-lg border dark:bg-gray-700 dark:border-gray-600 text-sm"
                                         >
@@ -723,7 +754,7 @@ const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBa
 
 // --- Order Detail Modal (New Component) ---
 const OrderDetailModal = ({ order, isDarkMode, onClose }) => {
-    // ... (content of OrderDetailModal - Unchanged)
+    // ... (content of OrderDetailModal)
     const modalBg = isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900';
     const inputClasses = `p-2 rounded-lg border w-full dark:bg-gray-700 dark:border-gray-600`;
 
@@ -778,6 +809,7 @@ const OrderDetailModal = ({ order, isDarkMode, onClose }) => {
 
 // --- Finance Management Section (Finance Manager/Admin) ---
 const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue, setRefundQueue }) => {
+    // ... (content of FinanceManagement)
     const canValidateCoupons = userRole === 'admin';
     const totalPaymentsToday = 5400;
     const totalPaymentsWeek = 18200;
@@ -788,7 +820,7 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
         // In a real app, update state and trigger external payment API
         setRefundQueue(prev => prev.filter(r => r.id !== requestId));
     }
-
+    
     // Mock data for payments
     const PAYMENT_DATA = [
         { label: 'Today', orders: 5, total: totalPaymentsToday, discount: 150 },
@@ -800,7 +832,7 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
     return (
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
             <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Financial Overview</h3>
-
+            
             {/* Total Orders & Payments Summary */}
             <div className={`p-6 rounded-xl shadow-lg ${cardBaseClasses}`}>
                 <h4 className="text-xl font-bold mb-4 text-purple-500">Total Payments Summary</h4>
@@ -816,7 +848,7 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
                     ))}
                 </div>
             </div>
-
+            
             {/* ⭐️ NEW: Daily Payments and Orders Table */}
             <div className={`p-6 rounded-xl shadow-lg ${cardBaseClasses}`}>
                 <h4 className="text-xl font-bold mb-4 text-cyan-500">Daily Sales and Payments</h4>
@@ -836,8 +868,8 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
                                 <tr key={d.date} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                     <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">{d.date}</td>
                                     <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{d.orders}</td>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-right text-green-500">₹{d.revenue.toFixed(2)}</td>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-right text-red-500">₹{d.discounts.toFixed(2)}</td>
+                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-green-500 text-right">₹{d.revenue.toFixed(2)}</td>
+                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-red-500 text-right">₹{d.discounts.toFixed(2)}</td>
                                     <td className="px-4 py-2 whitespace-nowrap text-sm font-bold text-right">₹{d.net.toFixed(2)}</td>
                                 </tr>
                             ))}
@@ -850,7 +882,7 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
             {/* Refund Validation Queue */}
             <div className={`p-6 rounded-xl shadow-lg ${cardBaseClasses}`}>
                 <h4 className="text-xl font-bold mb-4 text-red-500">Refund Validation Queue</h4>
-
+                
                 {refundQueue.length === 0 ? (
                     <p className="text-gray-500">No refunds pending validation.</p>
                 ) : (
@@ -862,14 +894,14 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
                                     <p className="text-xs text-gray-700 dark:text-gray-300">Amount: ₹{refund.amount.toFixed(2)} | Reason: {refund.reason}</p>
                                 </div>
                                 <div className="space-x-2">
-                                    <button
-                                        onClick={() => handleRefundDecision(refund.id, 'Approved')}
+                                    <button 
+                                        onClick={() => handleRefundDecision(refund.id, 'Approved')} 
                                         className="px-3 py-1 text-xs bg-green-500 text-white rounded-md hover:bg-green-600"
                                     >
                                         Approve
                                     </button>
-                                    <button
-                                        onClick={() => handleRefundDecision(refund.id, 'Declined')}
+                                    <button 
+                                        onClick={() => handleRefundDecision(refund.id, 'Declined')} 
                                         className="px-3 py-1 text-xs bg-red-500 text-white rounded-md hover:bg-red-600"
                                     >
                                         Decline
@@ -894,15 +926,15 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
 
 // --- Coupon Management Section (Product Manager) ---
 const CouponManagement = ({ isDarkMode, cardBaseClasses, userRole }) => {
-    // ... (content of CouponManagement - Unchanged)
+    // ... (content of CouponManagement)
     const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
-
+    
     // Mock state for coupons created by Product Manager
     const [myCoupons, setMyCoupons] = useState([
         { id: 10, code: 'WELCOME10', discount: 10, status: 'Active (Approved)', uses: 50 },
         { id: 11, code: 'SPRING20', discount: 20, status: 'Pending Approval', uses: 0 },
     ]);
-
+    
     // ⭐️ Handler to add user-defined coupon request
     const handleCouponRequestSave = (formData) => {
         const newCoupon = {
@@ -918,9 +950,9 @@ const CouponManagement = ({ isDarkMode, cardBaseClasses, userRole }) => {
 
     return (
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
-
+            
             {/* ⭐️ Coupon Form Modal Integration */}
-            <CouponFormModal
+            <CouponFormModal 
                 isOpen={isCouponModalOpen}
                 onClose={() => setIsCouponModalOpen(false)}
                 onSave={handleCouponRequestSave}
@@ -928,9 +960,9 @@ const CouponManagement = ({ isDarkMode, cardBaseClasses, userRole }) => {
             />
 
             <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>My Coupon Requests</h3>
-
+            
             {(userRole === 'admin' || userRole === 'product_manager') && (
-                <button
+                <button 
                     className="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-bold transition-colors"
                     // FIX: Open the modal instead of auto-adding mock data
                     onClick={() => setIsCouponModalOpen(true)}
@@ -938,7 +970,7 @@ const CouponManagement = ({ isDarkMode, cardBaseClasses, userRole }) => {
                     + Request New Coupon
                 </button>
             )}
-
+            
             <div className={`overflow-x-auto ${cardBaseClasses} rounded-xl shadow-lg`}>
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-100 dark:bg-gray-700">
@@ -969,7 +1001,7 @@ const CouponManagement = ({ isDarkMode, cardBaseClasses, userRole }) => {
 
 // --- User Management Section (Admin Only) ---
 const UserManagement = ({ users, setUsers, isDarkMode, cardBaseClasses }) => {
-    // ... (content of UserManagement - Unchanged)
+    // ... (content of UserManagement)
     return (
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
             <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Customer List</h3>
@@ -1004,7 +1036,7 @@ const UserManagement = ({ users, setUsers, isDarkMode, cardBaseClasses }) => {
 
 // ⭐️ New Component: Coupon Creation Modal
 const CouponFormModal = ({ isOpen, onClose, onSave, isDarkMode }) => {
-    // ... (content of CouponFormModal - Unchanged)
+    // ... (content of CouponFormModal)
     const [formData, setFormData] = useState({
         code: '',
         discount: 10,
@@ -1019,7 +1051,7 @@ const CouponFormModal = ({ isOpen, onClose, onSave, isDarkMode }) => {
             [name]: type === 'number' ? Number(value) : value.toUpperCase().replace(/\s/g, ''),
         }));
     };
-
+    
     const handleSubmit = (e) => {
         e.preventDefault();
         if (formData.discount > 99 || !formData.code) {
@@ -1051,7 +1083,7 @@ const CouponFormModal = ({ isOpen, onClose, onSave, isDarkMode }) => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-
+                    
                     {/* Coupon Code */}
                     <div>
                         <label className=" font-semibold mb-1 flex items-center"><Tag className='w-4 h-4 mr-2 text-pink-500' /> Coupon Code</label>
@@ -1070,7 +1102,7 @@ const CouponFormModal = ({ isOpen, onClose, onSave, isDarkMode }) => {
                             <input type="number" name="usageLimit" value={formData.usageLimit} onChange={handleChange} className={inputClasses} min="1" required />
                         </div>
                     </div>
-
+                    
                     {/* Min Order Value */}
                     <div>
                         <label className="block font-semibold mb-1">Min. Order Value (₹)</label>
