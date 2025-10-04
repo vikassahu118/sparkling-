@@ -15,6 +15,7 @@ import ProfilePage from './components/Profile.jsx';
 import OfferBar from "./components/OfferBar.jsx";
 import AdminLogin from './components/admin/AdminLogin.jsx';
 import AdminPage from './components/admin/AdminPage.jsx';
+import CustomerAuth from './components/CustomerAuth.jsx'; 
 
 // --- Placeholder Page Components (Unchanged) ---
 const Shop = () => <div className="text-center py-40 text-4xl font-bold text-cyan-600">🛍️ Shop All Our Latest Styles!</div>;
