@@ -11,7 +11,9 @@ import { Cart } from './components/Cart.jsx';
  import SearchModal from './components/Search.jsx'; 
 import WishlistSidebar from './components/Wishlist.jsx';
 import ProfilePage from './components/Profile.jsx';
-import OfferBar from "./components/OfferBar.jsx" 
+import OfferBar from "./components/OfferBar.jsx";
+import AdminLogin from './components/admin/AdminLogin.jsx';
+import AdminPage from './components/admin/AdminPage.jsx';
 
 
 // --- Placeholder Page Components (Unchanged) ---
