@@ -75,7 +75,8 @@ export default function Footer({ onViewChange, isDarkMode }) {
         { id: 'girls', label: 'Shirts', icon: '' },
         { id: 'baby', label: 'Cord Sets', icon: '' },
         { id: 'accessories', label: 'Culotte Sets', icon: '' },
-        { id: 'dresses', label: 'Dresses', icon: '' }
+        { id: 'dresses', label: 'Dresses', icon: '' },
+        { id: 'pants', label: 'Pants', icon: '' }
 
     ];
 
