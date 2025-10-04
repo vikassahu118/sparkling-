@@ -1,3 +1,358 @@
+// import React, { useState, useEffect } from 'react';
+
+// // Component Imports 
+// import Navbar from './components/Navbar.jsx';
+// import Footer from './components/Footer.jsx';
+// import HeroSection from './components/HeroSection.jsx';
+// import { ProductGrid } from './components/ProductGrid.jsx';
+// import About from './components/About.jsx';
+// import DiscountPopup from './components/DiscountPopup.jsx';
+// import { Cart } from './components/Cart.jsx';
+//
+
+
+// // --- Placeholder Page Components ---
+// const Shop = () => <div className="text-center py-40 text-4xl font-bold text-cyan-600">🛍️ Shop All Our Latest Styles!</div>;
+// const Categories = () => <div className="text-center py-40 text-4xl font-bold text-pink-600">📂 Explore Categories</div>;
+// const Deals = () => <div className="text-center py-40 text-4xl font-bold text-purple-600">🎉 Special Deals Just for You!</div>;
+
+
+// // ⬅️ Component: Combines Hero and ProductGrid for the Home View
+// const HomePage = ({ onViewChange, isDarkMode, handleProductAction, wishlistItems }) => ( 
+//     <>
+//         <HeroSection 
+//             onShopNowClick={() => onViewChange('shop')} 
+//             isDarkMode={isDarkMode} 
+//         />
+//         <ProductGrid 
+//             products={[]}
+//             onProductClick={(p) => handleProductAction('View', p)}
+//             onAddToCart={(p) => handleProductAction('Add to Cart', p)}
+//             onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
+//             isDarkMode={isDarkMode} 
+//             wishlistItems={wishlistItems} 
+//         />
+//     </>
+// );
+
+
+// export default function App() {
+// // =======================================================
+// // ✅ APP STATE AND HANDLERS
+// // =======================================================
+  
+//   // App-level visibility states
+//   const [isSearchOpen, setIsSearchOpen] = useState(false);
+//   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+//   const [isCartOpen, setIsCartOpen] = useState(false); 
+//   const [isPopupVisible, setIsPopupVisible] = useState(false);
+  
+//   // State for Authentication/Role Tracking
+//   const [currentUserRole, setCurrentUserRole] = useState(null); // 'admin', 'product_manager', 'user', or null
+//   const [currentUserName, setCurrentUserName] = useState(null); 
+  
+//   // Data states
+//   const [wishlistItems, setWishlistItems] = useState([]); 
+//   const [cartItems, setCartItems] = useState([]);
+//   const [discounts, setDiscounts] = useState([]);
+  
+//   // UI States
+//   const [currentView, setCurrentView] = useState('home');
+//   const [isDarkMode, setIsDarkMode] = useState(false);
+
+
+//   // --- Handlers ---
+//   const toggleTheme = () => setIsDarkMode(prev => !prev);
+  
+//   // Profile Click Logic (ONLY for general users)
+//   const onProfileClick = () => {
+//     if (currentUserRole === 'user') {
+//         onViewChange('profile'); 
+//     } else {
+//         onViewChange('user_auth'); 
+//     }
+//   };
+
+//   // Handler for Customer Login Success
+//   const handleCustomerLoginSuccess = (name, role) => {
+//     setCurrentUserName(name);
+//     setCurrentUserRole(role);
+//     onViewChange('profile'); 
+//   }
+
+//   // Handler for Admin/Manager Login Success (Used by AdminLogin component)
+//   const handleManagerLoginSuccess = (role) => {
+//     setCurrentUserName(role.toUpperCase().replace('_', ' '));
+//     setCurrentUserRole(role);
+//     onViewChange('admin'); 
+//   };
+  
+//   // Generic Logout Handler
+//   const handleLogout = () => {
+//     setCurrentUserRole(null);
+//     setCurrentUserName(null);
+//     onViewChange('home');
+//   };
+
+
+//   const onViewChange = (viewId) => {
+//     setCurrentView(viewId);
+//     window.scrollTo({ top: 0, behavior: 'smooth' });
+//   };
+  
+//   const handleApplyCode = (code) => {
+//     console.log(`Discount code applied: ${code}`);
+//   };
+
+//   const handleProductAction = (action, product) => {
+//       // Create a robust product object with necessary properties
+//       const actualProduct = product && product.id ? product : {
+//           id: 999, // Fallback ID
+//           name: 'Rainbow Unicorn Dress', // Default name to match screenshot
+//           price: 1199.00, // Using 1199.00 as the default price
+//           image: '/mock.jpg'
+//       };
+
+//       console.log(`${action} triggered for: ${actualProduct?.name || 'product'} (ID: ${actualProduct.id})`);
+
+//       // WISHLIST LOGIC (Toggle: Add if missing, remove if present)
+//       if (action === 'Add to Wishlist') {
+//           setWishlistItems(prev => {
+//               const exists = prev.some(item => item.id === actualProduct.id);
+//               if (exists) {
+//                   return prev.filter(item => item.id !== actualProduct.id);
+//               } else {
+//                   const newItem = { 
+//                     ...actualProduct, 
+//                     id: actualProduct.id || Date.now(), 
+//                     name: actualProduct.name, 
+//                     price: actualProduct.price 
+//                   };
+//                   setIsWishlistOpen(true); 
+//                   return [...prev, newItem];
+//               }
+//           });
+//       } 
+      
+//       // ADD TO CART LOGIC
+//       else if (action === 'Add to Cart') {
+//           setCartItems(prevItems => {
+//               const existingItem = prevItems.find(item => item.id === actualProduct.id);
+
+//               if (existingItem) {
+//                   return prevItems.map(item =>
+//                       item.id === actualProduct.id
+//                           ? { ...item, quantity: item.quantity + 1 }
+//                           : item
+//                   );
+//               } else {
+//                   const newItem = {
+//                       id: actualProduct.id,
+//                       name: actualProduct.name,
+//                       price: actualProduct.price,
+//                       quantity: 1
+//                   };
+//                   return [...prevItems, newItem];
+//               }
+//           });
+//           setIsCartOpen(true);
+//       }
+//   };
+  
+//   const handleRemoveWishlistItem = (itemId) => {
+//       setWishlistItems(prev => prev.filter(item => item.id !== itemId));
+//   };
+  
+//   // ------------------------------------------
+//   // CART HANDLERS (Unchanged)
+//   // ------------------------------------------
+
+//   const handleUpdateQuantity = (itemId, newQuantity) => { 
+//     if (newQuantity <= 0) {
+//         handleRemoveItem(itemId);
+//         return;
+//     }
+
+//     setCartItems(prevItems => {
+//         return prevItems.map(item =>
+//             item.id === itemId
+//                 ? { ...item, quantity: newQuantity }
+//                 : item
+//         );
+//     });
+//   };
+
+//   const handleRemoveItem = (itemId) => { 
+//     setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
+//   };
+
+//   const handleCheckout = () => { 
+//     console.log('Initiating checkout...');
+//     alert('Checkout initiated! (This is a placeholder action)');
+//   };
+
+//   const handleApplyDiscount = (discountCode) => { 
+//     console.log(`Applying discount: ${discountCode}`);
+//     setDiscounts(prev => [...prev, { code: discountCode, amount: 5.00 }]);
+//   };
+  
+//   const handleMoveAllToCart = () => {
+//     if (wishlistItems.length === 0) return;
+
+//     setCartItems(prevCart => {
+//         let updatedCart = [...prevCart];
+        
+//         wishlistItems.forEach(wishItem => {
+//             const existingItemIndex = updatedCart.findIndex(cartItem => cartItem.id === wishItem.id);
+            
+//             if (existingItemIndex !== -1) {
+//                 updatedCart[existingItemIndex] = {
+//                     ...updatedCart[existingItemIndex],
+//                     quantity: updatedCart[existingItemIndex].quantity + 1,
+//                 };
+//             } else {
+//                 updatedCart.push({ ...wishItem, quantity: 1 });
+//             }
+//         });
+//         return updatedCart;
+//     });
+
+//     setWishlistItems([]);
+//     setIsWishlistOpen(false);
+//     setIsCartOpen(true);
+//   };
+  
+//   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+
+//   // ⭐️ CRITICAL FIX: Expose onViewChange globally for manual testing
+//   useEffect(() => {
+//     // This makes the function accessible from the browser console
+//     window.onViewChange = onViewChange;
+//     return () => {
+//       delete window.onViewChange;
+//     };
+//   }, [onViewChange]);
+
+//   // --- Effects ---
+//   useEffect(() => {
+//     setIsPopupVisible(true);
+//   }, []);
+
+
+//   // --- Router/Render Logic ---
+//   const renderView = () => {
+//     // Check if the user is an Admin/Manager: if so, ONLY show the admin page
+//     if (currentView === 'admin' && (currentUserRole === 'admin' || currentUserRole === 'product_manager' || currentUserRole === 'finance_manager')) {
+//         return <AdminPage isDarkMode={isDarkMode} onViewChange={onViewChange} userRole={currentUserRole} />;
+//     }
+    
+//     switch (currentView) {
+//       case 'home':
+//         return <HomePage 
+//             onViewChange={onViewChange} 
+//             isDarkMode={isDarkMode} 
+//             handleProductAction={handleProductAction} 
+//             wishlistItems={wishlistItems}
+//         />;
+//       case 'shop':
+//         return (
+//             <ProductGrid
+//                 onProductClick={(p) => handleProductAction('View', p)}
+//                 onAddToCart={(p) => handleProductAction('Add to Cart', p)}
+//                 onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
+//                 isDarkMode={isDarkMode}
+//                 wishlistItems={wishlistItems}
+//             />
+//         );
+//       case 'categories':
+//         return <Categories />;
+//       case 'deals':
+//         return <Deals />;
+//       case 'about':
+//         return <About onViewChange={onViewChange} />;
+      
+//       // Standard Customer Routes
+//       case 'profile':
+//         return <ProfilePage isDarkMode={isDarkMode} onLogout={handleLogout} />;
+//       case 'user_auth':
+//         return <CustomerAuth isDarkMode={isDarkMode} onLoginSuccess={handleCustomerLoginSuccess} />;
+
+//       // Admin/Manager Routes (Accessed via hidden URL/direct routing)
+//       case 'admin_login': 
+//         return <AdminLogin isDarkMode={isDarkMode} onLoginSuccess={handleManagerLoginSuccess} />;
+      
+//       default:
+//         return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} handleProductAction={handleProductAction} wishlistItems={wishlistItems} />;
+//     }
+//   };
+
+//   // The main App structure
+//   return (
+//     <div className={`${isDarkMode ? 'dark bg-gray-900 min-h-screen' : 'bg-white min-h-screen'} font-inter transition-colors duration-500`}>
+
+//       {/* 1. Navbar */}
+//       <Navbar
+//         isDarkMode={isDarkMode}
+//         toggleTheme={toggleTheme}
+//         cartCount={cartCount}
+//         onCartClick={() => setIsCartOpen(true)}
+//         onSearchClick={() => setIsSearchOpen(true)}
+//         onWishlistClick={() => setIsWishlistOpen(true)}
+//         onProfileClick={onProfileClick} // Now only routes general customers
+//         currentView={currentView}
+//         onViewChange={onViewChange}
+//       />
+
+//       {/* 2. Main Content Area */}
+//       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+//         {renderView()}
+//       </main>
+
+
+//        {/* Search Modal */}
+//       <SearchModal
+//         isOpen={isSearchOpen}
+//         onClose={() => setIsSearchOpen(false)}
+//         isDarkMode={isDarkMode}
+//       />
+
+//       {/* 3. Wishlist Sidebar */}
+//       <WishlistSidebar
+//         isOpen={isWishlistOpen}
+//         onClose={() => setIsWishlistOpen(false)}
+//         wishlistItems={wishlistItems}
+//         onRemoveItem={handleRemoveWishlistItem}
+//         onMoveAllToCart={handleMoveAllToCart}
+//         isDarkMode={isDarkMode}
+//       />
+      
+//       {/* Discount Popup */}
+//       <DiscountPopup
+//         isVisible={isPopupVisible}
+//         onClose={() => setIsPopupVisible(false)}
+//         onApplyCode={handleApplyCode}
+//       />
+
+//       {/* 4. Footer */}
+//       <Footer onViewChange={onViewChange} isDarkMode={isDarkMode} />
+
+//       {/* 5. Cart */}
+//       <Cart 
+//         isDarkMode={isDarkMode}
+//         isOpen={isCartOpen} 
+//         onClose={() => setIsCartOpen(false)}
+//         items={cartItems}
+//         onUpdateQuantity={handleUpdateQuantity} 
+//         onRemoveItem={handleRemoveItem}         
+//         onCheckout={handleCheckout}             
+//         appliedDiscounts={discounts}
+//         onApplyDiscount={handleApplyDiscount}   
+//       />
+//     </div>
+//   );
+// }
+
+
 import React, { useState, useEffect } from 'react';
 
 // Component Imports 
@@ -8,15 +363,15 @@ import { ProductGrid } from './components/ProductGrid.jsx';
 import About from './components/About.jsx';
 import DiscountPopup from './components/DiscountPopup.jsx';
 import { Cart } from './components/Cart.jsx';
-import SearchModal from './components/Search.jsx'; 
+ import SearchModal from './components/Search.jsx'; 
 import WishlistSidebar from './components/Wishlist.jsx';
-import ProfilePage from './components/EditProfilePage.jsx'; 
+import ProfilePage from './components/Profile.jsx'; 
 import AdminPage from './components/admin/AdminPage.jsx'; 
 import AdminLogin from './components/admin/AdminLogin.jsx'; 
 import CustomerAuth from './components/CustomerAuth.jsx';
 
 
-// --- Placeholder Page Components ---
+// --- Placeholder Page Components (Unchanged) ---
 const Shop = () => <div className="text-center py-40 text-4xl font-bold text-cyan-600">🛍️ Shop All Our Latest Styles!</div>;
 const Categories = () => <div className="text-center py-40 text-4xl font-bold text-pink-600">📂 Explore Categories</div>;
 const Deals = () => <div className="text-center py-40 text-4xl font-bold text-purple-600">🎉 Special Deals Just for You!</div>;
@@ -53,7 +408,7 @@ export default function App() {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   
   // State for Authentication/Role Tracking
-  const [currentUserRole, setCurrentUserRole] = useState(null); // 'admin', 'product_manager', 'user', or null
+  const [currentUserRole, setCurrentUserRole] = useState(null); 
   const [currentUserName, setCurrentUserName] = useState(null); 
   
   // Data states
@@ -69,14 +424,11 @@ export default function App() {
   // --- Handlers ---
   const toggleTheme = () => setIsDarkMode(prev => !prev);
   
-  // ⭐️ CRITICAL FIX: Profile Click Logic is now ONLY for general users
+  // Profile Click Logic (ONLY for general users)
   const onProfileClick = () => {
-    // 1. Logged in as a standard Customer: Go to Profile Page
     if (currentUserRole === 'user') {
         onViewChange('profile'); 
-    } 
-    // 2. Not logged in (or logged in as Admin/Manager—who shouldn't use this button): Go to Customer Login/Signup
-    else {
+    } else {
         onViewChange('user_auth'); 
     }
   };
@@ -85,14 +437,16 @@ export default function App() {
   const handleCustomerLoginSuccess = (name, role) => {
     setCurrentUserName(name);
     setCurrentUserRole(role);
-    onViewChange('profile'); // Redirect to profile page
+    onViewChange('profile'); 
   }
 
   // Handler for Admin/Manager Login Success (Used by AdminLogin component)
   const handleManagerLoginSuccess = (role) => {
     setCurrentUserName(role.toUpperCase().replace('_', ' '));
     setCurrentUserRole(role);
-    onViewChange('admin'); // Redirect to admin dashboard
+    onViewChange('admin'); 
+    // ⭐️ FIX: Change URL back to home on successful login/navigation
+    window.history.pushState({}, '', '/'); 
   };
   
   // Generic Logout Handler
@@ -102,10 +456,16 @@ export default function App() {
     onViewChange('home');
   };
 
-
+  // ⭐️ Updated onViewChange to handle URL changes
   const onViewChange = (viewId) => {
     setCurrentView(viewId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Update the browser URL without reloading
+    const path = viewId === 'home' ? '/' : `/${viewId}`;
+    if (window.location.pathname !== path) {
+        window.history.pushState(null, '', path);
+    }
   };
   
   const handleApplyCode = (code) => {
@@ -232,15 +592,22 @@ export default function App() {
   
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  // --- Effects ---
+  // ⭐️ CRITICAL FIX: Effect to read URL on mount (Simulates router)
   useEffect(() => {
-    setIsPopupVisible(true);
+    const path = window.location.pathname.substring(1); // Remove leading '/'
+    if (path) {
+        // Check if the path matches a known route, defaulting to 'home' if not found
+        const normalizedPath = path.includes('/') ? path.split('/')[0] : path;
+        
+        if (['admin_login', 'shop', 'profile', 'user_auth', 'admin'].includes(normalizedPath)) {
+            setCurrentView(normalizedPath);
+        }
+    }
   }, []);
-
 
   // --- Router/Render Logic ---
   const renderView = () => {
-    // ⭐️ Check if the user is an Admin/Manager: if so, ONLY show the admin page
+    // Check if the user is an Admin/Manager: if so, ONLY show the admin page
     if (currentView === 'admin' && (currentUserRole === 'admin' || currentUserRole === 'product_manager' || currentUserRole === 'finance_manager')) {
         return <AdminPage isDarkMode={isDarkMode} onViewChange={onViewChange} userRole={currentUserRole} />;
     }
@@ -276,7 +643,7 @@ export default function App() {
       case 'user_auth':
         return <CustomerAuth isDarkMode={isDarkMode} onLoginSuccess={handleCustomerLoginSuccess} />;
 
-      // ⭐️ Admin/Manager Routes (Accessed via hidden URL/direct routing)
+      // Admin/Manager Routes (Accessed via hidden URL/direct routing)
       case 'admin_login': 
         return <AdminLogin isDarkMode={isDarkMode} onLoginSuccess={handleManagerLoginSuccess} />;
       
