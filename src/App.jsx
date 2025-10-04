@@ -11,7 +11,8 @@ import { Cart } from './components/Cart.jsx';
 // 👇 FIX 1: Corrected component file paths
 import SearchModal from './components/Search.jsx'; 
 import WishlistSidebar from './components/Wishlist.jsx';
-import ProfilePage from './components/Profile.jsx'; 
+import ProfilePage from './components/Profile.jsx';
+import OfferBar from "./components/OfferBar.jsx" 
 
 
 // --- Placeholder Page Components ---
@@ -246,7 +247,8 @@ export default function App() {
   // The main App structure
   return (
     <div className={`${isDarkMode ? 'dark bg-gray-900 min-h-screen' : 'bg-white min-h-screen'} font-inter transition-colors duration-500`}>
-
+      {/* OfferBar */}
+      <OfferBar />
       {/* 1. Navbar */}
       <Navbar
         isDarkMode={isDarkMode}
