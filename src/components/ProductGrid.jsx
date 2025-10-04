@@ -2,16 +2,16 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ShoppingCart, Star, Eye, ChevronDown, Filter, X } from 'lucide-react';
 
-
+// --- Helper & UI Components (Unchanged) ---
 const ImageWithFallback = ({ src, alt, className }) => {
   const [imgSrc, setImgSrc] = useState(src);
   const placeholder = `https://placehold.co/600x400/f7f7f7/cbd5e0?text=Image+Not+Found`;
   return <img src={imgSrc} alt={alt} className={className} onError={() => setImgSrc(placeholder)} />;
 };
+
 const Badge = ({ children, className }) => (
   <span className={`font-bold rounded-full text-xs px-2.5 py-1 ${className}`}>{children}</span>
 );
-
 
 const Button = ({ children, className, onClick, ...props }) => (
   <button className={`font-semibold rounded-lg transition-transform duration-200 ease-in-out active:scale-95 ${className}`} onClick={onClick} {...props}>
@@ -24,30 +24,59 @@ const PriceRangeSlider = React.memo(({ min, max, step, price, setPrice, isDarkMo
   const [minVal, setMinVal] = useState(price.min);
   const [maxVal, setMaxVal] = useState(price.max);
   const range = useRef(null);
+  
   const thumbBorderColor = isDarkMode ? '#8b5cf6' : '#ec4899';
+
   const getPercent = useCallback((value) => Math.round(((value - min) / (max - min)) * 100), [min, max]);
 
-  useEffect(() => { setMinVal(price.min); setMaxVal(price.max); }, [price]);
+  useEffect(() => {
+    setMinVal(price.min);
+    setMaxVal(price.max);
+  }, [price]);
+
   useEffect(() => {
     const minPercent = getPercent(minVal);
     const maxPercent = getPercent(maxVal);
-    if (range.current) { range.current.style.left = `${minPercent}%`; range.current.style.width = `${maxPercent - minPercent}%`; }
+    if (range.current) {
+      range.current.style.left = `${minPercent}%`;
+      range.current.style.width = `${maxPercent - minPercent}%`;
+    }
   }, [minVal, getPercent]);
+
   useEffect(() => {
     const minPercent = getPercent(minVal);
     const maxPercent = getPercent(maxVal);
-    if (range.current) { range.current.style.width = `${maxPercent - minPercent}%`; }
+    if (range.current) {
+      range.current.style.width = `${maxPercent - minPercent}%`;
+    }
   }, [maxVal, getPercent]);
+
+  const handleMinChange = (event) => {
+    const value = Math.min(Number(event.target.value), maxVal - step);
+    setMinVal(value);
+    setPrice({ ...price, min: value });
+  };
+
+  const handleMaxChange = (event) => {
+    const value = Math.max(Number(event.target.value), minVal + step);
+    setMaxVal(value);
+    setPrice({ ...price, max: value });
+  };
 
   return (
     <div className="pt-4">
       <div className="relative flex items-center h-2">
-        <input type="range" min={min} max={max} value={minVal} step={step} onChange={(e) => { const v = Math.min(Number(e.target.value), maxVal - step); setMinVal(v); setPrice({ ...price, min: v }); }} className="thumb thumb--left" style={{ zIndex: minVal > max - 100 ? "5" : "3" }}/>
-        <input type="range" min={min} max={max} value={maxVal} step={step} onChange={(e) => { const v = Math.max(Number(e.target.value), minVal + step); setMaxVal(v); setPrice({ ...price, max: v }); }} className="thumb thumb--right" />
-        <div className="relative w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-md"><div ref={range} className="absolute h-1 rounded-md bg-pink-500" /></div>
+        <input type="range" min={min} max={max} value={minVal} step={step} onChange={handleMinChange} className="thumb thumb--left" style={{ zIndex: minVal > max - 100 ? "5" : "3" }}/>
+        <input type="range" min={min} max={max} value={maxVal} step={step} onChange={handleMaxChange} className="thumb thumb--right"style={{ zIndex: minVal > max - 100 ? "5" : "3" }} />
+        <div className="relative w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-md">
+          <div ref={range} className="absolute h-1 rounded-md bg-pink-500" />
+        </div>
       </div>
-      <div className="flex justify-between mt-4"><span className="font-medium text-gray-800 dark:text-white">₹{minVal}</span><span className="font-medium text-gray-800 dark:text-white">₹{maxVal}</span></div>
-      <style>{`.thumb{pointer-events:none;position:absolute;height:0;width:100%;outline:none;-webkit-appearance:none;appearance:none;background:transparent;}.thumb::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;pointer-events:all;width:20px;height:20px;background-color:#fff;border-radius:50%;border:2px solid ${thumbBorderColor};cursor:pointer;}.thumb::-moz-range-thumb{pointer-events:all;width:20px;height:20px;background-color:#fff;border-radius:50%;border:2px solid ${thumbBorderColor};cursor:pointer;}`}</style>
+      <div className="flex justify-between mt-4">
+        <span className="font-medium text-gray-800 dark:text-white">₹{minVal}</span>
+        <span className="font-medium text-gray-800 dark:text-white">₹{maxVal}</span>
+      </div>
+       <style>{`.thumb{pointer-events:none;position:absolute;height:0;width:100%;outline:none;-webkit-appearance:none;-moz-appearance:none;appearance:none;background:transparent;}.thumb::-webkit-slider-thumb{-webkit-appearance:none;-moz-appearance:none;appearance:none;pointer-events:all;width:20px;height:20px;background-color:#fff;border-radius:50%;border:2px solid ${thumbBorderColor};box-shadow:0 0 5px rgba(0,0,0,0.1);cursor:pointer;}.thumb::-moz-range-thumb{pointer-events:all;width:20px;height:20px;background-color:#fff;border-radius:50%;border:2px solid ${thumbBorderColor};cursor:pointer;}`}</style>
     </div>
   );
 });
@@ -58,20 +87,58 @@ const FilterSidebar = ({ isOpen, onClose, filters, setFilters, products, default
   const isMobile = window.innerWidth < 768;
   const AVAILABLE_SIZES = ['XS', 'S', 'M', 'L', 'XL'];
   const uniqueColors = useMemo(() => [...new Set(products.flatMap(p => p.colors))], [products]);
-  const colorMap = { pink: 'bg-pink-400', purple: 'bg-purple-400', blue: 'bg-blue-400', green: 'bg-green-400', orange: 'bg-orange-400', white: 'bg-gray-200 border border-gray-300', yellow: 'bg-yellow-400', multicolor: 'bg-gradient-to-r from-pink-400 to-yellow-400' };
+  
+  const colorMap = {
+    pink: 'bg-pink-400', purple: 'bg-purple-400', blue: 'bg-blue-400', green: 'bg-green-400', orange: 'bg-orange-400', white: 'bg-gray-200 border border-gray-300', yellow: 'bg-yellow-400', multicolor: 'bg-gradient-to-r from-pink-400 to-yellow-400', rainbow: 'bg-gradient-to-r from-red-400 via-green-400 to-blue-400', navy: 'bg-blue-900', red: 'bg-red-500', gold: 'bg-yellow-500', silver: 'bg-gray-400', brown: 'bg-yellow-800', black: 'bg-black',
+  };
+
+  const handleColorSelect = (color) => setFilters(p => ({ ...p, color: p.color === color ? null : color }));
+  const handleSizeToggle = (size) => setFilters(p => ({ ...p, sizes: p.sizes.includes(size) ? p.sizes.filter(s => s !== size) : [...p.sizes, size] }));
+  const clearFilters = () => setFilters(defaultFilters);
+
+  const panelVariants = isMobile ? {
+    visible: { y: 0 }, hidden: { y: "100%" }
+  } : {
+    visible: { x: 0 }, hidden: { x: "100%" }
+  };
+  
+  const contentBg = isDarkMode ? 'bg-gray-800' : 'bg-white';
+  const headerText = isDarkMode ? 'text-white' : 'text-gray-800';
+  const primaryText = isDarkMode ? 'text-gray-200' : 'text-gray-700';
+
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div onClick={onClose} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 z-40" />
-          <motion.div initial={isMobile ? { y: "100%" } : { x: "100%" }} animate={isMobile ? { y: 0 } : { x: 0 }} exit={isMobile ? { y: "100%" } : { x: "100%" }} className={`fixed ${isMobile ? 'bottom-0 left-0 right-0 h-[85vh] rounded-t-3xl' : 'top-0 right-0 h-full w-full max-w-md'} ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-2xl z-50 flex flex-col`}>
-            <div className="flex items-center justify-between p-5 border-b dark:border-gray-700"><h3 className="text-xl font-bold dark:text-white">Filters</h3><Button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><X className="w-6 h-6 text-gray-600 dark:text-gray-300" /></Button></div>
-            <div className="flex-grow p-6 overflow-y-auto space-y-8">
-              <div><h4 className="font-semibold dark:text-gray-200">Price Range</h4><PriceRangeSlider min={500} max={5000} step={100} price={filters.price} setPrice={newPrice => setFilters(p => ({ ...p, price: newPrice }))} isDarkMode={isDarkMode} /></div>
-              <div><h4 className="font-semibold mb-4 dark:text-gray-200">Colors</h4><div className="flex flex-wrap gap-3">{uniqueColors.map(c => <button key={c} onClick={() => setFilters(p => ({...p, color: p.color === c ? null : c}))} className={`w-9 h-9 rounded-full ${colorMap[c]||'bg-gray-300'} ${filters.color===c?'ring-2 ring-offset-2 dark:ring-offset-gray-800 ring-pink-500':''}`} />)}</div></div>
-              <div><h4 className="font-semibold mb-4 dark:text-gray-200">Sizes</h4><div className="flex flex-wrap gap-3">{AVAILABLE_SIZES.map(s => <button key={s} onClick={() => setFilters(p => ({...p, sizes: p.sizes.includes(s) ? p.sizes.filter(i => i !== s) : [...p.sizes, s]}))} className={`px-4 py-2 border rounded-full text-sm ${filters.sizes.includes(s) ? 'bg-pink-500 text-white border-pink-500' : 'dark:border-gray-600 dark:text-gray-300'}`}>{s}</button>)}</div></div>
+          <motion.div onClick={onClose} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="fixed inset-0 bg-black/60 z-40" />
+          <motion.div
+            variants={panelVariants} initial="hidden" animate="visible" exit="hidden" transition={{ type: 'spring', stiffness: 400, damping: 40 }}
+            className={`fixed ${isMobile ? 'bottom-0 left-0 right-0 h-[85vh]' : 'top-0 right-0 h-full w-full max-w-md'} ${contentBg} shadow-2xl z-50 flex flex-col rounded-t-3xl md:rounded-none`}
+          >
+            <div className={`flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700 ${contentBg}`}>
+              <h3 className={`text-xl font-bold ${headerText}`}>Filters</h3>
+              <Button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><X className="w-6 h-6 text-gray-600 dark:text-gray-300" /></Button>
             </div>
-            <div className="p-4 border-t dark:border-gray-700 flex gap-4"><Button onClick={() => setFilters(defaultFilters)} className="w-full py-3 bg-gray-200 dark:bg-gray-700 dark:text-white rounded-xl">Clear</Button><Button onClick={onClose} className="w-full py-3 bg-pink-500 text-white rounded-xl">Apply</Button></div>
+            
+            <div className="flex-grow p-6 overflow-y-auto space-y-8">
+              <div>
+                <h4 className={`font-semibold ${primaryText}`}>Price Range</h4>
+                <PriceRangeSlider min={500} max={5000} step={100} price={filters.price} setPrice={newPrice => setFilters(p => ({ ...p, price: newPrice }))} isDarkMode={isDarkMode} />
+              </div>
+              <div>
+                <h4 className="font-semibold mb-4 text-gray-700 dark:text-gray-200">Colors</h4>
+                <div className="flex flex-wrap gap-3">{uniqueColors.map(c => <button key={c} onClick={() => handleColorSelect(c)} className={`w-9 h-9 rounded-full capitalize transition-transform duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-pink-500 ${colorMap[c]||'bg-gray-300'} ${filters.color===c?'ring-2 ring-offset-2 dark:ring-offset-gray-800 ring-pink-500':''}`} aria-label={`Filter by ${c}`} />)}</div>
+              </div>
+              <div>
+                <h4 className={`font-semibold mb-4 ${primaryText}`}>Sizes</h4>
+                <div className="flex flex-wrap gap-3">{AVAILABLE_SIZES.map(s => <button key={s} onClick={() => handleSizeToggle(s)} className={`px-4 py-2 border rounded-full font-medium transition-colors duration-200 text-sm ${filters.sizes.includes(s) ? 'bg-pink-500 text-white border-pink-500' : 'bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600 dark:text-gray-300'}`}>{s}</button>)}</div>
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex items-center gap-4">
+              <Button onClick={clearFilters} className="w-full py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600">Clear</Button>
+              <Button onClick={onClose} className="w-full py-3 bg-pink-500 text-white rounded-xl hover:bg-pink-600">Apply Filters</Button>
+            </div>
           </motion.div>
         </>
       )}
@@ -92,19 +159,68 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
   }), [product]);
 
   return (
-    <motion.div layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="group bg-white dark:bg-gray-800 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+    <motion.div
+      layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.3 }}
+      className="group bg-white dark:bg-gray-800 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col"
+      onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}
+    >
       <div className="relative overflow-hidden">
-        <motion.div whileHover={{ scale: 1.1 }} className="cursor-pointer" onClick={() => onProductClick(product)}><ImageWithFallback src={product.image} alt={product.name} className="w-full h-64 object-cover" /></motion.div>
-        <motion.button onClick={() => onAddToWishlist(productForAction)} className="absolute bottom-3 right-3 p-3 rounded-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-xl z-10" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}><Heart className={`w-5 h-5 ${isWishlisted ? 'text-red-500 fill-red-500' : 'text-gray-400 dark:text-gray-300'}`} /></motion.button>
-        <div className="absolute top-3 left-3 flex flex-col gap-2">{product.isNew && <Badge className="bg-green-500 text-white">NEW</Badge>}{product.isBestseller && <Badge className="bg-orange-500 text-white">BESTSELLER</Badge>}</div>
-        <motion.div className="absolute top-3 right-3" animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }} transition={{ duration: 2, repeat: Infinity }}>{product.discount > 0 && <Badge className="bg-red-500 text-white text-sm px-3 py-1.5">{product.discount}% OFF</Badge>}</motion.div>
-        <AnimatePresence>{isHovered && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 hidden sm:flex items-center justify-center gap-3"><Button onClick={() => onProductClick(product)} className="bg-white text-gray-800 rounded-full p-3 h-12 w-12 flex items-center justify-center"><Eye className="w-5 h-5" /></Button></motion.div>}</AnimatePresence>
+        <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.4 }} className="cursor-pointer" onClick={() => onProductClick(product)}>
+          <ImageWithFallback src={product.image} alt={product.name} className="w-full h-64 object-cover" />
+        </motion.div>
+        
+        {/* Wishlist Heart Icon (Moved to bottom right of image) */}
+        <motion.button
+            onClick={() => onAddToWishlist(productForAction)}
+            className="absolute bottom-3 right-3 p-3 rounded-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-xl transition-all duration-300 hover:scale-110 z-10"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+        >
+            <Heart 
+                className={`w-5 h-5 transition-colors duration-300 ${
+                    isWishlisted 
+                        ? 'text-red-500 fill-red-500' // FILLED RED
+                        : 'text-gray-400 dark:text-gray-300 hover:text-red-500' // OUTLINE
+                }`} 
+            />
+        </motion.button>
+
+        {/* Badges (Positioned in the top left/right corners) */}
+        <div className="absolute top-3 left-3 flex flex-col gap-2">
+          {product.isNew && <Badge className="bg-green-500 text-white">NEW</Badge>}
+          {product.isBestseller && <Badge className="bg-orange-500 text-white">BESTSELLER</Badge>}
+        </div>
+        <motion.div className="absolute top-3 right-3" animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }} transition={{ duration: 2, repeat: Infinity, repeatType: "loop", ease: "easeInOut" }}>
+          {/* Ensure discount badge shows the calculated value */}
+          {product.discount > 0 && <Badge className="bg-red-500 text-white text-sm px-3 py-1.5">{product.discount}% OFF</Badge>}
+        </motion.div>
+        
+        {/* Quick Action Icons on Hover (View) */}
+        <AnimatePresence>
+          {isHovered &&
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} 
+                className="absolute inset-0 bg-black/60 hidden sm:flex items-center justify-center gap-3"
+            >
+              <Button onClick={() => onProductClick(product)} className="bg-white text-gray-800 hover:bg-gray-100 rounded-full p-3 h-12 w-12 flex items-center justify-center transform hover:scale-110 transition-transform"><Eye className="w-5 h-5" /></Button>
+            </motion.div>
+          }
+        </AnimatePresence>
       </div>
       <div className="p-5 flex flex-col flex-grow">
-        <div className="flex items-center gap-1 mb-2"><div className="flex">{[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />)}</div><span className="text-sm text-gray-600 dark:text-gray-400">{product.rating} ({product.reviews})</span></div>
-        <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-2 cursor-pointer hover:text-pink-600 h-14" onClick={() => onProductClick(product)}>{product.name}</h3>
-        <div className="flex items-center gap-2 my-3"><span className="text-xl font-bold text-pink-600">₹{product.discountedPrice}</span><span className="text-sm text-gray-500 line-through">₹{product.originalPrice}</span></div>
-        <div className="mt-auto"><Button onClick={() => onAddToCart(productForAction)} className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl py-3 flex items-center justify-center"><ShoppingCart className="w-4 h-4 mr-2" /> Add to Cart</Button></div>
+        <div className="flex items-center gap-1 mb-2">
+          <div className="flex">{[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />)}</div>
+          <span className="text-sm text-gray-600 dark:text-gray-400">{product.rating} ({product.reviews})</span>
+        </div>
+        <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-2 cursor-pointer hover:text-pink-600 transition-colors line-clamp-2 h-14" onClick={() => onProductClick(product)}>{product.name}</h3>
+        <div className="flex items-center gap-2 my-3">
+          <span className="text-xl font-bold text-pink-600">₹{product.discountedPrice}</span>
+          <span className="text-sm text-gray-500 line-through">₹{product.originalPrice}</span>
+        </div>
+        <div className="mt-auto">
+          <Button onClick={() => onAddToCart(productForAction)} className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white rounded-xl py-3 font-medium flex items-center justify-center">
+            <ShoppingCart className="w-4 h-4 mr-2" /> Add to Cart
+          </Button>
+        </div>
       </div>
     </motion.div>
   );
