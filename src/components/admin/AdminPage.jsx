@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Users, Package, TrendingUp, X, ChevronRight, Edit3, Trash2, DollarSign, BarChart2, Zap, CornerDownRight, Plus, MapPin, Phone, Mail, Save } from 'lucide-react';
@@ -5,14 +7,7 @@ import { ShoppingBag, Users, Package, TrendingUp, X, ChevronRight, Edit3, Trash2
 // NOTE: This dashboard uses mock data and pure local state management. 
 
 // Mock Data Structures
-const MOCK_PRODUCTS = [
-    { id: '1', name: 'Rainbow Unicorn Dress', price: 1199, stock: 45, category: 'Tops', description: 'A sparkling unicorn dress perfect for parties.', images: [{ color: 'pink', url: 'pink.jpg' }, { color: 'blue', url: 'blue.jpg' }], status: 'In Stock' },
-    { id: '2', name: 'Cool Dino T-Shirt Set', price: 999, stock: 12, category: 'Shirts', description: 'Two cool tees with dinosaur prints.', images: [{ color: 'green', url: 'green.jpg' }], status: 'Low Stock' },
-    { id: '3', name: 'Cute Baby Onesie', price: 639, stock: 0, category: 'Cord Sets', description: 'Soft cotton onesie for infants.', images: [{ color: 'white', url: 'white.jpg' }], status: 'Out of Stock' },
-    { id: '4', name: 'Colorful Sneakers', price: 1539, stock: 78, category: 'Culotte', description: 'Vibrant sneakers for active kids.', images: [{ color: 'multicolor', url: 'multi.jpg' }], status: 'In Stock' },
-    { id: '5', name: 'Winter Cozy Jacket', price: 1749, stock: 3, category: 'Dresses', description: 'Warm puffy jacket with fleece lining.', images: [{ color: 'navy', url: 'navy.jpg' }], status: 'Low Stock' },
-];
-
+// We keep the mock data here as the initial values for orders, users, and refund queue
 const MOCK_ORDERS = [
     { id: 'O1001', customer: 'Jane Doe', email: 'jane@example.com', phone: '555-1234', address: '123 Main St, Bubble City', total: 1199, status: 'Shipped', date: '2025-10-01', payment: 'Credit Card', items: [{ name: 'Unicorn Dress', qty: 1, price: 1199 }] },
     { id: 'O1002', customer: 'John Smith', email: 'john@example.com', phone: '555-5678', address: '456 Oak Ave, Sparkle Town', total: 2538, status: 'Pending', date: '2025-10-03', payment: 'PayPal', items: [{ name: 'Dino Set', qty: 2, price: 999 }, { name: 'Sneakers', qty: 1, price: 540 }] },
@@ -24,7 +19,6 @@ const MOCK_USERS = [
     { id: 'U2', name: 'John Smith', email: 'john@example.com', orders: 5 },
 ];
 
-// Mock Global State for Refunds (Shared between Order and Finance)
 const MOCK_REFUND_QUEUE = [
     { id: 'R1', orderId: 'O1003', customer: 'User X', amount: 639, reason: 'Wrong size ordered.', requestedBy: 'Order Manager', status: 'Pending Finance' },
 ];
@@ -51,7 +45,8 @@ const DashboardCard = ({ title, value, icon: Icon, colorClass, linkLabel, onClic
     </motion.div>
 );
 
-const AdminPage = ({ isDarkMode, onViewChange, userRole }) => {
+// ⭐️ UPDATED SIGNATURE: Accept products and setProducts from App.jsx
+const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }) => { 
     // Shared Refund State
     const [refundQueue, setRefundQueue] = useState(MOCK_REFUND_QUEUE);
 
@@ -62,8 +57,8 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole }) => {
     }, [userRole]);
 
     const [activeSection, setActiveSection] = useState(initialSection);
-    const [products, setProducts] = useState(MOCK_PRODUCTS);
-    const [orders, setOrders] = useState(MOCK_ORDERS);
+    // FIX: Orders and Users remain local state within AdminPage, mock data is used here
+    const [orders, setOrders] = useState(MOCK_ORDERS); 
     const [users, setUsers] = useState(MOCK_USERS);
 
     const containerClasses = isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900';
@@ -75,6 +70,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole }) => {
     const renderSection = () => {
         switch (activeSection) {
             case 'products':
+                // Pass product state and setter to ProductManagement
                 return <ProductManagement products={products} setProducts={setProducts} isDarkMode={isDarkMode} cardBaseClasses={cardBaseClasses} userRole={userRole} />;
             case 'orders':
                 return <OrderManagement orders={orders} setOrders={setOrders} setRefundQueue={setRefundQueue} isDarkMode={isDarkMode} cardBaseClasses={cardBaseClasses} userRole={userRole} />;
@@ -166,12 +162,13 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole }) => {
 
 // --- Dashboard Sub-Components ---
 const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, userRole }) => {
-    // ... (Dashboard content logic remains the same for filtering visibility)
+    // ... (unchanged)
     const canViewFinance = userRole === 'admin' || userRole === 'finance_manager';
     
     const totalRevenue = 52100.00; 
     const netProfit = 18500.00;
     const pendingTickets = 14;
+    
     const totalOrders = orders.length;
     const lowStockItems = products.filter(p => p.stock <= 10 && p.stock > 0).length;
     const outOfStockItems = products.filter(p => p.stock === 0).length;
@@ -216,7 +213,6 @@ const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, user
                 ))}
             </div>
             
-            {/* Low Stock Products & Recent Orders sections below use the same visibility logic as before */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {(userRole === 'admin' || userRole === 'product_manager') && (
                     <div className="p-6 rounded-2xl bg-white dark:bg-gray-800 shadow-lg">
@@ -239,7 +235,7 @@ const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, user
                         <h3 className="text-xl font-bold mb-4 text-cyan-500 dark:text-cyan-400">Recent Orders</h3>
                         <ul className="space-y-2">
                             {orders.slice(0, 3).map(o => (
-                                <li key={o.id} className="flex justify-between items-center text-sm p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
+                                <li key={o.id} className="flex justify-between p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-sm">
                                     <span>Order {o.id} ({o.customer})</span>
                                     <span className="font-semibold">{o.status}</span>
                                 </li>
@@ -252,42 +248,88 @@ const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, user
     );
 };
 
-
 // --- Product Management Modal Component (New) ---
 const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
     // Determine if we are adding a new product or editing an existing one
     const isEditing = !!product;
     
-    const [formData, setFormData] = useState(product || {
-        id: Date.now().toString(), name: '', price: 0, stock: 0, category: 'Tops', description: '', images: [], newImageColor: '', newImageUrl: ''
+    // NOTE: Added discountedPrice, originalPrice, and discount to initial state
+    const [formData, setFormData] = useState(product ? { 
+        ...product, // Use existing product data
+        originalPrice: product.originalPrice || product.price, // Fallback for price property
+        discountedPrice: product.discountedPrice || product.price,
+        images: product.images || [],
+        newImageColor: '', 
+        newImageUrl: '',
+    } : {
+        // Initial state for new product
+        id: Date.now().toString(), name: '', price: 0, stock: 0, category: 'Tops', description: '', images: [], newImageColor: '', newImageUrl: '', discountedPrice: 0, originalPrice: 0, discount: 0, rating: 4.5, reviews: 0, colors: [], sizes: ['S', 'M'],
     });
 
+    // Helper to calculate discount based on original and discounted price
+    const calculateDiscount = useCallback((original, discounted) => {
+        const org = Number(original);
+        const disc = Number(discounted);
+        if (org > disc && org > 0) {
+            return Math.floor(((org - disc) / org) * 100);
+        }
+        return 0;
+    }, []);
+
+    useEffect(() => {
+        // Recalculate discount whenever price fields change
+        const discountValue = calculateDiscount(formData.originalPrice, formData.discountedPrice);
+        if (discountValue !== formData.discount) {
+             setFormData(p => ({ ...p, discount: discountValue }));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formData.originalPrice, formData.discountedPrice, calculateDiscount]);
+
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(p => ({ ...p, [name]: value }));
+        const { name, value, type } = e.target;
+        const finalValue = type === 'number' ? Number(value) : value;
+        
+        setFormData(p => ({
+            ...p,
+            [name]: finalValue
+        }));
     };
     
     const handleImageAdd = () => {
         if (formData.newImageUrl && formData.newImageColor) {
+            // Check if color already exists
+            if (formData.images.some(img => img.color === formData.newImageColor)) {
+                alert(`Image for color "${formData.newImageColor}" already added. Delete it first to replace.`);
+                return;
+            }
             setFormData(p => ({
                 ...p,
                 images: [...p.images, { color: p.newImageColor, url: p.newImageUrl }],
                 newImageColor: '',
                 newImageUrl: '',
+                colors: [...new Set([...p.colors, p.newImageColor])], // Auto-update colors array
             }));
         }
     };
     
     const handleImageRemove = (index) => {
-        setFormData(p => ({
-            ...p,
-            images: p.images.filter((_, i) => i !== index),
-        }));
+        setFormData(p => {
+            const newImages = p.images.filter((_, i) => i !== index);
+            // Re-derive colors from remaining images
+            const newColors = [...new Set(newImages.map(img => img.color))];
+            return {
+                ...p,
+                images: newImages,
+                colors: newColors,
+            };
+        });
     };
     
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSave(formData);
+        // Set the primary price used in cart/wishlist to the discounted price
+        const dataToSave = { ...formData, price: formData.discountedPrice };
+        onSave(dataToSave);
         onClose();
     };
     
@@ -319,16 +361,29 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                         
                         <label className="block font-semibold">Category</label>
                         <select name="category" value={formData.category} onChange={handleChange} className={inputClasses} required>
-                            <option>Tops</option>
-                            <option>Shirts</option>
-                            <option>Cord Sets</option>
-                            <option>Dresses</option>
+                            <option value="Tops">Tops</option>
+                            <option value="Shirts">Shirts</option>
+                            <option value="Cord Sets">Cord Sets</option>
+                            <option value="Dresses">Dresses</option>
+                            <option value="Culotte">Culotte</option>
+                            <option value="Accessories">Accessories</option>
                         </select>
-                        
+
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block font-semibold">Price (₹)</label>
-                                <input type="number" name="price" value={formData.price} onChange={handleChange} className={inputClasses} min="0" required />
+                                <label className="block font-semibold">Original Price (₹)</label>
+                                <input type="number" name="originalPrice" value={formData.originalPrice} onChange={handleChange} className={inputClasses} min="0" required />
+                            </div>
+                            <div>
+                                <label className="block font-semibold">Discounted Price (₹)</label>
+                                <input type="number" name="discountedPrice" value={formData.discountedPrice} onChange={handleChange} className={inputClasses} min="0" required />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block font-semibold">Discount (%)</label>
+                                <input type="number" name="discount" value={formData.discount} className={`${inputClasses} font-bold text-green-500 dark:text-green-400`} readOnly />
                             </div>
                             <div>
                                 <label className="block font-semibold">Stock Quantity</label>
@@ -339,7 +394,7 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                     
                     {/* Column 2: Photos and Colors */}
                     <div className="space-y-4">
-                        <label className="block font-semibold">Product Photos & Colors</label>
+                        <label className="block font-semibold">Product Photos & Colors ({formData.images.length})</label>
                         
                         {/* Image Input */}
                         <div className="flex gap-2">
@@ -360,7 +415,19 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                                 </div>
                             ))}
                         </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Add photos tied to specific product colors/filters.</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Current Colors: {formData.colors.length > 0 ? formData.colors.join(', ') : 'None'}</p>
+                        
+                        {/* Status/Rating (Static for simplicity, but included in data model) */}
+                         <div className="grid grid-cols-2 gap-4 pt-2">
+                            <div>
+                                <label className="block font-semibold">Rating (Mock)</label>
+                                <p className="p-2 font-medium text-yellow-500">{formData.rating || 'N/A'}</p>
+                            </div>
+                             <div>
+                                <label className="block font-semibold">Reviews (Mock)</label>
+                                <p className="p-2 font-medium">{formData.reviews || 0}</p>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Submit Button */}
@@ -392,22 +459,35 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
             setProductToEdit(null);
             setIsModalOpen(true);
         } else if (action === 'Edit') {
+            // Find full product data (passed from table)
             setProductToEdit(product);
             setIsModalOpen(true);
         } else if (action === 'Delete') {
+            // FIX: Use setProducts to update the global state
             setProducts(products.filter(p => p.id !== product.id));
             console.log(`Deleted product ${product.id}`);
         }
     };
     
     const handleProductSave = (formData) => {
+        // Ensure price fields are numeric and map 'price' to 'discountedPrice' for consistency
+        const savedData = {
+            ...formData,
+            originalPrice: Number(formData.originalPrice),
+            discountedPrice: Number(formData.discountedPrice),
+            price: Number(formData.discountedPrice), // Set primary price for cart/wishlist
+            stock: Number(formData.stock),
+            status: formData.stock > 0 ? (formData.stock <= 10 ? 'Low Stock' : 'In Stock') : 'Out of Stock',
+        };
+
         if (productToEdit) {
-            setProducts(products.map(p => p.id === formData.id ? { ...p, ...formData } : p));
-            console.log('Product updated:', formData.id);
+            // FIX: Use setProducts to update the global state
+            setProducts(products.map(p => p.id === savedData.id ? savedData : p));
+            console.log('Product updated:', savedData.id);
         } else {
-            // New product defaults to In Stock status
-            setProducts(prev => [...prev, { ...formData, status: 'In Stock' }]);
-            console.log('New product added:', formData.name);
+            // FIX: Use setProducts to update the global state
+            setProducts(prev => [...prev, savedData]);
+            console.log('New product added:', savedData.name);
         }
     };
 
@@ -460,7 +540,8 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
                                 {products.map((p) => (
                                     <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{p.name}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm">₹{p.price.toFixed(2)}</td>
+                                        {/* Display discounted price */}
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">₹{p.discountedPrice.toFixed(2)}</td>
                                         <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${p.stock === 0 ? 'text-red-500' : p.stock <= 10 ? 'text-orange-500' : 'text-green-500'}`}>
                                             {p.stock}
                                         </td>
@@ -492,6 +573,7 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
 
 // --- Order Management Section (Product Manager/Admin) ---
 const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBaseClasses, userRole }) => {
+    // ... (unchanged)
     const canManageOrders = userRole === 'admin' || userRole === 'product_manager';
     const [selectedOrder, setSelectedOrder] = useState(null); // For detail view
 
@@ -503,6 +585,7 @@ const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBa
     
     // Mock function to raise a refund request
     const handleRefundRequest = (order) => {
+        // ... (unchanged)
         const refundReason = prompt(`Reason for refund/return request for Order ${order.id}?`);
         if (refundReason) {
              const newRequest = {
@@ -591,6 +674,7 @@ const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBa
 
 // --- Order Detail Modal (New Component) ---
 const OrderDetailModal = ({ order, isDarkMode, onClose }) => {
+    // ... (unchanged)
     const modalBg = isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900';
     const inputClasses = `p-2 rounded-lg border w-full dark:bg-gray-700 dark:border-gray-600`;
 
@@ -645,6 +729,7 @@ const OrderDetailModal = ({ order, isDarkMode, onClose }) => {
 
 // --- Finance Management Section (Finance Manager/Admin) ---
 const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue, setRefundQueue }) => {
+    // ... (unchanged)
     const canValidateCoupons = userRole === 'admin';
     const totalPaymentsToday = 5400;
     const totalPaymentsWeek = 18200;
@@ -729,9 +814,9 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
     );
 };
 
-// --- Coupon Management Section (Product Manager/Admin) ---
+// --- Coupon Management Section (Product Manager) ---
 const CouponManagement = ({ isDarkMode, cardBaseClasses, userRole }) => {
-    // Mock state for coupons created by Product Manager
+    // ... (unchanged)
     const [myCoupons, setMyCoupons] = useState([
         { id: 10, code: 'WELCOME10', discount: 10, status: 'Active (Approved)', uses: 50 },
         { id: 11, code: 'SPRING20', discount: 20, status: 'Pending Approval', uses: 0 },
@@ -743,7 +828,7 @@ const CouponManagement = ({ isDarkMode, cardBaseClasses, userRole }) => {
             id: Date.now(),
             code: `NEW${Math.floor(Math.random() * 900) + 100}`,
             discount: Math.floor(Math.random() * 10) + 10,
-            status: 'Pending Approval',
+            status: 'Pending Finance Approval', // Changed to reflect finance manager approval
             uses: 0,
         };
         setMyCoupons(prev => [...prev, newCoupon]);

@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from 'react';
 
 // Component Imports 
@@ -15,7 +17,6 @@ import OfferBar from "./components/OfferBar.jsx";
 import AdminLogin from './components/admin/AdminLogin.jsx';
 import AdminPage from './components/admin/AdminPage.jsx';
 
-
 // --- Placeholder Page Components (Unchanged) ---
 const Shop = () => <div className="text-center py-40 text-4xl font-bold text-cyan-600">🛍️ Shop All Our Latest Styles!</div>;
 const Categories = () => <div className="text-center py-40 text-4xl font-bold text-pink-600">📂 Explore Categories</div>;
@@ -23,14 +24,14 @@ const Deals = () => <div className="text-center py-40 text-4xl font-bold text-pu
 
 
 // ⬅️ Component: Combines Hero and ProductGrid for the Home View
-const HomePage = ({ onViewChange, isDarkMode, handleProductAction, wishlistItems }) => ( 
+const HomePage = ({ onViewChange, isDarkMode, handleProductAction, wishlistItems, products }) => ( 
     <>
         <HeroSection 
             onShopNowClick={() => onViewChange('shop')} 
             isDarkMode={isDarkMode} 
         />
         <ProductGrid 
-            products={[]}
+            products={products} // ⭐️ Uses centralized product list
             onProductClick={(p) => handleProductAction('View', p)}
             onAddToCart={(p) => handleProductAction('Add to Cart', p)}
             onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
@@ -39,6 +40,15 @@ const HomePage = ({ onViewChange, isDarkMode, handleProductAction, wishlistItems
         />
     </>
 );
+
+// ⭐️ Mock Product Data (Centralized Source of Truth)
+const MOCK_PRODUCT_DATA = [
+    { id: '1', name: 'Rainbow Unicorn Dress', image: 'https://images.unsplash.com/photo-1560359601-01c9c800ee60?w=600', originalPrice: 1599, discountedPrice: 1199.00, discount: 25, rating: 4.8, reviews: 156, colors: ['pink', 'purple', 'blue'], sizes: ['S', 'M', 'L'], category: 'Tops', isNew: true, isBestseller: true, description: 'A sparkling unicorn dress perfect for parties.', stock: 45 },
+    { id: '2', name: 'Cool Dino T-Shirt Set', image: 'https://images.unsplash.com/photo-1585528761181-2865fc48723f?w=600', originalPrice: 1299, discountedPrice: 999.00, discount: 23, rating: 4.6, reviews: 89, colors: ['green', 'blue', 'orange'], sizes: ['XS', 'S', 'M'], category: 'Shirts', isBestseller: true, description: 'Two cool tees with dinosaur prints.', stock: 12 },
+    { id: '3', name: 'Cute Baby Onesie', image: 'https://images.unsplash.com/photo-1545877872-3e6582cbc37c?w=600', originalPrice: 799, discountedPrice: 639.00, discount: 20, rating: 4.9, reviews: 234, colors: ['white', 'pink', 'yellow'], sizes: ['XS'], category: 'Cord Sets', isNew: true, description: 'Soft cotton onesie for infants.', stock: 0 },
+    { id: '4', name: 'Colorful Sneakers', image: 'https://images.unsplash.com/photo-1669762162480-fb67378e307b?w=600', originalPrice: 2199, discountedPrice: 1539.00, discount: 30, rating: 4.7, reviews: 67, colors: ['multicolor', 'rainbow', 'black'], sizes: ['M', 'L'], category: 'Culotte', description: 'Vibrant sneakers for active kids.', stock: 78 },
+    { id: '5', name: 'Winter Cozy Jacket', image: 'https://images.unsplash.com/photo-1513978121979-75bfaa6a713b?w=600', originalPrice: 2499, discountedPrice: 1749.00, discount: 30, rating: 4.9, reviews: 145, colors: ['navy', 'red', 'green'], sizes: ['M', 'L', 'XL'], category: 'Dresses', isBestseller: true, description: 'Warm puffy jacket with fleece lining.', stock: 3 },
+];
 
 
 export default function App() {
@@ -60,6 +70,8 @@ export default function App() {
   const [wishlistItems, setWishlistItems] = useState([]); 
   const [cartItems, setCartItems] = useState([]);
   const [discounts, setDiscounts] = useState([]);
+  // ⭐️ Product State is now centralized
+  const [products, setProducts] = useState(MOCK_PRODUCT_DATA); 
   
   // UI States
   const [currentView, setCurrentView] = useState('home');
@@ -90,7 +102,7 @@ export default function App() {
     setCurrentUserName(role.toUpperCase().replace('_', ' '));
     setCurrentUserRole(role);
     onViewChange('admin'); 
-    // ⭐️ FIX: Change URL back to home on successful login/navigation
+    // FIX: Change URL back to home on successful login/navigation
     window.history.pushState({}, '', '/'); 
   };
   
@@ -101,7 +113,7 @@ export default function App() {
     onViewChange('home');
   };
 
-  // ⭐️ Updated onViewChange to handle URL changes
+  // Updated onViewChange to handle URL changes
   const onViewChange = (viewId) => {
     setCurrentView(viewId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -237,7 +249,7 @@ export default function App() {
   
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  // ⭐️ CRITICAL FIX: Effect to read URL on mount (Simulates router)
+  // Effect to read URL on mount (Simulates router)
   useEffect(() => {
     const path = window.location.pathname.substring(1); // Remove leading '/'
     if (path) {
@@ -254,7 +266,13 @@ export default function App() {
   const renderView = () => {
     // Check if the user is an Admin/Manager: if so, ONLY show the admin page
     if (currentView === 'admin' && (currentUserRole === 'admin' || currentUserRole === 'product_manager' || currentUserRole === 'finance_manager')) {
-        return <AdminPage isDarkMode={isDarkMode} onViewChange={onViewChange} userRole={currentUserRole} />;
+        return <AdminPage 
+            isDarkMode={isDarkMode} 
+            onViewChange={onViewChange} 
+            userRole={currentUserRole}
+            products={products}
+            setProducts={setProducts} 
+        />;
     }
     
     switch (currentView) {
@@ -264,6 +282,7 @@ export default function App() {
             isDarkMode={isDarkMode} 
             handleProductAction={handleProductAction} 
             wishlistItems={wishlistItems}
+            products={products} // ⭐️ Passed product state
         />;
       case 'shop':
         return (
@@ -273,6 +292,7 @@ export default function App() {
                 onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
                 isDarkMode={isDarkMode}
                 wishlistItems={wishlistItems}
+                products={products} // ⭐️ Passed product state
             />
         );
       case 'categories':
@@ -293,7 +313,7 @@ export default function App() {
         return <AdminLogin isDarkMode={isDarkMode} onLoginSuccess={handleManagerLoginSuccess} />;
       
       default:
-        return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} handleProductAction={handleProductAction} wishlistItems={wishlistItems} />;
+        return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} handleProductAction={handleProductAction} wishlistItems={wishlistItems} products={products} />;
     }
   };
 
