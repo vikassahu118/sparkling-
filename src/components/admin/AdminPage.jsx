@@ -1017,7 +1017,7 @@ const CouponFormModal = ({ isOpen, onClose, onSave, isDarkMode }) => {
                     
                     {/* Coupon Code */}
                     <div>
-                        <label className="block font-semibold mb-1 flex items-center"><Tag className='w-4 h-4 mr-2 text-pink-500' /> Coupon Code</label>
+                        <label className="font-semibold mb-1 flex items-center"><Tag className='w-4 h-4 mr-2 text-pink-500' /> Coupon Code</label>
                         <input type="text" name="code" value={formData.code} onChange={handleChange} className={inputClasses} placeholder="SUMMER20" required maxLength={15} />
                     </div>
 
