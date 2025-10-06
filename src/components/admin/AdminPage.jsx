@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Users, Package, TrendingUp, X, ChevronRight, Edit3, Trash2, DollarSign, BarChart2, Zap, CornerDownRight, Plus, MapPin, Phone, Mail, Save, Tag, Image as ImageIcon } from 'lucide-react'; // Added Image icon
+// Added Menu icon for mobile toggle
+import { ShoppingBag, Users, Package, TrendingUp, X, ChevronRight, Edit3, Trash2, DollarSign, BarChart2, Zap, CornerDownRight, Plus, MapPin, Phone, Mail, Save, Tag, Image as ImageIcon, Menu } from 'lucide-react'; 
 
 // NOTE: This dashboard uses mock data and pure local state management. 
 
@@ -53,6 +54,8 @@ const DashboardCard = ({ title, value, icon: Icon, colorClass, linkLabel, onClic
 const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }) => { 
     // Shared Refund State
     const [refundQueue, setRefundQueue] = useState(MOCK_REFUND_QUEUE);
+    // ⭐️ NEW STATE for Mobile Sidebar visibility
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const initialSection = useMemo(() => {
         if (userRole === 'product_manager') return 'products';
@@ -70,6 +73,11 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
     const mainContentClasses = isDarkMode ? 'bg-gray-900' : 'bg-gray-50';
     const cardBaseClasses = isDarkMode ? 'bg-gray-800' : 'bg-white';
     const headerClasses = isDarkMode ? 'text-purple-400' : 'text-pink-600';
+
+    const handleSectionChange = (sectionId) => {
+        setActiveSection(sectionId);
+        setIsSidebarOpen(false); // ⭐️ Close sidebar on selection for mobile
+    };
 
     const renderSection = () => {
         switch (activeSection) {
@@ -112,12 +120,42 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
 
 
     return (
+        // ⭐️ The parent div uses 'flex' layout on all screens
         <div className={`min-h-screen flex ${containerClasses}`}>
-            {/* Sidebar */}
+            {/* ⭐️ Sidebar: Responsive Implementation */}
+            
+            {/* Mobile Overlay */}
+            <AnimatePresence>
+                {isSidebarOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="fixed inset-0 bg-black/50 z-20 lg:hidden" // Only on small screens
+                        onClick={() => setIsSidebarOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* ⭐️ CORRECTED Mobile Sidebar: Always fixed, hides on large screen, slides via motion */}
             <motion.div 
-                initial={{ x: -50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.3 }}
-                className={`w-64 p-6 flex flex-col ${sidebarClasses} sticky top-0 h-screen`}
+                initial={false} 
+                // Animate for mobile slide in/out
+                animate={isSidebarOpen ? { x: 0 } : { x: -256 }} 
+                transition={{ duration: 0.3 }}
+                
+                // ⭐️ KEY FIX: Ensure 'flex' is applied by default (mobile view) and is 'fixed'.
+                // 'lg:hidden' ensures this entire block disappears when the static sidebar takes over.
+                className={`w-64 p-6 flex-col ${sidebarClasses} h-screen z-30 
+                            fixed top-0 left-0 flex
+                            lg:hidden`}
             >
+                {/* Close Button for Mobile */}
+                <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700/50">
+                    <X className="w-6 h-6 text-white" />
+                </button>
+
                 <h1 className={`text-3xl font-extrabold mb-8 bg-gradient-to-r ${isDarkMode ? 'from-purple-400 to-cyan-400' : 'from-pink-500 to-purple-600'} bg-clip-text text-transparent`}>
                     {userRole?.toUpperCase().replace('_', ' ') || 'MANAGER'}
                 </h1>
@@ -125,7 +163,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
                     {filteredNavItems.map(item => (
                         <motion.button
                             key={item.id}
-                            onClick={() => setActiveSection(item.id)}
+                            onClick={() => handleSectionChange(item.id)} // Use new handler
                             whileHover={{ x: 5 }}
                             className={`w-full text-left flex items-center p-3 rounded-xl transition-all duration-200 ${
                                 activeSection === item.id
@@ -149,13 +187,52 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
                 </div>
             </motion.div>
 
+            {/* ⭐️ NEW STATIC DESKTOP SIDEBAR: Renders ONLY on large screens, ensuring consistent layout */}
+            {/* It is a regular flex item, making the main 'flex' layout correct. */}
+            <div className={`w-64 p-6 flex-col ${sidebarClasses} h-screen z-10 hidden lg:flex flex-shrink-0`}>
+                 <h1 className={`text-3xl font-extrabold mb-8 bg-gradient-to-r ${isDarkMode ? 'from-purple-400 to-cyan-400' : 'from-pink-500 to-purple-600'} bg-clip-text text-transparent`}>
+                    {userRole?.toUpperCase().replace('_', ' ') || 'MANAGER'}
+                </h1>
+                <nav className="space-y-2 flex-grow">
+                    {filteredNavItems.map(item => (
+                        <button
+                            key={item.id}
+                            onClick={() => handleSectionChange(item.id)} 
+                            className={`w-full text-left flex items-center p-3 rounded-xl transition-all duration-200 ${
+                                activeSection === item.id
+                                    ? 'bg-pink-500 text-white shadow-lg'
+                                    : 'text-gray-400 hover:bg-gray-700/50 hover:text-white dark:text-gray-300 dark:hover:bg-gray-700'
+                            }`}
+                        >
+                            <item.icon className="w-5 h-5 mr-3" />
+                            <span className="font-medium">{item.label}</span>
+                        </button>
+                    ))}
+                </nav>
+                <div className="pt-6 border-t border-gray-700/50">
+                    <button
+                        onClick={() => onViewChange('admin_login')} 
+                        className={`w-full text-left flex items-center p-3 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors`}
+                    >
+                        <X className="w-5 h-5 mr-3" />
+                        <span className="font-medium">Exit Admin</span>
+                    </button>
+                </div>
+            </div>
+
+
             {/* Main Content Area */}
-            <main className={`flex-1 p-8 overflow-y-auto ${mainContentClasses}`}>
-                <header className="flex justify-between items-center pb-6 mb-8 border-b border-gray-700/50">
-                    <h2 className={`text-4xl font-extrabold capitalize ${headerClasses}`}>
+            <main className={`flex-1 p-4 sm:p-8 overflow-y-auto ${mainContentClasses}`}> 
+                <header className="flex justify-between items-center pb-4 mb-4 sm:pb-6 sm:mb-8 border-b border-gray-700/50 sticky top-0 z-10 bg-inherit">
+                    {/* ⭐️ Mobile Toggle Button (Visible ONLY on small screens) */}
+                    <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 rounded-full hover:bg-gray-700/50 mr-3">
+                        <Menu className="w-6 h-6 text-pink-500" />
+                    </button>
+                    
+                    <h2 className={`text-2xl sm:text-4xl font-extrabold capitalize ${headerClasses} truncate`}>
                         {activeSection.replace('_', ' ')}
                     </h2>
-                    <p className="text-gray-500 dark:text-gray-400">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base hidden sm:block">
                         Logged in as: <span className="font-semibold text-white dark:text-gray-200 capitalize">{userRole}</span>
                     </p>
                 </header>
@@ -167,7 +244,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
 
 // --- Dashboard Sub-Components (Unchanged) ---
 const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, userRole }) => {
-    // ... (content of Dashboard)
+    // ... (content of Dashboard, grid classes updated below)
     const canViewFinance = userRole === 'admin' || userRole === 'finance_manager';
     
     const totalRevenue = 52100.00; 
@@ -204,6 +281,7 @@ const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, user
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="space-y-10">
+            {/* ⭐️ Updated grid classes for better responsiveness: default 1-col, sm 2-col, lg 3-col, xl 4-col */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {renderedCards.map((card, index) => (
                     <DashboardCard 
@@ -385,15 +463,17 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
         <AnimatePresence>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[1000]" onClick={onClose} />
             <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -50, opacity: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className={`fixed inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto max-w-4xl p-8 rounded-3xl shadow-2xl z-[1001] ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+                // ⭐️ Updated max-w-lg (large) and grid-cols-1 on mobile
+                className={`fixed inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto max-w-lg lg:max-w-4xl p-4 sm:p-8 rounded-3xl shadow-2xl z-[1001] ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex justify-between items-center border-b pb-4 mb-6 border-gray-700/50">
-                    <h3 className={`text-3xl font-bold ${headerClasses}`}>{isEditing ? 'Edit Product' : 'Add New Product'}</h3>
+                    <h3 className={`text-2xl sm:text-3xl font-bold ${headerClasses}`}>{isEditing ? 'Edit Product' : 'Add New Product'}</h3>
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-700/50"><X className="w-6 h-6" /></button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-6">
+                {/* ⭐️ Updated form grid for responsiveness: 1-col on mobile, 2-col on large screens */}
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Column 1: Basic Details */}
                     <div className="space-y-4">
                         <label className="block font-semibold">Name</label>
@@ -512,7 +592,7 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                     </div>
 
                     {/* Submit Button */}
-                    <div className="col-span-2 pt-4 border-t dark:border-gray-700">
+                    <div className="col-span-1 lg:col-span-2 pt-4 border-t dark:border-gray-700"> {/* ⭐️ Span 2 cols on desktop */}
                         <button type="submit" className="w-full py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl transition-colors">
                             <Save className="w-5 h-5 mr-2 inline" /> {isEditing ? 'Save Changes' : 'Create Product'}
                         </button>
@@ -606,6 +686,7 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
                         </button>
                     )}
                     
+                    {/* ⭐️ Table is now wrapped to handle horizontal scroll on small screens */}
                     <div className={`overflow-x-auto ${cardBaseClasses} rounded-xl shadow-lg`}>
                         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead className="bg-gray-100 dark:bg-gray-700">
@@ -700,7 +781,8 @@ const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBa
             )}
 
             <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Order List</h3>
-            <div className={`overflow-x-auto ${cardBaseClasses} rounded-xl shadow-lg`}>
+            {/* ⭐️ Table is now wrapped to handle horizontal scroll on small screens */}
+            <div className={`overflow-x-auto ${cardBaseClasses} rounded-xl shadow-lg`}> 
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-100 dark:bg-gray-700">
                         <tr>
@@ -756,7 +838,7 @@ const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBa
 const OrderDetailModal = ({ order, isDarkMode, onClose }) => {
     // ... (content of OrderDetailModal)
     const modalBg = isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900';
-    const inputClasses = `p-2 rounded-lg border w-full dark:bg-gray-700 dark:border-gray-600`;
+    // const inputClasses = `p-2 rounded-lg border w-full dark:bg-gray-700 dark:border-gray-600`;
 
     if (!order) return null;
 
@@ -764,18 +846,20 @@ const OrderDetailModal = ({ order, isDarkMode, onClose }) => {
         <AnimatePresence>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[2000]" onClick={onClose} />
             <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className={`fixed inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto max-w-4xl p-8 rounded-3xl shadow-2xl z-[2001] ${modalBg}`}
+                // ⭐️ Updated max-w-lg (large) and grid-cols-1 on mobile
+                className={`fixed inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto max-w-lg lg:max-w-4xl p-4 sm:p-8 rounded-3xl shadow-2xl z-[2001] ${modalBg}`}
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex justify-between items-center border-b pb-4 mb-6 border-gray-700/50">
-                    <h3 className="text-3xl font-bold text-pink-500">Order #{order.id} Details</h3>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-pink-500">Order #{order.id} Details</h3>
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-700/50"><X className="w-6 h-6" /></button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-8">
+                {/* ⭐️ Updated grid for responsiveness: 1-col on mobile, 2-col on large screens */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* User Details */}
                     <div className="space-y-4 p-4 rounded-xl dark:bg-gray-700/50 bg-gray-50 shadow-inner">
-                        <h4 className="text-xl font-bold mb-3 flex items-center gap-2 text-purple-500"><User className="w-5 h-5" /> Customer Info</h4>
+                        <h4 className="text-xl font-bold mb-3 flex items-center gap-2 text-purple-500"><Users className="w-5 h-5" /> Customer Info</h4>
                         <p className="flex items-center gap-2"><span className="font-semibold w-20">Name:</span> {order.customer}</p>
                         <p className="flex items-center gap-2"><Phone className="w-4 h-4 mr-1 text-cyan-400" /> {order.phone}</p>
                         <p className="flex items-center gap-2"><Mail className="w-4 h-4 mr-1 text-cyan-400" /> {order.email}</p>
@@ -836,7 +920,8 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
             {/* Total Orders & Payments Summary */}
             <div className={`p-6 rounded-xl shadow-lg ${cardBaseClasses}`}>
                 <h4 className="text-xl font-bold mb-4 text-purple-500">Total Payments Summary</h4>
-                <div className="grid grid-cols-3 gap-4 text-center">
+                {/* ⭐️ Updated grid classes for responsiveness */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                     {PAYMENT_DATA.map(data => (
                         <div key={data.label} className="p-4 rounded-lg bg-gray-100 dark:bg-gray-700 border dark:border-gray-600">
                             <p className="text-sm font-medium text-pink-500">{data.label}</p>
@@ -852,6 +937,7 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
             {/* ⭐️ NEW: Daily Payments and Orders Table */}
             <div className={`p-6 rounded-xl shadow-lg ${cardBaseClasses}`}>
                 <h4 className="text-xl font-bold mb-4 text-cyan-500">Daily Sales and Payments</h4>
+                {/* ⭐️ Table wrapped for horizontal scroll on mobile */}
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead className="bg-gray-100 dark:bg-gray-700">
@@ -888,8 +974,8 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
                 ) : (
                     <ul className="space-y-3">
                         {refundQueue.map(refund => (
-                            <li key={refund.id} className="flex justify-between items-center p-3 rounded-lg bg-red-50 dark:bg-red-900/10 border border-red-300 dark:border-red-700">
-                                <div>
+                            <li key={refund.id} className="flex justify-between flex-wrap items-center p-3 rounded-lg bg-red-50 dark:bg-red-900/10 border border-red-300 dark:border-red-700">
+                                <div className='mb-2 sm:mb-0'>
                                     <p className="font-semibold text-lg text-red-600">Order {refund.orderId}</p>
                                     <p className="text-xs text-gray-700 dark:text-gray-300">Amount: ₹{refund.amount.toFixed(2)} | Reason: {refund.reason}</p>
                                 </div>
@@ -971,6 +1057,7 @@ const CouponManagement = ({ isDarkMode, cardBaseClasses, userRole }) => {
                 </button>
             )}
             
+            {/* ⭐️ Table wrapped for horizontal scroll on mobile */}
             <div className={`overflow-x-auto ${cardBaseClasses} rounded-xl shadow-lg`}>
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-100 dark:bg-gray-700">
@@ -1005,6 +1092,7 @@ const UserManagement = ({ users, setUsers, isDarkMode, cardBaseClasses }) => {
     return (
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
             <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Customer List</h3>
+            {/* ⭐️ Table wrapped for horizontal scroll on mobile */}
             <div className={`overflow-x-auto ${cardBaseClasses} rounded-xl shadow-lg`}>
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-100 dark:bg-gray-700">
@@ -1074,7 +1162,8 @@ const CouponFormModal = ({ isOpen, onClose, onSave, isDarkMode }) => {
         <AnimatePresence>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[2000]" onClick={onClose} />
             <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className={`fixed inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto max-w-lg p-8 rounded-3xl shadow-2xl z-[2001] ${modalBg}`}
+                // ⭐️ Max-w-lg is suitable for this modal on most screens
+                className={`fixed inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto max-w-lg p-4 sm:p-8 rounded-3xl shadow-2xl z-[2001] ${modalBg}`}
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex justify-between items-center border-b pb-4 mb-6 dark:border-gray-700">

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 
 // Component Imports 
@@ -77,6 +76,8 @@ export default function App() {
   const [currentView, setCurrentView] = useState('home');
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  // ⭐️ NEW: A convenient way to check if we are in an Admin view
+  const isAdminView = currentView === 'admin' && (currentUserRole === 'admin' || currentUserRole === 'product_manager' || currentUserRole === 'finance_manager');
 
   // --- Handlers ---
   const toggleTheme = () => setIsDarkMode(prev => !prev);
@@ -273,8 +274,8 @@ export default function App() {
 
   // --- Router/Render Logic ---
   const renderView = () => {
-    // Check if the user is an Admin/Manager: if so, ONLY show the admin page
-    if (currentView === 'admin' && (currentUserRole === 'admin' || currentUserRole === 'product_manager' || currentUserRole === 'finance_manager')) {
+    // Use the isAdminView boolean check
+    if (isAdminView) {
         return <AdminPage 
             isDarkMode={isDarkMode} 
             onViewChange={onViewChange} 
@@ -329,67 +330,77 @@ export default function App() {
   // The main App structure
   return (
     <div className={`${isDarkMode ? 'dark bg-gray-900 min-h-screen' : 'bg-white min-h-screen'} font-inter transition-colors duration-500`}>
-      {/* OfferBar */}
-      <OfferBar />
-      {/* 1. Navbar */}
-      <Navbar
-        isDarkMode={isDarkMode}
-        toggleTheme={toggleTheme}
-        cartCount={cartCount}
-        onCartClick={() => setIsCartOpen(true)}
-        onSearchClick={() => setIsSearchOpen(true)}
-        onWishlistClick={() => setIsWishlistOpen(true)}
-        onProfileClick={onProfileClick} // Now only routes general customers
-        currentView={currentView}
-        onViewChange={onViewChange}
-      />
+      
+      {/* 1. Conditional Rendering for OfferBar */}
+      {!isAdminView && <OfferBar />}
 
-      {/* 2. Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* 2. Conditional Rendering for Navbar */}
+      {!isAdminView && (
+        <Navbar
+          isDarkMode={isDarkMode}
+          toggleTheme={toggleTheme}
+          cartCount={cartCount}
+          onCartClick={() => setIsCartOpen(true)}
+          onSearchClick={() => setIsSearchOpen(true)}
+          onWishlistClick={() => setIsWishlistOpen(true)}
+          onProfileClick={onProfileClick}
+          currentView={currentView}
+          onViewChange={onViewChange}
+        />
+      )}
+
+      {/* 3. Main Content Area: Always render, its content handles its own layout */}
+      <main className={isAdminView ? "h-screen" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"}>
         {renderView()}
       </main>
 
+       {/* Search Modal (Only needed for main site) */}
+      {!isAdminView && (
+          <SearchModal
+            isOpen={isSearchOpen}
+            onClose={() => setIsSearchOpen(false)}
+            isDarkMode={isDarkMode}
+          />
+      )}
 
-       {/* Search Modal */}
-      <SearchModal
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        isDarkMode={isDarkMode}
-      />
-
-      {/* 3. Wishlist Sidebar */}
-      <WishlistSidebar
-        isOpen={isWishlistOpen}
-        onClose={() => setIsWishlistOpen(false)}
-        wishlistItems={wishlistItems}
-        onRemoveItem={handleRemoveWishlistItem}
-        onMoveAllToCart={handleMoveAllToCart}
-        isDarkMode={isDarkMode}
-      />
+      {/* 4. Wishlist Sidebar (Only needed for main site) */}
+      {!isAdminView && (
+          <WishlistSidebar
+            isOpen={isWishlistOpen}
+            onClose={() => setIsWishlistOpen(false)}
+            wishlistItems={wishlistItems}
+            onRemoveItem={handleRemoveWishlistItem}
+            onMoveAllToCart={handleMoveAllToCart}
+            isDarkMode={isDarkMode}
+          />
+      )}
       
-      {/* Discount Popup */}
-      <DiscountPopup
-        isVisible={isPopupVisible}
-        onClose={() => setIsPopupVisible(false)}
-        onApplyCode={handleApplyCode}
-      />
+      {/* 5. Discount Popup (Only needed for main site) */}
+      {!isAdminView && (
+          <DiscountPopup
+            isVisible={isPopupVisible}
+            onClose={() => setIsPopupVisible(false)}
+            onApplyCode={handleApplyCode}
+          />
+      )}
 
-      {/* 4. Footer */}
-      <Footer onViewChange={onViewChange} isDarkMode={isDarkMode} />
+      {/* 6. Conditional Rendering for Footer */}
+      {!isAdminView && <Footer onViewChange={onViewChange} isDarkMode={isDarkMode} />}
 
-      {/* 5. Cart */}
-      <Cart 
-        isDarkMode={isDarkMode}
-        isOpen={isCartOpen} 
-        onClose={() => setIsCartOpen(false)}
-        items={cartItems}
-        onUpdateQuantity={handleUpdateQuantity} 
-        onRemoveItem={handleRemoveItem}         
-        onCheckout={handleCheckout}             
-        appliedDiscounts={discounts}
-        onApplyDiscount={handleApplyDiscount}   
-      />
+      {/* 7. Cart (Only needed for main site) */}
+      {!isAdminView && (
+          <Cart 
+            isDarkMode={isDarkMode}
+            isOpen={isCartOpen} 
+            onClose={() => setIsCartOpen(false)}
+            items={cartItems}
+            onUpdateQuantity={handleUpdateQuantity} 
+            onRemoveItem={handleRemoveItem}         
+            onCheckout={handleCheckout}             
+            appliedDiscounts={discounts}
+            onApplyDiscount={handleApplyDiscount}   
+          />
+      )}
     </div>
   );
 }
-
