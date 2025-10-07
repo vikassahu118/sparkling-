@@ -2,20 +2,28 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShoppingCart, Minus, Plus, Trash2, Tag, Truck } from 'lucide-react';
 
-// --- Placeholder/Helper Components ---
+// --- Placeholder/Helper Components (Updated Button) ---
 
-// NOTE: Please ensure this Button component aligns with your Button in ProfilePage/WishlistSidebar
-const Button = ({ children, onClick, className = '' }) => (
-    <button onClick={onClick} className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-200 ${className}`}>
+// ⭐ MODIFIED: Button component now correctly handles the disabled prop and styling
+const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
+    <button 
+        onClick={onClick} 
+        disabled={disabled}
+        className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-200 ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+        {...props}
+    >
         {children}
     </button>
 );
 
 const ImageWithFallback = ({ src, alt, className = '' }) => (
-    <div className={`flex items-center justify-center bg-gray-200 dark:bg-gray-600 rounded-lg overflow-hidden ${className}`}>
-        {/* Placeholder for image */}
-        <span className="text-gray-500 dark:text-gray-400 text-xs text-center p-1">IMG</span>
-    </div>
+    // ⭐ MODIFIED: Added image source and alt for realism
+    <img 
+        src={src || 'https://placehold.co/60x60/9333ea/ffffff?text=Product'}
+        alt={alt} 
+        className={`object-cover ${className}`}
+        onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/60x60/9333ea/ffffff?text=IMG' }}
+    />
 );
 
 // --- Main Cart Component ---
@@ -27,7 +35,7 @@ export const Cart = ({
     items, 
     onUpdateQuantity, 
     onRemoveItem, 
-    onCheckout, 
+    onCheckout, // This function must handle the routing/state change to show CheckoutPage
     appliedDiscounts, 
     onApplyDiscount 
 }) => {
@@ -38,17 +46,12 @@ export const Cart = ({
     const shippingCost = 99.00; // Fixed shipping for now
     const freeShippingThreshold = 500.00;
     
-    // Calculate Subtotal (before discount and shipping)
-    // Ensure item.price is treated as 0 if undefined/null to prevent reduce failure
     const subtotal = items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
     
-    // Calculate Discount
     const totalDiscountAmount = appliedDiscounts.reduce((sum, discount) => sum + (discount.amount || 0), 0);
 
-    // Calculate Actual Shipping
     const finalShippingCost = subtotal >= freeShippingThreshold ? 0.00 : shippingCost;
 
-    // Calculate Total
     const finalTotal = subtotal + finalShippingCost - totalDiscountAmount;
 
     // --- Styling Classes ---
@@ -64,9 +67,12 @@ export const Cart = ({
         } else {
             document.body.style.overflow = 'unset';
         }
+        return () => {
+             // Cleanup on unmount
+             document.body.style.overflow = 'unset';
+        };
     }, [isOpen]);
 
-    // ⭐️ FIX: Safely format price, defaulting to 0 if the price is invalid
     const formatPrice = (price) => {
         const safePrice = parseFloat(price);
         return `₹${(isNaN(safePrice) ? 0 : safePrice).toFixed(2)}`;
@@ -141,6 +147,7 @@ export const Cart = ({
                                                             onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
                                                             className="p-1 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-l-lg"
                                                             aria-label="Decrease quantity"
+                                                            disabled={item.quantity <= 1} // Disable if quantity is 1
                                                         >
                                                             <Minus className="w-4 h-4" />
                                                         </button>
@@ -190,6 +197,7 @@ export const Cart = ({
                                         <Button 
                                             onClick={() => onApplyDiscount(discountCode)}
                                             className="bg-pink-500 hover:bg-pink-600 text-white dark:bg-purple-600 dark:hover:bg-purple-700 transition-colors"
+                                            disabled={!discountCode}
                                         >
                                             Apply
                                         </Button>
@@ -236,7 +244,10 @@ export const Cart = ({
 
                                     {/* Checkout Button */}
                                     <Button 
-                                        onClick={onCheckout}
+                                        onClick={() => {
+                                            onClose(); // Close the cart sidebar first
+                                            onCheckout(); // Then trigger the navigation
+                                        }}
                                         className="w-full mt-4 flex items-center justify-center gap-2 bg-pink-500 hover:bg-pink-600 text-white dark:bg-purple-600 dark:hover:bg-purple-700 transition-colors py-3 shadow-lg"
                                         disabled={items.length === 0}
                                     >
