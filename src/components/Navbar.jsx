@@ -160,12 +160,22 @@ export default function Navbar({
                 />
               </motion.div>
               <div className="sm:block">
-                {/* ⭐ FIX: Using <img> tag for the Heading SVG (LogoText) */}
-                <img 
-                    src={LogoText} 
-                    alt="Brand Name" 
-                    className="h-7 lg:h-8 w-auto" 
-                />
+                <motion.h1 
+                  className={`text-2xl lg:text-3xl font-bold bg-gradient-to-r ${getTextGradient()} bg-clip-text text-transparent`}
+                  animate={{
+                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "linear"
+                  }}
+                  style={{
+                    backgroundSize: '200% 200%'
+                  }}
+                >
+                  Sparkling Bubble
+                </motion.h1>
                 
                 <p className={`text-xs ${isDarkMode ? 'text-purple-300' : 'text-gray-500'} transition-colors duration-500`}>
                   Kids Fashion Paradise {isDarkMode ? '🌙' : '✨'}
