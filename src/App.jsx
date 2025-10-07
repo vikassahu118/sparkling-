@@ -8,13 +8,15 @@ import { ProductGrid } from './components/ProductGrid.jsx';
 import About from './components/About.jsx';
 import DiscountPopup from './components/DiscountPopup.jsx';
 import { Cart } from './components/Cart.jsx';
- import SearchModal from './components/Search.jsx'; 
+import SearchModal from './components/Search.jsx'; 
 import WishlistSidebar from './components/Wishlist.jsx';
 import ProfilePage from './components/Profile.jsx';
 import OfferBar from "./components/OfferBar.jsx";
 import AdminLogin from './components/admin/AdminLogin.jsx';
 import AdminPage from './components/admin/AdminPage.jsx';
 import CustomerAuth from './components/CustomerAuth.jsx'; 
+// ⭐ 1. Import the new CheckoutPage component
+import CheckoutPage from './components/CheckoutPage.jsx'; 
 
 // --- Placeholder Page Components (Unchanged) ---
 const Shop = () => <div className="text-center py-40 text-4xl font-bold text-cyan-600">🛍️ Shop All Our Latest Styles!</div>;
@@ -74,7 +76,8 @@ export default function App() {
   const [products, setProducts] = useState(MOCK_PRODUCT_DATA); 
   
   // UI States
-  const [currentView, setCurrentView] = useState('home');
+  // ⭐ UPDATED: Ensure 'checkout' is a valid view option
+  const [currentView, setCurrentView] = useState('home'); 
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   // ⭐️ NEW: A convenient way to check if we are in an Admin view
@@ -213,9 +216,11 @@ export default function App() {
     setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
   };
 
+  // ⭐ 2. UPDATE: Routing function for checkout
   const handleCheckout = () => { 
     console.log('Initiating checkout...');
-    alert('Checkout initiated! (This is a placeholder action)');
+    setIsCartOpen(false); // Close the cart sidebar
+    onViewChange('checkout'); // Navigate to the new checkout page
   };
 
   const handleApplyDiscount = (discountCode) => { 
@@ -253,21 +258,18 @@ export default function App() {
 
   // ⭐️ FIX: Restore useEffect for Discount Popup Visibility
   useEffect(() => {
-    // Show popup on every homepage load
     setIsPopupVisible(true);
-    // Also attach onViewChange to window for admin access
     window.onViewChange = onViewChange;
-  }, []); // Empty dependency array ensures it runs once on mount
-
+  }, []); 
 
   // Effect to read URL on mount (Simulates router) - Runs after the popup check
   useEffect(() => {
     const path = window.location.pathname.substring(1); // Remove leading '/'
     if (path) {
-        // Check if the path matches a known route, defaulting to 'home' if not found
+        // ⭐ UPDATED: Include 'checkout' in the list of known routes
         const normalizedPath = path.includes('/') ? path.split('/')[0] : path;
         
-        if (['admin_login', 'shop', 'profile', 'user_auth', 'admin'].includes(normalizedPath)) {
+        if (['admin_login', 'shop', 'profile', 'user_auth', 'admin', 'checkout'].includes(normalizedPath)) {
             setCurrentView(normalizedPath);
         }
     }
@@ -275,7 +277,6 @@ export default function App() {
 
   // --- Router/Render Logic ---
   const renderView = () => {
-    // Use the isAdminView boolean check
     if (isAdminView) {
         return <AdminPage 
             isDarkMode={isDarkMode} 
@@ -306,6 +307,13 @@ export default function App() {
                 products={products} // ⭐️ Passed product state
             />
         );
+      // ⭐ 3. ADD: Checkout Page Case
+      case 'checkout':
+        return <CheckoutPage 
+            cartItems={cartItems} 
+            onGoBack={() => onViewChange('shop')} // Go back to shop/products
+        />;
+      // -----------------------------
       case 'categories':
         return <Categories />;
       case 'deals':
@@ -336,7 +344,8 @@ export default function App() {
       {!isAdminView && <OfferBar />}
 
       {/* 2. Conditional Rendering for Navbar */}
-      {!isAdminView && (
+      {/* ⭐ MODIFIED: Hide Navbar when on Checkout view for a focused experience */}
+      {!isAdminView && currentView !== 'checkout' && ( 
         <Navbar
           isDarkMode={isDarkMode}
           toggleTheme={toggleTheme}
@@ -351,7 +360,8 @@ export default function App() {
       )}
 
       {/* 3. Main Content Area: Always render, its content handles its own layout */}
-      <main className={isAdminView ? "h-screen" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"}>
+      {/* ⭐ MODIFIED: Remove max-width/auto-margins for checkout page to allow full width */}
+      <main className={isAdminView || currentView === 'checkout' ? "h-screen" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"}>
         {renderView()}
       </main>
 
@@ -386,7 +396,7 @@ export default function App() {
       )}
 
       {/* 6. Conditional Rendering for Footer */}
-      {!isAdminView && <Footer onViewChange={onViewChange} isDarkMode={isDarkMode} />}
+      {!isAdminView && currentView !== 'checkout' && <Footer onViewChange={onViewChange} isDarkMode={isDarkMode} />}
 
       {/* 7. Cart (Only needed for main site) */}
       {!isAdminView && (
@@ -397,7 +407,7 @@ export default function App() {
             items={cartItems}
             onUpdateQuantity={handleUpdateQuantity} 
             onRemoveItem={handleRemoveItem}         
-            onCheckout={handleCheckout}             
+            onCheckout={handleCheckout} // Now calls the routing function          
             appliedDiscounts={discounts}
             onApplyDiscount={handleApplyDiscount}   
           />
