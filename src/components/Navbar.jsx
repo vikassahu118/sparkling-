@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, User, Sun, Moon, Heart, Menu, X } from 'lucide-react';
+// Import only the Lucide icons you need
+import { ShoppingCart, Search, User, Sun, Moon, Heart, Menu, X } from 'lucide-react'; 
 import { motion, AnimatePresence } from "framer-motion"; 
-import Sparkles from "../assets/logotext.svg"
-import Star from "../assets/butterfly.svg"
 
-// FIX 2: Define a simple Badge component, as it was used but not imported/defined.
+// ⭐ MODIFIED IMPORTS: Using standard imports for SVG URL strings
+// The names are preserved from the original file, but they now hold URL strings
+import LogoText from "../assets/logotext.svg"; // Path to your SVG heading
+import LogoIcon from "../assets/butterfly.svg"; // Path to your SVG icon
+
+// FIX 2: Define a simple Badge component
 const Badge = ({ children, className }) => (
   <span className={`inline-flex items-center justify-center rounded-full font-semibold leading-none ${className}`}>
     {children}
   </span>
 );
 
-// FIX 1: Changed 'export function Header' to 'export default function Navbar' 
-// to resolve the 'does not provide an export named default' error and align with file name convention.
 export default function Navbar({ 
   isDarkMode, 
   toggleTheme, 
@@ -21,7 +23,6 @@ export default function Navbar({
   onSearchClick,
   currentView,
   onViewChange,
-  // ⬅️ Prop is correctly accepted here
   onWishlistClick,
   onProfileClick
 }) {
@@ -90,10 +91,8 @@ export default function Navbar({
   const navItems = [
     { id: 'home', label: 'Home', emoji: '🏠' },
     { id: 'shop', label: 'Shop', emoji: '🛍️' },
-    // { id: 'categories', label: 'Categories', emoji: '📂' },
     { id: 'deals', label: 'Special Deals', emoji: '🎉' },
     { id: 'about', label: 'About Us', emoji: '✨' },
-    // { id: 'contact', label: 'Contact', emoji: '📞' }
   ];
 
   const handleNavClick = (viewId) => {
@@ -113,7 +112,8 @@ export default function Navbar({
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center justify-between">
-            {/* Logo ... (unchanged) */}
+            
+            {/* Logo and Heading Section */}
             <motion.div 
               className="flex items-center space-x-3"
               whileHover={{ scale: 1.05 }}
@@ -131,11 +131,13 @@ export default function Navbar({
                   repeatType: "reverse",
                 }}
               >
-                {isDarkMode ? (
-                  <Star className="w-6 h-6 text-white" />
-                ) : (
-                  <Sparkles className="w-6 h-6 text-white" />
-                )}
+                {/* ⭐ FIX: Using <img> tag for the Icon SVG (LogoIcon) */}
+                <img 
+                    src={LogoIcon} 
+                    alt="Brand Icon" 
+                    className="w-6 h-6" 
+                />
+                
                 <motion.div
                   className="absolute inset-0 rounded-full"
                   animate={{
@@ -158,14 +160,20 @@ export default function Navbar({
                 />
               </motion.div>
               <div className="sm:block">
-                <Sparkles className="w-6 h-6 lg:h-8 lg:w-8 text-white" />
+                {/* ⭐ FIX: Using <img> tag for the Heading SVG (LogoText) */}
+                <img 
+                    src={LogoText} 
+                    alt="Brand Name" 
+                    className="h-7 lg:h-8 w-auto" 
+                />
+                
                 <p className={`text-xs ${isDarkMode ? 'text-purple-300' : 'text-gray-500'} transition-colors duration-500`}>
                   Kids Fashion Paradise {isDarkMode ? '🌙' : '✨'}
                 </p>
               </div>
             </motion.div>
 
-            {/* Desktop Navigation ... (unchanged) */}
+            {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-2">
               {navItems.map((item) => (
                 <motion.div
@@ -246,9 +254,9 @@ export default function Navbar({
                   <Search className={`w-5 h-5 ${getIconColors()}`} />
                 </motion.button>
 
-                {/* Wishlist ⬅️ FIX APPLIED HERE */}
+                {/* Wishlist */}
                 <motion.button
-                  onClick={onWishlistClick} // 👈 ADDED onClick handler
+                  onClick={onWishlistClick} 
                   whileHover={{ 
                     scale: 1.1,
                     backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.2)' : 'rgba(236, 72, 153, 0.1)',
@@ -304,7 +312,7 @@ export default function Navbar({
                 </motion.button>
               </motion.div>
 
-              {/* Theme Toggle ... (unchanged) */}
+              {/* Theme Toggle */}
               <motion.button
                 onClick={toggleTheme}
                 whileHover={{ 
@@ -343,7 +351,7 @@ export default function Navbar({
                 </motion.div>
               </motion.button>
 
-              {/* Mobile Menu Button ... (unchanged) */}
+              {/* Mobile Menu Button */}
               <motion.button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 whileHover={{ scale: 1.1 }}
@@ -377,7 +385,7 @@ export default function Navbar({
             className={`lg:hidden sticky top-[73px] z-40 ${getHeaderBackground()} border-b ${getHeaderBorder()} shadow-lg`}
           >
             <div className="max-w-7xl mx-auto px-4 py-4">
-              {/* Mobile Nav Links ... (unchanged) */}
+              {/* Mobile Nav Links */}
               <div className="grid grid-cols-2 gap-3">
                 {navItems.map((item, index) => (
                   <motion.button
@@ -428,9 +436,9 @@ export default function Navbar({
                   }`} />
                 </motion.button>
                 
-                {/* Wishlist ⬅️ FIX APPLIED HERE */}
+                {/* Wishlist */}
                 <motion.button
-                  onClick={onWishlistClick} // 👈 ADDED onClick handler
+                  onClick={onWishlistClick} 
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   className={`p-3 rounded-xl touch-optimized transition-all duration-300 ${
