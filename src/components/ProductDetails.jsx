@@ -5,55 +5,55 @@ import { X, Heart, Share2, Star, Clock, ShoppingCart, Zap } from 'lucide-react';
 // Utility component definitions (included locally for single-file operation)
 
 const Badge = ({ children, className = '' }) => (
-    <div className={`inline-flex items-center justify-center px-2.5 py-0.5 text-xs font-semibold rounded-full ${className}`}>
-        {children}
-    </div>
+  <div className={`inline-flex items-center justify-center px-2.5 py-0.5 text-xs font-semibold rounded-full ${className}`}>
+    {children}
+  </div>
 );
 
 const Button = ({ children, className = '', variant, size, ...props }) => {
-    // Basic variant handling for demonstration
-    const baseClasses = 'transition-all duration-300 rounded-xl font-medium shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2';
-    
-    let variantClasses = 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600'; // Ghost default
-    
-    if (variant === 'outline') {
-        variantClasses = 'bg-transparent border-2 hover:bg-opacity-10';
-    }
+  // Basic variant handling for demonstration
+  const baseClasses = 'transition-all duration-300 rounded-xl font-medium shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2';
 
-    let sizeClasses = 'px-4 py-2 text-sm';
-    if (size === 'sm') sizeClasses = 'px-3 py-1 text-sm';
-    
-    return (
-        <button
-            className={`${baseClasses} ${variantClasses} ${sizeClasses} ${className}`}
-            {...props}
-        >
-            {children}
-        </button>
-    );
+  let variantClasses = 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600'; // Ghost default
+
+  if (variant === 'outline') {
+    variantClasses = 'bg-transparent border-2 hover:bg-opacity-10';
+  }
+
+  let sizeClasses = 'px-4 py-2 text-sm';
+  if (size === 'sm') sizeClasses = 'px-3 py-1 text-sm';
+
+  return (
+    <button
+      className={`${baseClasses} ${variantClasses} ${sizeClasses} ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
 };
 
 const ImageWithFallback = ({ src, alt, className = '' }) => {
-    // Placeholder logic for demonstration purposes
-    const placeholderUrl = `https://placehold.co/400x400/9333ea/ffffff?text=${encodeURIComponent(alt || 'Product')}`;
-    const [imgSrc, setImgSrc] = useState(src);
+  // Placeholder logic for demonstration purposes
+  const placeholderUrl = `https://placehold.co/400x400/9333ea/ffffff?text=${encodeURIComponent(alt || 'Product')}`;
+  const [imgSrc, setImgSrc] = useState(src);
 
-    useEffect(() => {
-        setImgSrc(src);
-    }, [src]);
+  useEffect(() => {
+    setImgSrc(src);
+  }, [src]);
 
-    return (
-        <img
-            src={imgSrc}
-            alt={alt}
-            className={className}
-            onError={() => setImgSrc(placeholderUrl)}
-        />
-    );
+  return (
+    <img
+      src={imgSrc}
+      alt={alt}
+      className={className}
+      onError={() => setImgSrc(placeholderUrl)}
+    />
+  );
 };
 
 
-export default function ProductDetail({ product, isOpen, onClose, onAddToCart, onAddToWishlist }) {
+export default function ProductDetail({ product, isOpen, onClose, onAddToCart, onAddToWishlist, isWishlisted  }) {
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
@@ -65,7 +65,7 @@ export default function ProductDetail({ product, isOpen, onClose, onAddToCart, o
       setSelectedColor(product.colors?.[0] || '');
       setQuantity(1);
       // Reset timer when product opens
-      setTimeLeft(3600); 
+      setTimeLeft(3600);
     }
   }, [product, isOpen]);
 
@@ -145,7 +145,7 @@ export default function ProductDetail({ product, isOpen, onClose, onAddToCart, o
                       alt={product.name}
                       className="w-full h-96 object-cover"
                     />
-                    
+
                     {/* Badges */}
                     <div className="absolute top-4 left-4 flex flex-col gap-2">
                       {product.isNew && (
@@ -199,17 +199,16 @@ export default function ProductDetail({ product, isOpen, onClose, onAddToCart, o
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-3">
                       {product.name}
                     </h1>
-                    
+
                     <div className="flex items-center gap-2 mb-4">
                       <div className="flex">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-5 h-5 ${
-                              i < Math.floor(product.rating)
+                            className={`w-5 h-5 ${i < Math.floor(product.rating)
                                 ? 'text-yellow-400 fill-yellow-400' // Added fill
                                 : 'text-gray-300'
-                            }`}
+                              }`}
                           />
                         ))}
                       </div>
@@ -221,8 +220,8 @@ export default function ProductDetail({ product, isOpen, onClose, onAddToCart, o
 
                   {/* Description */}
                   <div>
-                      <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Description:</h3>
-                      <p className="text-gray-600 dark:text-gray-400 text-sm">{product.description || "A soft, comfortable, and stylish outfit perfect for everyday adventures and playtime. Made with care for your little one."}</p>
+                    <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Description:</h3>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">{product.description || "A soft, comfortable, and stylish outfit perfect for everyday adventures and playtime. Made with care for your little one."}</p>
                   </div>
 
 
@@ -247,11 +246,10 @@ export default function ProductDetail({ product, isOpen, onClose, onAddToCart, o
                         <button
                           key={size}
                           onClick={() => setSelectedSize(size)}
-                          className={`px-4 py-2 border-2 rounded-lg transition-all text-sm ${
-                            selectedSize === size
+                          className={`px-4 py-2 border-2 rounded-lg transition-all text-sm ${selectedSize === size
                               ? 'border-pink-500 bg-pink-100 dark:bg-pink-900/20 text-pink-600 dark:text-pink-300 font-bold shadow-inner'
                               : 'border-gray-300 dark:border-gray-600 hover:border-pink-300 dark:hover:border-purple-400 text-gray-700 dark:text-gray-300'
-                          }`}
+                            }`}
                         >
                           {size}
                         </button>
@@ -269,15 +267,14 @@ export default function ProductDetail({ product, isOpen, onClose, onAddToCart, o
                           onClick={() => setSelectedColor(color)}
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.95 }}
-                          className={`w-10 h-10 rounded-full border-4 transition-all duration-200 ${
-                            selectedColor === color
+                          className={`w-10 h-10 rounded-full border-4 transition-all duration-200 ${selectedColor === color
                               ? 'border-pink-500 dark:border-cyan-400 scale-110 shadow-lg'
                               : 'border-gray-300 dark:border-gray-600 hover:scale-105 opacity-80'
-                          }`}
+                            }`}
                           style={{
-                              backgroundColor: color,
-                              // Ensure white border is visible if color is white
-                              borderColor: selectedColor === color && color === 'white' ? 'black' : undefined 
+                            backgroundColor: color,
+                            // Ensure white border is visible if color is white
+                            borderColor: selectedColor === color && color === 'white' ? 'black' : undefined
                           }}
                           aria-label={`Select color ${color}`}
                         />
@@ -315,15 +312,22 @@ export default function ProductDetail({ product, isOpen, onClose, onAddToCart, o
                       <ShoppingCart className="w-5 h-5 mr-2" />
                       Add to Cart
                     </Button>
-                    
+
                     <Button
-                      onClick={() => onAddToWishlist(product)}
-                      variant="outline"
-                      className="p-4 border-2 border-pink-300 text-pink-600 hover:bg-pink-50 dark:border-purple-400 dark:text-purple-400 dark:hover:bg-purple-900/20"
-                    >
-                      <Heart className="w-5 h-5" />
-                    </Button>
-                    
+    onClick={() => onAddToWishlist({
+        id: product.id,
+        name: product.name,
+        price: product.discountedPrice,
+        image: product.image,
+    })}
+    variant="outline"
+    // Conditional styling for the button border and text
+    className={`p-4 border-2 ${isWishlisted ? 'border-red-500 text-red-500 hover:bg-red-50' : 'border-pink-300 text-pink-600 hover:bg-pink-50 dark:border-purple-400 dark:text-purple-400 dark:hover:bg-purple-900/20'}`}
+>
+    {/* Conditional styling for the Heart icon fill */}
+    <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-red-500' : ''}`} />
+</Button>
+
                     <Button
                       variant="outline"
                       className="p-4 border-2 border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
