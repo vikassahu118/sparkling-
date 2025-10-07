@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, User, Sun, Moon, Heart, Menu, X, Sparkles, Star } from 'lucide-react';
+import { ShoppingCart, Search, User, Sun, Moon, Heart, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from "framer-motion"; 
+import Sparkles from "../assets/logotext.svg"
+import Star from "../assets/butterfly.svg"
 
 // FIX 2: Define a simple Badge component, as it was used but not imported/defined.
 const Badge = ({ children, className }) => (
@@ -156,22 +158,7 @@ export default function Navbar({
                 />
               </motion.div>
               <div className="sm:block">
-                <motion.h1 
-                  className={`text-2xl lg:text-3xl font-bold bg-gradient-to-r ${getTextGradient()} bg-clip-text text-transparent`}
-                  animate={{
-                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "linear"
-                  }}
-                  style={{
-                    backgroundSize: '200% 200%'
-                  }}
-                >
-                  Sparkling Bubbles
-                </motion.h1>
+                <Sparkles className="w-6 h-6 lg:h-8 lg:w-8 text-white" />
                 <p className={`text-xs ${isDarkMode ? 'text-purple-300' : 'text-gray-500'} transition-colors duration-500`}>
                   Kids Fashion Paradise {isDarkMode ? '🌙' : '✨'}
                 </p>
