@@ -120,7 +120,7 @@ export default function Navbar({
               transition={{ type: "spring", stiffness: 300 }}
             >
               <motion.div 
-                className={`relative w-12 h-12 bg-gradient-to-r ${getLogoGradient()} rounded-full flex items-center justify-center shadow-lg`}
+                className={`relative w-12 h-12 rounded-full flex items-center justify-center shadow-lg`}
                 animate={{
                   rotate: [0, 10, -10, 0],
                   scale: [1, 1.05, 1],
@@ -135,7 +135,7 @@ export default function Navbar({
                 <img 
                     src={LogoIcon} 
                     alt="Brand Icon" 
-                    className="w-6 h-6" 
+                    className="w-10 h-10" 
                 />
                 
                 <motion.div
