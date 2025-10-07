@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ShoppingCart, Star, Eye, ChevronDown, Filter, X } from 'lucide-react';
+// ⭐ IMPORT ProductDetail Component
+import ProductDetail from './ProductDetails'; // ASSUMING ProductDetail is in a separate file named ProductDetail.jsx or similar
 
 // --- Helper & UI Components (Unchanged) ---
 const ImageWithFallback = ({ src, alt, className }) => {
@@ -82,7 +84,7 @@ const PriceRangeSlider = React.memo(({ min, max, step, price, setPrice, isDarkMo
 });
 
 
-// --- Enhanced Filter Sidebar/Drawer Component ---
+// --- Enhanced Filter Sidebar/Drawer Component (Unchanged) ---
 const FilterSidebar = ({ isOpen, onClose, filters, setFilters, products, defaultFilters, isDarkMode, sortOption, setSortOption }) => {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const AVAILABLE_SIZES = ['XS', 'S', 'M', 'L', 'XL'];
@@ -126,7 +128,7 @@ const FilterSidebar = ({ isOpen, onClose, filters, setFilters, products, default
                 <h4 className={`font-semibold ${primaryText}`}>Price Range</h4>
                 <PriceRangeSlider min={500} max={5000} step={100} price={filters.price} setPrice={newPrice => setFilters(p => ({ ...p, price: newPrice }))} isDarkMode={isDarkMode} />
               </div>
-              {/* ⭐ ADDED: Sort By Section */}
+              {/* Sort By Section */}
               <div>
                 <h4 className={`font-semibold mb-4 ${primaryText}`}>Sort By</h4>
                 <div className="relative">
@@ -169,7 +171,7 @@ const FilterSidebar = ({ isOpen, onClose, filters, setFilters, products, default
 };
 
 
-// --- Memoized Product Card for Performance (Unchanged) ---
+// --- Memoized Product Card for Performance (Modified to use new onProductClick) ---
 const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToWishlist, isWishlisted }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -184,6 +186,7 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
       onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}
     >
       <div className="relative overflow-hidden">
+        {/* ⭐ MODIFIED: Calls the new onProductClick handler */}
         <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.4 }} className="cursor-pointer" onClick={() => onProductClick(product)}>
           <ImageWithFallback src={product.image} alt={product.name} className="w-full h-64 object-cover" />
         </motion.div>
@@ -210,6 +213,7 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
           <div className="flex">{[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />)}</div>
           <span className="text-sm text-gray-600 dark:text-gray-400">{product.rating} ({product.reviews})</span>
         </div>
+        {/* ⭐ MODIFIED: Calls the new onProductClick handler */}
         <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-2 cursor-pointer hover:text-pink-600 transition-colors line-clamp-2 h-14" onClick={() => onProductClick(product)}>{product.name}</h3>
         <div className="flex items-center gap-2 my-3">
           <span className="text-xl font-bold text-pink-600">₹{product.discountedPrice}</span>
@@ -225,15 +229,40 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
   );
 });
 
-// --- Main Product Grid Component ---
+// --- Main Product Grid Component (Updated with Detail Modal Logic) ---
 export const ProductGrid = ({ products = [], onProductClick = () => { }, onAddToCart = () => { }, onAddToWishlist = () => { }, isDarkMode, wishlistItems = [] }) => {
   const dropdownRef = useRef(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-  // ⭐ ADDED: State for sorting
   const [sortOption, setSortOption] = useState('Default');
+
+  // ⭐ ADDED: State for Product Detail Modal
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  // ⭐ ADDED: Handler to open the detail view
+  const handleProductClick = (product) => {
+    setSelectedProduct(product);
+    setIsDetailOpen(true);
+    onProductClick(product); // Retain original external click handler
+  };
+  
+  // ⭐ ADDED: Handler for adding to cart from the detail modal
+  const handleDetailAddToCart = (product, size, color, quantity) => {
+    // Pass the detailed information up to the main application's onAddToCart
+    const cartItem = {
+        id: product.id,
+        name: product.name,
+        price: product.discountedPrice,
+        image: product.image,
+        quantity: quantity,
+        size: size,
+        color: color
+    };
+    onAddToCart(cartItem);
+  };
+
 
   const maxProductPrice = useMemo(() => Math.max(...products.map(p => p.originalPrice || 0), 5000), [products]);
   const minProductPrice = useMemo(() => Math.min(...products.map(p => p.originalPrice || 500), 500), [products]);
@@ -271,7 +300,7 @@ export const ProductGrid = ({ products = [], onProductClick = () => { }, onAddTo
       (filters.sizes.length === 0 || p.sizes.some(s => filters.sizes.includes(s)))
     );
 
-    // ⭐ ADDED: Sorting logic
+    // Sorting logic
     if (sortOption === 'Price: Low to High') {
       return [...filtered].sort((a, b) => a.discountedPrice - b.discountedPrice);
     }
@@ -280,7 +309,7 @@ export const ProductGrid = ({ products = [], onProductClick = () => { }, onAddTo
     }
 
     return filtered; // Default order
-  }, [selectedCategory, filters, productsToUse, sortOption]); // ⭐ ADDED: sortOption dependency
+  }, [selectedCategory, filters, productsToUse, sortOption]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -346,7 +375,7 @@ export const ProductGrid = ({ products = [], onProductClick = () => { }, onAddTo
           {filteredAndSortedProducts.length > 0 ? (
             filteredAndSortedProducts.map(product => {
               const isProductWishlisted = wishlistItems.some(item => item.id === product.id);
-              return (<ProductCard key={product.id} product={product} onProductClick={onProductClick} onAddToCart={onAddToCart} onAddToWishlist={onAddToWishlist} isWishlisted={isProductWishlisted} />);
+              return (<ProductCard key={product.id} product={product} onProductClick={handleProductClick} onAddToCart={onAddToCart} onAddToWishlist={onAddToWishlist} isWishlisted={isProductWishlisted} />);
             })
           ) : (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="col-span-full text-center py-12">
@@ -367,11 +396,23 @@ export const ProductGrid = ({ products = [], onProductClick = () => { }, onAddTo
         isDarkMode={isDarkMode}
         min={minProductPrice}
         max={maxProductPrice}
-        // ⭐ ADDED: Pass sorting state to sidebar
         sortOption={sortOption}
         setSortOption={setSortOption}
       />
+      
+      {/* ⭐ ADDED: Product Detail Modal Integration */}
+       {selectedProduct && (
+          <ProductDetail
+              product={selectedProduct}
+              isOpen={isDetailOpen}
+              onClose={() => setIsDetailOpen(false)}
+              onAddToCart={handleDetailAddToCart}
+              onAddToWishlist={onAddToWishlist}
+              // ⭐ ADDED: Calculate and pass the isWishlisted flag
+              isWishlisted={wishlistItems.some(item => item.id === selectedProduct.id)}
+          />
+      )}
+      {/* --- END Product Detail Modal Integration --- */}
     </section>
   );
 };
-
