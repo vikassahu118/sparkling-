@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-// Added Menu icon for mobile toggle
-import { ShoppingBag, Users, Package, TrendingUp, X, ChevronRight, Edit3, Trash2, DollarSign, BarChart2, Zap, CornerDownRight, Plus, MapPin, Phone, Mail, Save, Tag, Image as ImageIcon, Menu } from 'lucide-react'; 
+// Added Menu icon and Zap for Site Settings
+import { ShoppingBag, Users, Package, TrendingUp, X, ChevronRight, Edit3, Trash2, DollarSign, BarChart2, Zap, CornerDownRight, Plus, MapPin, Phone, Mail, Save, Tag, Image as ImageIcon, Menu } from 'lucide-react';
 
-// NOTE: This dashboard uses mock data and pure local state management. 
+// NOTE: This dashboard uses mock data and pure local state management.
 
 // Mock Data Structures
 const MOCK_ORDERS = [
@@ -21,7 +21,6 @@ const MOCK_REFUND_QUEUE = [
     { id: 'R1', orderId: 'O1003', customer: 'User X', amount: 639, reason: 'Wrong size ordered.', requestedBy: 'Order Manager', status: 'Pending Finance' },
 ];
 
-// ⭐️ NEW MOCK DATA: Daily Payments and Orders
 const MOCK_DAILY_SALES = [
     { date: '2025-10-04', orders: 5, revenue: 5400, net: 5250, discounts: 150 },
     { date: '2025-10-03', orders: 12, revenue: 8900, net: 8400, discounts: 500 },
@@ -30,10 +29,10 @@ const MOCK_DAILY_SALES = [
     { date: '2025-09-30', orders: 15, revenue: 10500, net: 9800, discounts: 700 },
 ];
 
-// Reusable Dashboard Card Component (Unchanged)
+// Reusable Dashboard Card Component
 const DashboardCard = ({ title, value, icon: Icon, colorClass, linkLabel, onClick }) => (
-    <motion.div 
-        whileHover={{ y: -5, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }} 
+    <motion.div
+        whileHover={{ y: -5, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}
         className={`rounded-2xl p-6 shadow-xl transition-all duration-300 ${colorClass}`}
     >
         <div className="flex justify-between items-start">
@@ -51,11 +50,93 @@ const DashboardCard = ({ title, value, icon: Icon, colorClass, linkLabel, onClic
     </motion.div>
 );
 
-const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }) => { 
+// =======================================================
+// ✨ NEW COMPONENT: Offer Bar Update Modal
+// =======================================================
+const OfferBarModal = ({ isOpen, onClose, onSave, currentOfferText, isDarkMode }) => {
+    const [text, setText] = useState(currentOfferText || '');
+
+    useEffect(() => {
+        setText(currentOfferText);
+    }, [currentOfferText]);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSave(text);
+        onClose();
+    };
+    
+    const modalBg = isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900';
+    const headerClasses = isDarkMode ? 'text-cyan-400' : 'text-cyan-600';
+    const inputClasses = `w-full p-3 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:text-white`;
+
+    if (!isOpen) return null;
+
+    return (
+        <AnimatePresence>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[2000]" onClick={onClose} />
+            <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className={`fixed inset-0 m-auto h-fit max-w-lg p-8 rounded-3xl shadow-2xl z-[2001] ${modalBg}`}
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="flex justify-between items-center border-b pb-4 mb-6 dark:border-gray-700">
+                    <h3 className={`text-2xl font-bold ${headerClasses}`}>Update Offer Bar</h3>
+                    <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-700/50"><X className="w-6 h-6" /></button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="font-semibold mb-2 block">Offer Text</label>
+                        <input
+                            type="text"
+                            value={text}
+                            onChange={(e) => setText(e.target.value)}
+                            className={inputClasses}
+                            placeholder="e.g., 🎉 Mega Sale! Up to 50% OFF..."
+                            required
+                        />
+                    </div>
+                    <div className="pt-4 border-t dark:border-gray-700">
+                        <button type="submit" className="w-full py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-bold rounded-xl transition-colors">
+                            <Save className="w-5 h-5 mr-2 inline" /> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </motion.div>
+        </AnimatePresence>
+    );
+};
+
+// =======================================================
+// ✨ NEW COMPONENT: Site Settings Section
+// =======================================================
+const SiteSettings = ({ onUpdateOfferClick, currentOfferText, cardBaseClasses }) => (
+    <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
+        <div className={`p-6 rounded-2xl shadow-lg ${cardBaseClasses}`}>
+            <h3 className="text-xl font-bold mb-4 text-cyan-500 dark:text-cyan-400">Promotional Offer Bar</h3>
+            <div className="p-4 mb-4 rounded-lg bg-gray-100 dark:bg-gray-700/50 border dark:border-gray-600">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Current Display Text:</p>
+                <p className="font-semibold">{currentOfferText}</p>
+            </div>
+            <button
+                onClick={onUpdateOfferClick}
+                className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-bold transition-colors flex items-center gap-2"
+            >
+                <Edit3 className="w-4 h-4" />
+                Update Offer Text
+            </button>
+        </div>
+    </motion.div>
+);
+
+// =======================================================
+// Main Admin Page Component
+// =======================================================
+const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, currentOfferText, setOfferText }) => {
     // Shared Refund State
     const [refundQueue, setRefundQueue] = useState(MOCK_REFUND_QUEUE);
-    // ⭐️ NEW STATE for Mobile Sidebar visibility
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isOfferModalOpen, setIsOfferModalOpen] = useState(false); // ✨ State for the new modal
 
     const initialSection = useMemo(() => {
         if (userRole === 'product_manager') return 'products';
@@ -64,8 +145,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
     }, [userRole]);
 
     const [activeSection, setActiveSection] = useState(initialSection);
-    // FIX: Orders and Users remain local state within AdminPage, mock data is used here
-    const [orders, setOrders] = useState(MOCK_ORDERS); 
+    const [orders, setOrders] = useState(MOCK_ORDERS);
     const [users, setUsers] = useState(MOCK_USERS);
 
     const containerClasses = isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900';
@@ -76,21 +156,27 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
 
     const handleSectionChange = (sectionId) => {
         setActiveSection(sectionId);
-        setIsSidebarOpen(false); // ⭐️ Close sidebar on selection for mobile
+        setIsSidebarOpen(false);
     };
 
     const renderSection = () => {
         switch (activeSection) {
             case 'products':
-                // Pass product state and setter to ProductManagement
                 return <ProductManagement products={products} setProducts={setProducts} isDarkMode={isDarkMode} cardBaseClasses={cardBaseClasses} userRole={userRole} />;
             case 'orders':
                 return <OrderManagement orders={orders} setOrders={setOrders} setRefundQueue={setRefundQueue} isDarkMode={isDarkMode} cardBaseClasses={cardBaseClasses} userRole={userRole} />;
             case 'users':
                 return <UserManagement users={users} setUsers={setUsers} isDarkMode={isDarkMode} cardBaseClasses={cardBaseClasses} userRole={userRole} />;
             case 'finance':
-                // ⭐️ Pass Daily Sales Data
                 return <FinanceManagement isDarkMode={isDarkMode} cardBaseClasses={cardBaseClasses} userRole={userRole} refundQueue={refundQueue} setRefundQueue={setRefundQueue} />;
+            // ✨ Add case for the new settings section
+            case 'settings':
+                return <SiteSettings
+                    isDarkMode={isDarkMode}
+                    cardBaseClasses={cardBaseClasses}
+                    onUpdateOfferClick={() => setIsOfferModalOpen(true)}
+                    currentOfferText={currentOfferText}
+                />;
             case 'dashboard':
             default:
                 return <Dashboard products={products} orders={orders} users={users} setActiveSection={setActiveSection} isDarkMode={isDarkMode} userRole={userRole} />;
@@ -103,27 +189,32 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
         { id: 'orders', label: 'Order Manager', icon: ShoppingBag, roles: ['admin', 'product_manager'] },
         { id: 'finance', label: 'Finance Manager', icon: DollarSign, roles: ['admin', 'finance_manager'] },
         { id: 'users', label: 'User Management', icon: Users, roles: ['admin'] },
+        { id: 'settings', label: 'Site Settings', icon: Zap, roles: ['admin'] }, // ✨ New nav item
     ], []);
 
-    // ⭐️ Filter navigation based on user role
     const filteredNavItems = useMemo(() => {
         if (!userRole) return [];
         return allNavItems.filter(item => item.roles.includes(userRole));
     }, [userRole, allNavItems]);
     
-    // Fallback to the first available section if the current one is restricted
     useEffect(() => {
         if (activeSection === 'dashboard' && userRole !== 'admin') {
-            setActiveSection(filteredNavItems[0]?.id || 'products'); // Default to products if not admin
+            setActiveSection(filteredNavItems[0]?.id || 'products');
         }
     }, [userRole, activeSection, filteredNavItems]);
 
 
     return (
-        // ⭐️ The parent div uses 'flex' layout on all screens
         <div className={`min-h-screen flex ${containerClasses}`}>
-            {/* ⭐️ Sidebar: Responsive Implementation */}
-            
+            {/* ✨ Render the new Modal */}
+            <OfferBarModal
+                isOpen={isOfferModalOpen}
+                onClose={() => setIsOfferModalOpen(false)}
+                onSave={setOfferText}
+                currentOfferText={currentOfferText}
+                isDarkMode={isDarkMode}
+            />
+
             {/* Mobile Overlay */}
             <AnimatePresence>
                 {isSidebarOpen && (
@@ -132,30 +223,22 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="fixed inset-0 bg-black/50 z-20 lg:hidden" // Only on small screens
+                        className="fixed inset-0 bg-black/50 z-20 lg:hidden"
                         onClick={() => setIsSidebarOpen(false)}
                     />
                 )}
             </AnimatePresence>
 
-            {/* ⭐️ CORRECTED Mobile Sidebar: Always fixed, hides on large screen, slides via motion */}
-            <motion.div 
-                initial={false} 
-                // Animate for mobile slide in/out
-                animate={isSidebarOpen ? { x: 0 } : { x: -256 }} 
+            {/* Mobile Sidebar */}
+            <motion.div
+                initial={false}
+                animate={isSidebarOpen ? { x: 0 } : { x: -256 }}
                 transition={{ duration: 0.3 }}
-                
-                // ⭐️ KEY FIX: Ensure 'flex' is applied by default (mobile view) and is 'fixed'.
-                // 'lg:hidden' ensures this entire block disappears when the static sidebar takes over.
-                className={`w-64 p-6 flex-col ${sidebarClasses} h-screen z-30 
-                            fixed top-0 left-0 flex
-                            lg:hidden`}
+                className={`w-64 p-6 flex-col ${sidebarClasses} h-screen z-30 fixed top-0 left-0 flex lg:hidden`}
             >
-                {/* Close Button for Mobile */}
                 <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700/50">
                     <X className="w-6 h-6 text-white" />
                 </button>
-
                 <h1 className={`text-3xl font-extrabold mb-8 bg-gradient-to-r ${isDarkMode ? 'from-purple-400 to-cyan-400' : 'from-pink-500 to-purple-600'} bg-clip-text text-transparent`}>
                     {userRole?.toUpperCase().replace('_', ' ') || 'MANAGER'}
                 </h1>
@@ -163,13 +246,9 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
                     {filteredNavItems.map(item => (
                         <motion.button
                             key={item.id}
-                            onClick={() => handleSectionChange(item.id)} // Use new handler
+                            onClick={() => handleSectionChange(item.id)}
                             whileHover={{ x: 5 }}
-                            className={`w-full text-left flex items-center p-3 rounded-xl transition-all duration-200 ${
-                                activeSection === item.id
-                                    ? 'bg-pink-500 text-white shadow-lg'
-                                    : 'text-gray-400 hover:bg-gray-700/50 hover:text-white dark:text-gray-300 dark:hover:bg-gray-700'
-                            }`}
+                            className={`w-full text-left flex items-center p-3 rounded-xl transition-all duration-200 ${activeSection === item.id ? 'bg-pink-500 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-700/50 hover:text-white dark:text-gray-300 dark:hover:bg-gray-700'}`}
                         >
                             <item.icon className="w-5 h-5 mr-3" />
                             <span className="font-medium">{item.label}</span>
@@ -178,7 +257,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
                 </nav>
                 <div className="pt-6 border-t border-gray-700/50">
                     <motion.button
-                        onClick={() => onViewChange('admin_login')} 
+                        onClick={() => onViewChange('admin_login')}
                         className={`w-full text-left flex items-center p-3 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors`}
                     >
                         <X className="w-5 h-5 mr-3" />
@@ -187,22 +266,17 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
                 </div>
             </motion.div>
 
-            {/* ⭐️ NEW STATIC DESKTOP SIDEBAR: Renders ONLY on large screens, ensuring consistent layout */}
-            {/* It is a regular flex item, making the main 'flex' layout correct. */}
+            {/* Desktop Sidebar */}
             <div className={`w-64 p-6 flex-col ${sidebarClasses} h-screen z-10 hidden lg:flex flex-shrink-0`}>
-                 <h1 className={`text-3xl font-extrabold mb-8 bg-gradient-to-r ${isDarkMode ? 'from-purple-400 to-cyan-400' : 'from-pink-500 to-purple-600'} bg-clip-text text-transparent`}>
+                <h1 className={`text-3xl font-extrabold mb-8 bg-gradient-to-r ${isDarkMode ? 'from-purple-400 to-cyan-400' : 'from-pink-500 to-purple-600'} bg-clip-text text-transparent`}>
                     {userRole?.toUpperCase().replace('_', ' ') || 'MANAGER'}
                 </h1>
                 <nav className="space-y-2 flex-grow">
                     {filteredNavItems.map(item => (
                         <button
                             key={item.id}
-                            onClick={() => handleSectionChange(item.id)} 
-                            className={`w-full text-left flex items-center p-3 rounded-xl transition-all duration-200 ${
-                                activeSection === item.id
-                                    ? 'bg-pink-500 text-white shadow-lg'
-                                    : 'text-gray-400 hover:bg-gray-700/50 hover:text-white dark:text-gray-300 dark:hover:bg-gray-700'
-                            }`}
+                            onClick={() => handleSectionChange(item.id)}
+                            className={`w-full text-left flex items-center p-3 rounded-xl transition-all duration-200 ${activeSection === item.id ? 'bg-pink-500 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-700/50 hover:text-white dark:text-gray-300 dark:hover:bg-gray-700'}`}
                         >
                             <item.icon className="w-5 h-5 mr-3" />
                             <span className="font-medium">{item.label}</span>
@@ -211,7 +285,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
                 </nav>
                 <div className="pt-6 border-t border-gray-700/50">
                     <button
-                        onClick={() => onViewChange('admin_login')} 
+                        onClick={() => onViewChange('admin_login')}
                         className={`w-full text-left flex items-center p-3 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors`}
                     >
                         <X className="w-5 h-5 mr-3" />
@@ -220,15 +294,12 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
                 </div>
             </div>
 
-
             {/* Main Content Area */}
-            <main className={`flex-1 p-4 sm:p-8 overflow-y-auto ${mainContentClasses}`}> 
+            <main className={`flex-1 p-4 sm:p-8 overflow-y-auto ${mainContentClasses}`}>
                 <header className="flex justify-between items-center pb-4 mb-4 sm:pb-6 sm:mb-8 border-b border-gray-700/50 sticky top-0 z-10 bg-inherit">
-                    {/* ⭐️ Mobile Toggle Button (Visible ONLY on small screens) */}
                     <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 rounded-full hover:bg-gray-700/50 mr-3">
                         <Menu className="w-6 h-6 text-pink-500" />
                     </button>
-                    
                     <h2 className={`text-2xl sm:text-4xl font-extrabold capitalize ${headerClasses} truncate`}>
                         {activeSection.replace('_', ' ')}
                     </h2>
@@ -241,6 +312,9 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts }
         </div>
     );
 };
+
+// --- (The rest of your sub-components: Dashboard, ProductFormModal, ProductManagement, etc. remain unchanged) ---
+// --- Paste them below this line ---
 
 // --- Dashboard Sub-Components (Unchanged) ---
 const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, userRole }) => {

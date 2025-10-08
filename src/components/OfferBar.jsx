@@ -1,13 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from "framer-motion"; 
-import { ShoppingCart, Search, User, Sun, Moon, Heart, Menu, X, Sparkles, Star } from 'lucide-react';
+import React, { useState } from 'react';
 
-// =======================================================
-// ✅ COMPONENT 1: OfferBar
-// =======================================================
-const OfferBar = () => {
+// 1. Receive 'offerText' as a prop
+const OfferBar = ({ offerText }) => {
   const [isVisible, setIsVisible] = useState(true);
-  const offerText = "🎉 Mega Sale! Up to 70% OFF — Free Shipping on Orders Over ₹999 🛍️";
+  // 2. The hardcoded offerText is no longer needed here
   const handleClose = () => setIsVisible(false);
 
   const styles = `
@@ -33,6 +29,7 @@ const OfferBar = () => {
         <div className="relative flex items-center h-10 px-4">
             <div className="flex-1 overflow-hidden">
               <div className="flex whitespace-nowrap animate-marquee">
+                {/* 3. Use the offerText from props */}
                 <span className="mx-12 text-sm font-bold tracking-wider">{offerText}</span>
                 <span className="mx-12 text-sm font-bold tracking-wider" aria-hidden="true">{offerText}</span>
                 <span className="mx-12 text-sm font-bold tracking-wider" aria-hidden="true">{offerText}</span>
@@ -53,4 +50,4 @@ const OfferBar = () => {
   );
 };
 
-export default OfferBar
+export default OfferBar;
