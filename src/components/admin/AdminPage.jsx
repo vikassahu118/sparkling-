@@ -304,7 +304,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
                         {activeSection.replace('_', ' ')}
                     </h2>
                     <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base hidden sm:block">
-                        Logged in as: <span className="font-semibold text-white dark:text-gray-200 capitalize">{userRole}</span>
+                        Logged in as: <span className="font-semibold text-black dark:text-gray-200 capitalize">{userRole}</span>
                     </p>
                 </header>
                 {renderSection()}
