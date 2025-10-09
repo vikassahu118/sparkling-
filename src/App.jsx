@@ -82,6 +82,9 @@ export default function App() {
 
   // ⭐️ NEW: A convenient way to check if we are in an Admin view
   const isAdminView = currentView === 'admin' && (currentUserRole === 'admin' || currentUserRole === 'product_manager' || currentUserRole === 'finance_manager');
+  
+  // ⭐️ NEW: Flag for views that should have no Navbar, Footer, or Popups
+  const isLayoutFreeView = currentView === 'checkout' || currentView === 'admin_login' || isAdminView;
 
   // --- Handlers ---
   const toggleTheme = () => setIsDarkMode(prev => !prev);
@@ -329,7 +332,12 @@ export default function App() {
 
       // Admin/Manager Routes (Accessed via hidden URL/direct routing)
       case 'admin_login': 
-        return <AdminLogin isDarkMode={isDarkMode} onLoginSuccess={handleManagerLoginSuccess} />;
+        // ⭐ MODIFIED: Wrap AdminLogin component with centering utilities
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <AdminLogin isDarkMode={isDarkMode} onLoginSuccess={handleManagerLoginSuccess} />
+            </div>
+        );
       
       default:
         return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} handleProductAction={handleProductAction} wishlistItems={wishlistItems} products={products} />;
@@ -341,11 +349,11 @@ export default function App() {
     <div className={`${isDarkMode ? 'dark bg-gray-900 min-h-screen' : 'bg-white min-h-screen'} font-inter transition-colors duration-500`}>
       
       {/* 1. Conditional Rendering for OfferBar */}
-      {!isAdminView && <OfferBar />}
+      {!isLayoutFreeView && <OfferBar />}
 
       {/* 2. Conditional Rendering for Navbar */}
-      {/* ⭐ MODIFIED: Hide Navbar when on Checkout view for a focused experience */}
-      {!isAdminView && currentView !== 'checkout' && ( 
+      {/* ⭐ MODIFIED: Hide Navbar when on any layout-free view */}
+      {!isLayoutFreeView && ( 
         <Navbar
           isDarkMode={isDarkMode}
           toggleTheme={toggleTheme}
@@ -360,13 +368,13 @@ export default function App() {
       )}
 
       {/* 3. Main Content Area: Always render, its content handles its own layout */}
-      {/* ⭐ MODIFIED: Remove max-width/auto-margins for checkout page to allow full width */}
-      <main className={isAdminView || currentView === 'checkout' ? "h-screen" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"}>
+      {/* ⭐ MODIFIED: Remove max-width/auto-margins for layout-free views */}
+      <main className={isLayoutFreeView ? "h-screen" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"}>
         {renderView()}
       </main>
 
        {/* Search Modal (Only needed for main site) */}
-      {!isAdminView && (
+      {!isLayoutFreeView && (
           <SearchModal
             isOpen={isSearchOpen}
             onClose={() => setIsSearchOpen(false)}
@@ -375,7 +383,7 @@ export default function App() {
       )}
 
       {/* 4. Wishlist Sidebar (Only needed for main site) */}
-      {!isAdminView && (
+      {!isLayoutFreeView && (
           <WishlistSidebar
             isOpen={isWishlistOpen}
             onClose={() => setIsWishlistOpen(false)}
@@ -387,7 +395,7 @@ export default function App() {
       )}
       
       {/* 5. Discount Popup (Only needed for main site) */}
-      {!isAdminView && (
+      {!isLayoutFreeView && (
           <DiscountPopup
             isVisible={isPopupVisible}
             onClose={() => setIsPopupVisible(false)}
@@ -396,10 +404,10 @@ export default function App() {
       )}
 
       {/* 6. Conditional Rendering for Footer */}
-      {!isAdminView && currentView !== 'checkout' && <Footer onViewChange={onViewChange} isDarkMode={isDarkMode} />}
+      {!isLayoutFreeView && <Footer onViewChange={onViewChange} isDarkMode={isDarkMode} />}
 
       {/* 7. Cart (Only needed for main site) */}
-      {!isAdminView && (
+      {!isLayoutFreeView && (
           <Cart 
             isDarkMode={isDarkMode}
             isOpen={isCartOpen} 
