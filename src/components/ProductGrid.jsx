@@ -171,7 +171,7 @@ const FilterSidebar = ({ isOpen, onClose, filters, setFilters, products, default
 };
 
 
-// --- Memoized Product Card for Performance (Modified to use new onProductClick) ---
+// --- Memoized Product Card for Performance (Unchanged) ---
 const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToWishlist, isWishlisted }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -186,7 +186,6 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
       onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}
     >
       <div className="relative overflow-hidden">
-        {/* ⭐ MODIFIED: Calls the new onProductClick handler */}
         <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.4 }} className="cursor-pointer" onClick={() => onProductClick(product)}>
           <ImageWithFallback src={product.image} alt={product.name} className="w-full h-64 object-cover" />
         </motion.div>
@@ -213,7 +212,6 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
           <div className="flex">{[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />)}</div>
           <span className="text-sm text-gray-600 dark:text-gray-400">{product.rating} ({product.reviews})</span>
         </div>
-        {/* ⭐ MODIFIED: Calls the new onProductClick handler */}
         <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-2 cursor-pointer hover:text-pink-600 transition-colors line-clamp-2 h-14" onClick={() => onProductClick(product)}>{product.name}</h3>
         <div className="flex items-center gap-2 my-3">
           <span className="text-xl font-bold text-pink-600">₹{product.discountedPrice}</span>
@@ -229,43 +227,78 @@ const ProductCard = React.memo(({ product, onProductClick, onAddToCart, onAddToW
   );
 });
 
-// --- Main Product Grid Component (Updated with Detail Modal Logic) ---
-export const ProductGrid = ({ products = [], onProductClick = () => { }, onAddToCart = () => { }, onAddToWishlist = () => { }, isDarkMode, wishlistItems = [] }) => {
+// --- Main Product Grid Component (MODIFIED FOR DATA FETCHING) ---
+export const ProductGrid = ({ onProductClick = () => { }, onAddToCart = () => { }, onAddToWishlist = () => { }, isDarkMode, wishlistItems = [] }) => {
+  // ✅ ADDED: State for products, loading, and errors
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // ✅ ADDED: useEffect to fetch products from the backend on component mount
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/v1/products");
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        
+        // ✅ UPDATED LOGIC: Safely access the product array from the response
+        // This handles cases where the API returns a direct array [...]
+        // or an object containing the array, e.g., { data: [...] }
+        const productArray = Array.isArray(data) ? data : data.data;
+
+        // Ensure we only try to set the state if we found a valid array
+        if (Array.isArray(productArray)) {
+          setProducts(productArray);
+        } else {
+          // If the format is unexpected, log an error and set products to empty to avoid a crash
+          console.error("Could not find a product array in the API response:", data);
+          setProducts([]);
+        }
+      } catch (e) {
+        console.error("Failed to fetch products:", e);
+        setError(e.message || "Could not fetch products. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []); // Empty dependency array means this runs once when the component mounts
+
+  // --- All existing logic below remains unchanged ---
   const dropdownRef = useRef(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sortOption, setSortOption] = useState('Default');
 
-  // ⭐ ADDED: State for Product Detail Modal
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  // ⭐ ADDED: Handler to open the detail view
   const handleProductClick = (product) => {
     setSelectedProduct(product);
     setIsDetailOpen(true);
-    onProductClick(product); // Retain original external click handler
+    onProductClick(product);
   };
-  
-  // ⭐ ADDED: Handler for adding to cart from the detail modal
+
   const handleDetailAddToCart = (product, size, color, quantity) => {
-    // Pass the detailed information up to the main application's onAddToCart
-    const cartItem = {
-        id: product.id,
-        name: product.name,
-        price: product.discountedPrice,
-        image: product.image,
-        quantity: quantity,
-        size: size,
-        color: color
-    };
+    const cartItem = { id: product.id, name: product.name, price: product.discountedPrice, image: product.image, quantity: quantity, size: size, color: color };
     onAddToCart(cartItem);
   };
 
+  const maxProductPrice = useMemo(() => {
+    if (products.length === 0) return 5000;
+    return Math.max(...products.map(p => p.originalPrice || 0), 5000);
+  }, [products]);
 
-  const maxProductPrice = useMemo(() => Math.max(...products.map(p => p.originalPrice || 0), 5000), [products]);
-  const minProductPrice = useMemo(() => Math.min(...products.map(p => p.originalPrice || 500), 500), [products]);
+  const minProductPrice = useMemo(() => {
+    if (products.length === 0) return 500;
+    return Math.min(...products.map(p => p.originalPrice || 500), 500);
+  }, [products]);
+
 
   const defaultFilters = useMemo(() => ({
     price: { min: minProductPrice, max: maxProductPrice },
@@ -276,8 +309,11 @@ export const ProductGrid = ({ products = [], onProductClick = () => { }, onAddTo
   const [filters, setFilters] = useState(defaultFilters);
 
   useEffect(() => {
-    setFilters(defaultFilters);
-  }, [defaultFilters]);
+    // This effect ensures filters are reset if the product list changes dynamically
+    if (products.length > 0) {
+      setFilters(defaultFilters);
+    }
+  }, [defaultFilters, products.length]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -288,9 +324,9 @@ export const ProductGrid = ({ products = [], onProductClick = () => { }, onAddTo
     document.addEventListener("mousedown", handleClickOutside);
     return () => { document.removeEventListener("mousedown", handleClickOutside); };
   }, [isDropdownOpen]);
-
-  const productsToUse = products;
-  const categories = useMemo(() => ['All',  ...new Set(productsToUse.map(p => p.category))], [productsToUse]);
+  
+  const productsToUse = products; 
+  const categories = useMemo(() => ['All', ...new Set(productsToUse.map(p => p.category))], [productsToUse]);
 
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = productsToUse.filter(p =>
@@ -300,7 +336,6 @@ export const ProductGrid = ({ products = [], onProductClick = () => { }, onAddTo
       (filters.sizes.length === 0 || p.sizes.some(s => filters.sizes.includes(s)))
     );
 
-    // Sorting logic
     if (sortOption === 'Price: Low to High') {
       return [...filtered].sort((a, b) => a.discountedPrice - b.discountedPrice);
     }
@@ -308,7 +343,7 @@ export const ProductGrid = ({ products = [], onProductClick = () => { }, onAddTo
       return [...filtered].sort((a, b) => b.discountedPrice - a.discountedPrice);
     }
 
-    return filtered; // Default order
+    return filtered;
   }, [selectedCategory, filters, productsToUse, sortOption]);
 
   const activeFilterCount = useMemo(() => {
@@ -329,6 +364,28 @@ export const ProductGrid = ({ products = [], onProductClick = () => { }, onAddTo
     if (type === 'color') setFilters(p => ({ ...p, color: null }));
     if (type === 'size') setFilters(p => ({ ...p, sizes: p.sizes.filter(s => s !== value) }));
   };
+
+  if (isLoading) {
+    return (
+      <section className="py-16 px-4 min-h-screen font-sans flex justify-center items-center">
+        <div className="text-center">
+            <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-200">Loading products…</h2>
+            <p className="text-gray-500 mt-2">Please wait a moment.</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="py-16 px-4 min-h-screen font-sans flex justify-center items-center">
+        <div className="text-center">
+            <h3 className="text-2xl font-semibold text-red-500">Error: Failed to Load Products</h3>
+            <p className="text-gray-500 mt-2">{error}</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 px-4 min-h-screen font-sans ">
@@ -400,7 +457,6 @@ export const ProductGrid = ({ products = [], onProductClick = () => { }, onAddTo
         setSortOption={setSortOption}
       />
       
-      {/* ⭐ ADDED: Product Detail Modal Integration */}
        {selectedProduct && (
           <ProductDetail
               product={selectedProduct}
@@ -408,11 +464,9 @@ export const ProductGrid = ({ products = [], onProductClick = () => { }, onAddTo
               onClose={() => setIsDetailOpen(false)}
               onAddToCart={handleDetailAddToCart}
               onAddToWishlist={onAddToWishlist}
-              // ⭐ ADDED: Calculate and pass the isWishlisted flag
               isWishlisted={wishlistItems.some(item => item.id === selectedProduct.id)}
           />
       )}
-      {/* --- END Product Detail Modal Integration --- */}
     </section>
   );
 };
