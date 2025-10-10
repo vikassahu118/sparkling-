@@ -235,12 +235,14 @@ if (roleName && allowedRoles.includes(roleName.toLowerCase())) {
 
     const renderView = () => {
         if (isAdminView) {
-            return <AdminPage
-                isDarkMode={isDarkMode}
-                onViewChange={onViewChange}
+            return <AdminPage 
+                isDarkMode={isDarkMode} 
+                onViewChange={onViewChange} 
+                // ✅ FIX 2: Pass down a specific logout function for admins
+                onLogout={() => handleLogout('admin_login')}
                 userRole={currentUserRole}
                 products={products}
-                setProducts={setProducts}
+                setProducts={setProducts} 
             />;
         }
         switch (currentView) {
