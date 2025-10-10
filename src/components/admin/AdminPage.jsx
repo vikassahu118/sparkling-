@@ -69,10 +69,9 @@ const OfferBarModal = ({ isOpen, onClose, onSave, currentOfferText, isDarkMode }
     const headerClasses = isDarkMode ? 'text-cyan-400' : 'text-cyan-600';
     const inputClasses = `w-full p-3 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:text-white`;
 
-    if (!isOpen) return null;
-
+    // No need for `if (!isOpen)` here as AnimatePresence handles it
     return (
-        <AnimatePresence>
+        <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[2000]" onClick={onClose} />
             <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 className={`fixed inset-0 m-auto h-fit max-w-lg p-8 rounded-3xl shadow-2xl z-[2001] ${modalBg}`}
@@ -82,7 +81,6 @@ const OfferBarModal = ({ isOpen, onClose, onSave, currentOfferText, isDarkMode }
                     <h3 className={`text-2xl font-bold ${headerClasses}`}>Update Offer Bar</h3>
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-700/50"><X className="w-6 h-6" /></button>
                 </div>
-
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="font-semibold mb-2 block">Offer Text</label>
@@ -102,7 +100,7 @@ const OfferBarModal = ({ isOpen, onClose, onSave, currentOfferText, isDarkMode }
                     </div>
                 </form>
             </motion.div>
-        </AnimatePresence>
+        </>
     );
 };
 
@@ -137,7 +135,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
     const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
 
     const initialSection = useMemo(() => {
-        // ✅ FIX: Access .role_name from the userRole object
+        // Correctly checks for role name to set the initial view
         if (userRole?.role_name === 'product_manager') return 'products';
         if (userRole?.role_name === 'finance_manager') return 'finance';
         return 'dashboard';
@@ -159,8 +157,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
     };
 
     const renderSection = () => {
-        // ✅ FIX: Get the role string to pass to children, preventing errors
-        const roleString = userRole?.role_name;
+        const roleString = userRole?.role_name; // Safely get the role string
         switch (activeSection) {
             case 'products':
                 return <ProductManagement products={products} setProducts={setProducts} isDarkMode={isDarkMode} cardBaseClasses={cardBaseClasses} userRole={roleString} />;
@@ -193,13 +190,11 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
     ], []);
 
     const filteredNavItems = useMemo(() => {
-        // ✅ FIX: Access .role_name
         if (!userRole?.role_name) return [];
         return allNavItems.filter(item => item.roles.includes(userRole.role_name));
     }, [userRole, allNavItems]);
 
     useEffect(() => {
-        // ✅ FIX: Access .role_name
         if (activeSection === 'dashboard' && userRole?.role_name !== 'admin') {
             setActiveSection(filteredNavItems[0]?.id || 'products');
         }
@@ -208,13 +203,18 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
 
     return (
         <div className={`min-h-screen flex ${containerClasses}`}>
-            <OfferBarModal
-                isOpen={isOfferModalOpen}
-                onClose={() => setIsOfferModalOpen(false)}
-                onSave={setOfferText}
-                currentOfferText={currentOfferText}
-                isDarkMode={isDarkMode}
-            />
+            {/* ✅ FIX: AnimatePresence wraps the modal component call */}
+            <AnimatePresence>
+                {isOfferModalOpen && (
+                    <OfferBarModal
+                        isOpen={isOfferModalOpen}
+                        onClose={() => setIsOfferModalOpen(false)}
+                        onSave={setOfferText}
+                        currentOfferText={currentOfferText}
+                        isDarkMode={isDarkMode}
+                    />
+                )}
+            </AnimatePresence>
 
             <AnimatePresence>
                 {isSidebarOpen && (
@@ -240,7 +240,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
                     <X className="w-6 h-6 text-white" />
                 </button>
                 <h1 className={`text-3xl font-extrabold mb-8 bg-gradient-to-r ${isDarkMode ? 'from-purple-400 to-cyan-400' : 'from-pink-500 to-purple-600'} bg-clip-text text-transparent`}>
-                    {/* ✅ FIX: Access .role_name before calling .toUpperCase() */}
+                    {/* This is the correct, safe way to call toUpperCase */}
                     {userRole?.role_name?.toUpperCase().replace('_', ' ') || 'MANAGER'}
                 </h1>
                 <nav className="space-y-2 flex-grow">
@@ -270,7 +270,6 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
             {/* Desktop Sidebar */}
             <div className={`w-64 p-6 flex-col ${sidebarClasses} h-screen z-10 hidden lg:flex lg:fixed lg:top-0 lg:left-0 lg:overflow-y-auto flex-shrink-0`}>
                 <h1 className={`text-3xl font-extrabold mb-8 bg-gradient-to-r ${isDarkMode ? 'from-purple-400 to-cyan-400' : 'from-pink-500 to-purple-600'} bg-clip-text text-transparent`}>
-                    {/* ✅ FIX: Access .role_name before calling .toUpperCase() */}
                     {userRole?.role_name?.toUpperCase().replace('_', ' ') || 'MANAGER'}
                 </h1>
                 <nav className="space-y-2 flex-grow">
@@ -297,7 +296,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
             </div>
 
             {/* Main Content Area */}
-            <main className={`p-8 lg:ml-64 flex-1  sm:p-8 overflow-y-auto ${mainContentClasses}`}>
+            <main className={`p-4 sm:p-8 lg:ml-64 flex-1 overflow-y-auto ${mainContentClasses}`}>
                 <header className="flex justify-between items-center pb-4 mb-4 sm:pb-6 sm:mb-8 border-b border-gray-700/50 sticky top-0 z-10 bg-inherit">
                     <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 rounded-full hover:bg-gray-700/50 mr-3">
                         <Menu className="w-6 h-6 text-pink-500" />
@@ -306,7 +305,6 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
                         {activeSection.replace('_', ' ')}
                     </h2>
                     <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base hidden sm:block">
-                        {/* ✅ FIX: Also fix the role display here */}
                         Logged in as: <span className="font-semibold text-black dark:text-gray-200 capitalize">{userRole?.role_name}</span>
                     </p>
                 </header>
@@ -317,7 +315,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
 };
 
 
-// --- (The rest of your sub-components are below) ---
+// --- (The rest of your sub-components are below, with similar animation fixes) ---
 
 // --- Dashboard Sub-Components ---
 const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, userRole }) => {
@@ -447,7 +445,7 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
         if (discountValue !== formData.discount) {
             setFormData(p => ({ ...p, discount: discountValue }));
         }
-    }, [formData.originalPrice, formData.discountedPrice, calculateDiscount]);
+    }, [formData.originalPrice, formData.discountedPrice, formData.discount, calculateDiscount]);
 
     const handleChange = (e) => {
         const { name, value, type } = e.target;
@@ -519,10 +517,8 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
     const inputClasses = `w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:text-white`;
     const headerClasses = isDarkMode ? 'text-purple-400' : 'text-pink-600';
 
-    if (!isOpen) return null;
-
     return (
-        <AnimatePresence>
+        <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[1000]" onClick={onClose} />
             <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -50, opacity: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 className={`fixed inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto max-w-lg lg:max-w-4xl p-4 sm:p-8 rounded-3xl shadow-2xl z-[1001] ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
@@ -651,7 +647,7 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                     </div>
                 </form>
             </motion.div>
-        </AnimatePresence>
+        </>
     );
 };
 
@@ -661,7 +657,6 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [productToEdit, setProductToEdit] = useState(null);
 
-    const canManageCoupons = userRole === 'admin';
     const canEditProducts = userRole === 'admin' || userRole === 'product_manager';
 
     const handleAction = (action, product) => {
@@ -700,13 +695,17 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
 
     return (
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
-            <ProductFormModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                isDarkMode={isDarkMode}
-                product={productToEdit}
-                onSave={handleProductSave}
-            />
+            <AnimatePresence>
+                {isModalOpen && (
+                    <ProductFormModal
+                        isOpen={isModalOpen}
+                        onClose={() => setIsModalOpen(false)}
+                        isDarkMode={isDarkMode}
+                        product={productToEdit}
+                        onSave={handleProductSave}
+                    />
+                )}
+            </AnimatePresence>
 
             <div className="flex space-x-4 border-b border-gray-700/50">
                 <button onClick={() => setActiveTab('products')} className={`pb-2 font-semibold transition-colors ${activeTab === 'products' ? 'text-pink-500 border-b-2 border-pink-500' : 'text-gray-500 hover:text-white dark:hover:text-gray-200'}`}>
@@ -813,10 +812,11 @@ const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBa
 
     return (
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
-
-            {selectedOrder && (
-                <OrderDetailModal order={selectedOrder} isDarkMode={isDarkMode} onClose={() => setSelectedOrder(null)} />
-            )}
+            <AnimatePresence>
+                {selectedOrder && (
+                    <OrderDetailModal order={selectedOrder} isDarkMode={isDarkMode} onClose={() => setSelectedOrder(null)} />
+                )}
+            </AnimatePresence>
 
             <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Order List</h3>
             <div className={`overflow-x-auto ${cardBaseClasses} rounded-xl shadow-lg`}>
@@ -875,10 +875,8 @@ const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBa
 const OrderDetailModal = ({ order, isDarkMode, onClose }) => {
     const modalBg = isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900';
 
-    if (!order) return null;
-
     return (
-        <AnimatePresence>
+        <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[2000]" onClick={onClose} />
             <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 className={`fixed inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto max-w-lg lg:max-w-4xl p-4 sm:p-8 rounded-3xl shadow-2xl z-[2001] ${modalBg}`}
@@ -919,7 +917,7 @@ const OrderDetailModal = ({ order, isDarkMode, onClose }) => {
                     </div>
                 </div>
             </motion.div>
-        </AnimatePresence>
+        </>
     );
 };
 
@@ -1058,12 +1056,16 @@ const CouponManagement = ({ isDarkMode, cardBaseClasses, userRole }) => {
     return (
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
 
-            <CouponFormModal
-                isOpen={isCouponModalOpen}
-                onClose={() => setIsCouponModalOpen(false)}
-                onSave={handleCouponRequestSave}
-                isDarkMode={isDarkMode}
-            />
+            <AnimatePresence>
+                {isCouponModalOpen && (
+                    <CouponFormModal
+                        isOpen={isCouponModalOpen}
+                        onClose={() => setIsCouponModalOpen(false)}
+                        onSave={handleCouponRequestSave}
+                        isDarkMode={isDarkMode}
+                    />
+                )}
+            </AnimatePresence>
 
             <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>My Coupon Requests</h3>
 
@@ -1170,10 +1172,8 @@ const CouponFormModal = ({ isOpen, onClose, onSave, isDarkMode }) => {
     const headerClasses = isDarkMode ? 'text-purple-400' : 'text-pink-600';
     const modalBg = isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900';
 
-    if (!isOpen) return null;
-
     return (
-        <AnimatePresence>
+        <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[2000]" onClick={onClose} />
             <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 className={`fixed inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto max-w-lg p-4 sm:p-8 rounded-3xl shadow-2xl z-[2001] ${modalBg}`}
@@ -1214,7 +1214,7 @@ const CouponFormModal = ({ isOpen, onClose, onSave, isDarkMode }) => {
                     </div>
                 </form>
             </motion.div>
-        </AnimatePresence>
+        </>
     );
 };
 
