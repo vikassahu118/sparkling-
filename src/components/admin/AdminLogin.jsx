@@ -2,21 +2,9 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LogIn, User, Lock } from 'lucide-react';
 
-// Mock credentials for testing different roles
-const MOCK_CREDENTIALS = {
-    admin: 'admin123',
-    product: 'product123',
-    finance: 'finance123',
-    order: 'order123'
-};
-
-// Maps username to role ID
-const ROLE_MAP = {
-    admin: 'admin',
-    product: 'product_manager',
-    finance: 'finance_manager',
-    order: 'product_manager' // Order Manager uses the product_manager role for simplicity
-};
+// Define your API's base URL. 
+// You might want to move this to an environment variable (.env file) for better security and flexibility.
+const API_BASE_URL = 'http://localhost:8000/api'; // Replace with your actual backend URL
 
 const AdminLogin = ({ isDarkMode, onLoginSuccess }) => {
     const [username, setUsername] = useState('');
@@ -24,28 +12,47 @@ const AdminLogin = ({ isDarkMode, onLoginSuccess }) => {
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    // The handleSubmit function is now asynchronous to handle the API call.
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
         setIsLoading(true);
 
-        const normalizedUsername = username.toLowerCase().trim();
-        const expectedPassword = MOCK_CREDENTIALS[normalizedUsername];
+        try {
+            // Using the /auth/login endpoint from your documentation 
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+            });
 
-        setTimeout(() => {
-            if (expectedPassword === password) {
-                const role = ROLE_MAP[normalizedUsername];
-                if (role) {
-                    onLoginSuccess(role);
-                } else {
-                    setError('Unknown role. Please use "admin", "product", or "finance".');
-                }
-            } else {
-                setError('Invalid credentials. Try "admin" and "admin123".');
+            const data = await response.json();
+
+            if (!response.ok) {
+                // If the server responds with an error (e.g., 401 Unauthorized), throw an error to be caught by the catch block.
+                throw new Error(data.message || 'Invalid credentials.');
             }
+
+            // On successful login, the API should return data including a token and user details.
+            // We pass this entire data object to the parent component.
+            if (data.user && data.token) {
+                onLoginSuccess(data);
+            } else {
+                throw new Error('Login response from server was incomplete.');
+            }
+
+        } catch (err) {
+            // Catches network errors or errors thrown from the response check.
+            setError(err.message);
+        } finally {
+            // This will run whether the request was successful or not.
             setIsLoading(false);
-        }, 1000);
+        }
     };
+    
+    // --- The rest of your JSX remains the same, as it's already set up to handle loading and error states ---
 
     const inputClasses = `w-full p-3 rounded-lg border focus:ring-2 transition-colors duration-200`;
     const darkInputClasses = `bg-gray-700 border-gray-600 text-white placeholder-gray-400`;
@@ -74,7 +81,7 @@ const AdminLogin = ({ isDarkMode, onLoginSuccess }) => {
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Username (e.g., admin, product)"
+                        placeholder="Username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         className={`${inputClasses} ${isDarkMode ? darkInputClasses : lightInputClasses} pl-10`}
@@ -88,7 +95,7 @@ const AdminLogin = ({ isDarkMode, onLoginSuccess }) => {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                         type="password"
-                        placeholder="Password (e.g., admin123)"
+                        placeholder="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className={`${inputClasses} ${isDarkMode ? darkInputClasses : lightInputClasses} pl-10`}
@@ -122,4 +129,5 @@ const AdminLogin = ({ isDarkMode, onLoginSuccess }) => {
         </motion.div>
     );
 };
+
 export default AdminLogin;
