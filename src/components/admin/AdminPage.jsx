@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-// Added Menu icon and Zap for Site Settings
 import { ShoppingBag, Users, Package, TrendingUp, X, ChevronRight, Edit3, Trash2, DollarSign, BarChart2, Zap, CornerDownRight, Plus, MapPin, Phone, Mail, Save, Tag, Image as ImageIcon, Menu } from 'lucide-react';
 
 // NOTE: This dashboard uses mock data and pure local state management.
@@ -51,7 +50,7 @@ const DashboardCard = ({ title, value, icon: Icon, colorClass, linkLabel, onClic
 );
 
 // =======================================================
-// ✨ NEW COMPONENT: Offer Bar Update Modal
+// Offer Bar Update Modal
 // =======================================================
 const OfferBarModal = ({ isOpen, onClose, onSave, currentOfferText, isDarkMode }) => {
     const [text, setText] = useState(currentOfferText || '');
@@ -108,7 +107,7 @@ const OfferBarModal = ({ isOpen, onClose, onSave, currentOfferText, isDarkMode }
 };
 
 // =======================================================
-// ✨ NEW COMPONENT: Site Settings Section
+// Site Settings Section
 // =======================================================
 const SiteSettings = ({ onUpdateOfferClick, currentOfferText, cardBaseClasses }) => (
     <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
@@ -133,14 +132,14 @@ const SiteSettings = ({ onUpdateOfferClick, currentOfferText, cardBaseClasses })
 // Main Admin Page Component
 // =======================================================
 const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, currentOfferText, setOfferText }) => {
-    // Shared Refund State
     const [refundQueue, setRefundQueue] = useState(MOCK_REFUND_QUEUE);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [isOfferModalOpen, setIsOfferModalOpen] = useState(false); // ✨ State for the new modal
+    const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
 
     const initialSection = useMemo(() => {
-        if (userRole === 'product_manager') return 'products';
-        if (userRole === 'finance_manager') return 'finance';
+        // ✅ FIX: Access .role_name from the userRole object
+        if (userRole?.role_name === 'product_manager') return 'products';
+        if (userRole?.role_name === 'finance_manager') return 'finance';
         return 'dashboard';
     }, [userRole]);
 
@@ -160,16 +159,17 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
     };
 
     const renderSection = () => {
+        // ✅ FIX: Get the role string to pass to children, preventing errors
+        const roleString = userRole?.role_name;
         switch (activeSection) {
             case 'products':
-                return <ProductManagement products={products} setProducts={setProducts} isDarkMode={isDarkMode} cardBaseClasses={cardBaseClasses} userRole={userRole} />;
+                return <ProductManagement products={products} setProducts={setProducts} isDarkMode={isDarkMode} cardBaseClasses={cardBaseClasses} userRole={roleString} />;
             case 'orders':
-                return <OrderManagement orders={orders} setOrders={setOrders} setRefundQueue={setRefundQueue} isDarkMode={isDarkMode} cardBaseClasses={cardBaseClasses} userRole={userRole} />;
+                return <OrderManagement orders={orders} setOrders={setOrders} setRefundQueue={setRefundQueue} isDarkMode={isDarkMode} cardBaseClasses={cardBaseClasses} userRole={roleString} />;
             case 'users':
-                return <UserManagement users={users} setUsers={setUsers} isDarkMode={isDarkMode} cardBaseClasses={cardBaseClasses} userRole={userRole} />;
+                return <UserManagement users={users} setUsers={setUsers} isDarkMode={isDarkMode} cardBaseClasses={cardBaseClasses} userRole={roleString} />;
             case 'finance':
-                return <FinanceManagement isDarkMode={isDarkMode} cardBaseClasses={cardBaseClasses} userRole={userRole} refundQueue={refundQueue} setRefundQueue={setRefundQueue} />;
-            // ✨ Add case for the new settings section
+                return <FinanceManagement isDarkMode={isDarkMode} cardBaseClasses={cardBaseClasses} userRole={roleString} refundQueue={refundQueue} setRefundQueue={setRefundQueue} />;
             case 'settings':
                 return <SiteSettings
                     isDarkMode={isDarkMode}
@@ -179,7 +179,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
                 />;
             case 'dashboard':
             default:
-                return <Dashboard products={products} orders={orders} users={users} setActiveSection={setActiveSection} isDarkMode={isDarkMode} userRole={userRole} />;
+                return <Dashboard products={products} orders={orders} users={users} setActiveSection={setActiveSection} isDarkMode={isDarkMode} userRole={roleString} />;
         }
     };
 
@@ -189,16 +189,18 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
         { id: 'orders', label: 'Order Manager', icon: ShoppingBag, roles: ['admin', 'product_manager'] },
         { id: 'finance', label: 'Finance Manager', icon: DollarSign, roles: ['admin', 'finance_manager'] },
         { id: 'users', label: 'User Management', icon: Users, roles: ['admin'] },
-        { id: 'settings', label: 'Offerbar Settings', icon: Zap, roles: ['admin'] }, // ✨ New nav item
+        { id: 'settings', label: 'Offerbar Settings', icon: Zap, roles: ['admin'] },
     ], []);
 
     const filteredNavItems = useMemo(() => {
-        if (!userRole) return [];
-        return allNavItems.filter(item => item.roles.includes(userRole));
+        // ✅ FIX: Access .role_name
+        if (!userRole?.role_name) return [];
+        return allNavItems.filter(item => item.roles.includes(userRole.role_name));
     }, [userRole, allNavItems]);
 
     useEffect(() => {
-        if (activeSection === 'dashboard' && userRole !== 'admin') {
+        // ✅ FIX: Access .role_name
+        if (activeSection === 'dashboard' && userRole?.role_name !== 'admin') {
             setActiveSection(filteredNavItems[0]?.id || 'products');
         }
     }, [userRole, activeSection, filteredNavItems]);
@@ -206,7 +208,6 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
 
     return (
         <div className={`min-h-screen flex ${containerClasses}`}>
-            {/* ✨ Render the new Modal */}
             <OfferBarModal
                 isOpen={isOfferModalOpen}
                 onClose={() => setIsOfferModalOpen(false)}
@@ -215,7 +216,6 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
                 isDarkMode={isDarkMode}
             />
 
-            {/* Mobile Overlay */}
             <AnimatePresence>
                 {isSidebarOpen && (
                     <motion.div
@@ -240,7 +240,8 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
                     <X className="w-6 h-6 text-white" />
                 </button>
                 <h1 className={`text-3xl font-extrabold mb-8 bg-gradient-to-r ${isDarkMode ? 'from-purple-400 to-cyan-400' : 'from-pink-500 to-purple-600'} bg-clip-text text-transparent`}>
-                    {userRole?.toUpperCase().replace('_', ' ') || 'MANAGER'}
+                    {/* ✅ FIX: Access .role_name before calling .toUpperCase() */}
+                    {userRole?.role_name?.toUpperCase().replace('_', ' ') || 'MANAGER'}
                 </h1>
                 <nav className="space-y-2 flex-grow">
                     {filteredNavItems.map(item => (
@@ -269,7 +270,8 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
             {/* Desktop Sidebar */}
             <div className={`w-64 p-6 flex-col ${sidebarClasses} h-screen z-10 hidden lg:flex lg:fixed lg:top-0 lg:left-0 lg:overflow-y-auto flex-shrink-0`}>
                 <h1 className={`text-3xl font-extrabold mb-8 bg-gradient-to-r ${isDarkMode ? 'from-purple-400 to-cyan-400' : 'from-pink-500 to-purple-600'} bg-clip-text text-transparent`}>
-                    {userRole?.toUpperCase().replace('_', ' ') || 'MANAGER'}
+                    {/* ✅ FIX: Access .role_name before calling .toUpperCase() */}
+                    {userRole?.role_name?.toUpperCase().replace('_', ' ') || 'MANAGER'}
                 </h1>
                 <nav className="space-y-2 flex-grow">
                     {filteredNavItems.map(item => (
@@ -304,7 +306,8 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
                         {activeSection.replace('_', ' ')}
                     </h2>
                     <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base hidden sm:block">
-                        Logged in as: <span className="font-semibold text-black dark:text-gray-200 capitalize">{userRole}</span>
+                        {/* ✅ FIX: Also fix the role display here */}
+                        Logged in as: <span className="font-semibold text-black dark:text-gray-200 capitalize">{userRole?.role_name}</span>
                     </p>
                 </header>
                 {renderSection()}
@@ -313,12 +316,11 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products, setProducts, 
     );
 };
 
-// --- (The rest of your sub-components: Dashboard, ProductFormModal, ProductManagement, etc. remain unchanged) ---
-// --- Paste them below this line ---
 
-// --- Dashboard Sub-Components (Unchanged) ---
+// --- (The rest of your sub-components are below) ---
+
+// --- Dashboard Sub-Components ---
 const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, userRole }) => {
-    // ... (content of Dashboard, grid classes updated below)
     const canViewFinance = userRole === 'admin' || userRole === 'finance_manager';
 
     const totalRevenue = 52100.00;
@@ -355,7 +357,6 @@ const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, user
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="space-y-10">
-            {/* ⭐️ Updated grid classes for better responsiveness: default 1-col, sm 2-col, lg 3-col, xl 4-col */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {renderedCards.map((card, index) => (
                     <DashboardCard
@@ -405,26 +406,22 @@ const Dashboard = ({ products, orders, users, setActiveSection, isDarkMode, user
     );
 };
 
-// --- Product Management Modal Component (New) ---
+// --- Product Management Modal Component ---
 const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
-    // Determine if we are adding a new product or editing an existing one
     const isEditing = !!product;
 
-    // NOTE: Added discountedPrice, originalPrice, and discount to initial state
     const [formData, setFormData] = useState(product ? {
-        ...product, // Use existing product data
-        originalPrice: product.originalPrice || product.price, // Fallback for price property
+        ...product,
+        originalPrice: product.originalPrice || product.price,
         discountedPrice: product.discountedPrice || product.price,
         images: product.images || [],
         newImageColor: '',
         newImageUrl: '',
-        newImageFile: null, // ⭐️ NEW: State for file upload
+        newImageFile: null,
     } : {
-        // Initial state for new product
         id: Date.now().toString(), name: '', price: 0, stock: 0, category: 'Tops', description: '', images: [], newImageColor: '', newImageUrl: '', discountedPrice: 0, originalPrice: 0, discount: 0, rating: 4.5, reviews: 0, colors: [], sizes: ['S', 'M'], newImageFile: null
     });
 
-    // List of common colors and their Tailwind classes
     const AVAILABLE_COLORS = useMemo(() => [
         { name: 'Pink', class: 'bg-pink-500', value: 'pink' },
         { name: 'Blue', class: 'bg-blue-500', value: 'blue' },
@@ -436,7 +433,6 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
         { name: 'Black', class: 'bg-black', value: 'black' },
     ], []);
 
-    // Helper to calculate discount based on original and discounted price
     const calculateDiscount = useCallback((original, discounted) => {
         const org = Number(original);
         const disc = Number(discounted);
@@ -447,12 +443,10 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
     }, []);
 
     useEffect(() => {
-        // Recalculate discount whenever price fields change
         const discountValue = calculateDiscount(formData.originalPrice, formData.discountedPrice);
         if (discountValue !== formData.discount) {
             setFormData(p => ({ ...p, discount: discountValue }));
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formData.originalPrice, formData.discountedPrice, calculateDiscount]);
 
     const handleChange = (e) => {
@@ -472,13 +466,11 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
         }));
     };
 
-    // ⭐️ NEW HANDLER: Reads the uploaded file and converts it to Base64 URL
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                // reader.result is the Base64 data URL
                 setFormData(p => ({ ...p, newImageUrl: reader.result }));
             };
             reader.readAsDataURL(file);
@@ -488,9 +480,7 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
     };
 
     const handleImageAdd = () => {
-        // ⭐️ CHECK FOR Base64 URL instead of external URL
         if (formData.newImageUrl && formData.newImageColor) {
-            // Check if color already exists
             if (formData.images.some(img => img.color === formData.newImageColor)) {
                 alert(`Image for color "${formData.newImageColor.toUpperCase()}" already added. Delete it first to replace.`);
                 return;
@@ -498,9 +488,9 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
             setFormData(p => ({
                 ...p,
                 images: [...p.images, { color: p.newImageColor, url: p.newImageUrl }],
-                newImageColor: '', // Clear selection after adding
-                newImageUrl: '', // Clear URL after adding
-                colors: [...new Set([...p.colors, p.newImageColor])], // Auto-update colors array
+                newImageColor: '',
+                newImageUrl: '',
+                colors: [...new Set([...p.colors, p.newImageColor])],
             }));
         } else {
             alert('Please select a color and upload an Image.');
@@ -510,7 +500,6 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
     const handleImageRemove = (index) => {
         setFormData(p => {
             const newImages = p.images.filter((_, i) => i !== index);
-            // Re-derive colors from remaining images
             const newColors = [...new Set(newImages.map(img => img.color))];
             return {
                 ...p,
@@ -522,7 +511,6 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Set the primary price used in cart/wishlist to the discounted price
         const dataToSave = { ...formData, price: formData.discountedPrice };
         onSave(dataToSave);
         onClose();
@@ -537,7 +525,6 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
         <AnimatePresence>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[1000]" onClick={onClose} />
             <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -50, opacity: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                // ⭐️ Updated max-w-lg (large) and grid-cols-1 on mobile
                 className={`fixed inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto max-w-lg lg:max-w-4xl p-4 sm:p-8 rounded-3xl shadow-2xl z-[1001] ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
                 onClick={e => e.stopPropagation()}
             >
@@ -546,7 +533,6 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-700/50"><X className="w-6 h-6" /></button>
                 </div>
 
-                {/* ⭐️ Updated form grid for responsiveness: 1-col on mobile, 2-col on large screens */}
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Column 1: Basic Details */}
                     <div className="space-y-4">
@@ -593,7 +579,6 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                     <div className="space-y-4">
                         <label className="block font-semibold">1. Select Color & Add Photo ({formData.images.length})</label>
 
-                        {/* ⭐️ Color Selector Palette */}
                         <div className="flex flex-wrap gap-2 p-3 rounded-lg border dark:border-gray-700">
                             {AVAILABLE_COLORS.map(color => (
                                 <motion.button
@@ -610,7 +595,6 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                             ))}
                         </div>
 
-                        {/* ⭐️ FIX: File Upload Input */}
                         <label className="block font-semibold">2. Upload Image File</label>
                         <div className="flex items-center gap-2">
                             <input
@@ -621,7 +605,6 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                             />
                         </div>
 
-                        {/* ⭐️ Current Image Preview */}
                         {formData.newImageUrl && formData.newImageColor && (
                             <div className="flex items-center gap-2 p-2 border rounded-lg dark:border-gray-700">
                                 <img src={formData.newImageUrl} alt="Preview" className="w-12 h-12 object-cover rounded-md" />
@@ -629,13 +612,11 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                             </div>
                         )}
 
-                        {/* Add Button */}
                         <button type="button" onClick={handleImageAdd} className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold flex items-center justify-center">
                             <Plus className="w-5 h-5 mr-2" /> Add Photo to Product
                         </button>
 
 
-                        {/* Image List */}
                         <div className="space-y-2 max-h-40 overflow-y-auto p-2 border rounded-lg dark:border-gray-700">
                             {formData.images.map((img, index) => (
                                 <div key={index} className="flex justify-between items-center p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
@@ -651,7 +632,6 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Current Colors: {formData.colors.length > 0 ? formData.colors.join(', ') : 'None'}</p>
 
-                        {/* Status/Rating (Static for simplicity, but included in data model) */}
                         <div className="grid grid-cols-2 gap-4 pt-2">
                             <div>
                                 <label className="block font-semibold">Rating (Mock)</label>
@@ -664,8 +644,7 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
                         </div>
                     </div>
 
-                    {/* Submit Button */}
-                    <div className="col-span-1 lg:col-span-2 pt-4 border-t dark:border-gray-700"> {/* ⭐️ Span 2 cols on desktop */}
+                    <div className="col-span-1 lg:col-span-2 pt-4 border-t dark:border-gray-700">
                         <button type="submit" className="w-full py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl transition-colors">
                             <Save className="w-5 h-5 mr-2 inline" /> {isEditing ? 'Save Changes' : 'Create Product'}
                         </button>
@@ -676,13 +655,12 @@ const ProductFormModal = ({ isOpen, onClose, isDarkMode, product, onSave }) => {
     );
 };
 
-// --- Product Management Section (Product Manager/Admin) ---
+// --- Product Management Section ---
 const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses, userRole }) => {
     const [activeTab, setActiveTab] = useState('products');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [productToEdit, setProductToEdit] = useState(null); // Holds product data if editing
+    const [productToEdit, setProductToEdit] = useState(null);
 
-    // Admin can manage coupons; Product Manager can only see the Product Inventory tab
     const canManageCoupons = userRole === 'admin';
     const canEditProducts = userRole === 'admin' || userRole === 'product_manager';
 
@@ -693,33 +671,28 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
             setProductToEdit(null);
             setIsModalOpen(true);
         } else if (action === 'Edit') {
-            // Find full product data (passed from table)
             setProductToEdit(product);
             setIsModalOpen(true);
         } else if (action === 'Delete') {
-            // FIX: Use setProducts to update the global state
             setProducts(products.filter(p => p.id !== product.id));
             console.log(`Deleted product ${product.id}`);
         }
     };
 
     const handleProductSave = (formData) => {
-        // Ensure price fields are numeric and map 'price' to 'discountedPrice' for consistency
         const savedData = {
             ...formData,
             originalPrice: Number(formData.originalPrice),
             discountedPrice: Number(formData.discountedPrice),
-            price: Number(formData.discountedPrice), // Set primary price for cart/wishlist
+            price: Number(formData.discountedPrice),
             stock: Number(formData.stock),
             status: formData.stock > 0 ? (formData.stock <= 10 ? 'Low Stock' : 'In Stock') : 'Out of Stock',
         };
 
         if (productToEdit) {
-            // FIX: Use setProducts to update the global state
             setProducts(products.map(p => p.id === savedData.id ? savedData : p));
             console.log('Product updated:', savedData.id);
         } else {
-            // FIX: Use setProducts to update the global state
             setProducts(prev => [...prev, savedData]);
             console.log('New product added:', savedData.name);
         }
@@ -727,7 +700,6 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
 
     return (
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
-
             <ProductFormModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -736,12 +708,11 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
                 onSave={handleProductSave}
             />
 
-            {/* Tabs for Product vs. Coupons */}
             <div className="flex space-x-4 border-b border-gray-700/50">
                 <button onClick={() => setActiveTab('products')} className={`pb-2 font-semibold transition-colors ${activeTab === 'products' ? 'text-pink-500 border-b-2 border-pink-500' : 'text-gray-500 hover:text-white dark:hover:text-gray-200'}`}>
                     Product Inventory
                 </button>
-                {(userRole === 'admin' || userRole === 'product_manager') && ( // Product Manager can also manage coupons he requests
+                {(userRole === 'admin' || userRole === 'product_manager') && (
                     <button onClick={() => setActiveTab('coupons')} className={`pb-2 font-semibold transition-colors ${activeTab === 'coupons' ? 'text-pink-500 border-b-2 border-pink-500' : 'text-gray-500 hover:text-white dark:hover:text-gray-200'}`}>
                         Coupon Management
                     </button>
@@ -759,7 +730,6 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
                         </button>
                     )}
 
-                    {/* ⭐️ Table is now wrapped to handle horizontal scroll on small screens */}
                     <div className={`overflow-x-auto ${cardBaseClasses} rounded-xl shadow-lg`}>
                         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead className="bg-gray-100 dark:bg-gray-700">
@@ -775,7 +745,6 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
                                 {products.map((p) => (
                                     <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{p.name}</td>
-                                        {/* Display discounted price */}
                                         <td className="px-6 py-4 whitespace-nowrap text-sm">₹{p.discountedPrice.toFixed(2)}</td>
                                         <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${p.stock === 0 ? 'text-red-500' : p.stock <= 10 ? 'text-orange-500' : 'text-green-500'}`}>
                                             {p.stock}
@@ -806,19 +775,16 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
     );
 };
 
-// --- Order Management Section (Product Manager/Admin) ---
+// --- Order Management Section ---
 const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBaseClasses, userRole }) => {
-    // ... (content of OrderManagement)
     const canManageOrders = userRole === 'admin' || userRole === 'product_manager';
-    const [selectedOrder, setSelectedOrder] = useState(null); // For detail view
+    const [selectedOrder, setSelectedOrder] = useState(null);
 
-    // Mock function for processing tracking and returns
     const handleStatusUpdate = (orderId, newStatus) => {
         console.log(`Order ${orderId} tracking status updated to ${newStatus}`);
         setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
     };
 
-    // Mock function to raise a refund request
     const handleRefundRequest = (order) => {
         const refundReason = prompt(`Reason for refund/return request for Order ${order.id}?`);
         if (refundReason) {
@@ -848,13 +814,11 @@ const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBa
     return (
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
 
-            {/* Order Detail Modal */}
             {selectedOrder && (
                 <OrderDetailModal order={selectedOrder} isDarkMode={isDarkMode} onClose={() => setSelectedOrder(null)} />
             )}
 
             <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Order List</h3>
-            {/* ⭐️ Table is now wrapped to handle horizontal scroll on small screens */}
             <div className={`overflow-x-auto ${cardBaseClasses} rounded-xl shadow-lg`}>
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-100 dark:bg-gray-700">
@@ -871,7 +835,7 @@ const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBa
                             <tr key={o.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                 <td
                                     className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-pink-600 dark:text-pink-400 cursor-pointer hover:underline"
-                                    onClick={() => setSelectedOrder(o)} // Open detail modal
+                                    onClick={() => setSelectedOrder(o)}
                                 >
                                     {o.id}
                                 </td>
@@ -907,11 +871,9 @@ const OrderManagement = ({ orders, setOrders, setRefundQueue, isDarkMode, cardBa
     );
 };
 
-// --- Order Detail Modal (New Component) ---
+// --- Order Detail Modal ---
 const OrderDetailModal = ({ order, isDarkMode, onClose }) => {
-    // ... (content of OrderDetailModal)
     const modalBg = isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900';
-    // const inputClasses = `p-2 rounded-lg border w-full dark:bg-gray-700 dark:border-gray-600`;
 
     if (!order) return null;
 
@@ -919,7 +881,6 @@ const OrderDetailModal = ({ order, isDarkMode, onClose }) => {
         <AnimatePresence>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[2000]" onClick={onClose} />
             <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                // ⭐️ Updated max-w-lg (large) and grid-cols-1 on mobile
                 className={`fixed inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto max-w-lg lg:max-w-4xl p-4 sm:p-8 rounded-3xl shadow-2xl z-[2001] ${modalBg}`}
                 onClick={e => e.stopPropagation()}
             >
@@ -928,7 +889,6 @@ const OrderDetailModal = ({ order, isDarkMode, onClose }) => {
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-700/50"><X className="w-6 h-6" /></button>
                 </div>
 
-                {/* ⭐️ Updated grid for responsiveness: 1-col on mobile, 2-col on large screens */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* User Details */}
                     <div className="space-y-4 p-4 rounded-xl dark:bg-gray-700/50 bg-gray-50 shadow-inner">
@@ -964,9 +924,8 @@ const OrderDetailModal = ({ order, isDarkMode, onClose }) => {
 };
 
 
-// --- Finance Management Section (Finance Manager/Admin) ---
+// --- Finance Management Section ---
 const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue, setRefundQueue }) => {
-    // ... (content of FinanceManagement)
     const canValidateCoupons = userRole === 'admin';
     const totalPaymentsToday = 5400;
     const totalPaymentsWeek = 18200;
@@ -974,11 +933,9 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
 
     const handleRefundDecision = (requestId, decision) => {
         console.log(`Refund request ${requestId} ${decision}d.`);
-        // In a real app, update state and trigger external payment API
         setRefundQueue(prev => prev.filter(r => r.id !== requestId));
     }
 
-    // Mock data for payments
     const PAYMENT_DATA = [
         { label: 'Today', orders: 5, total: totalPaymentsToday, discount: 150 },
         { label: 'This Week', orders: 25, total: totalPaymentsWeek, discount: 900 },
@@ -990,10 +947,8 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
             <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Financial Overview</h3>
 
-            {/* Total Orders & Payments Summary */}
             <div className={`p-6 rounded-xl shadow-lg ${cardBaseClasses}`}>
                 <h4 className="text-xl font-bold mb-4 text-purple-500">Total Payments Summary</h4>
-                {/* ⭐️ Updated grid classes for responsiveness */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                     {PAYMENT_DATA.map(data => (
                         <div key={data.label} className="p-4 rounded-lg bg-gray-100 dark:bg-gray-700 border dark:border-gray-600">
@@ -1007,10 +962,8 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
                 </div>
             </div>
 
-            {/* ⭐️ NEW: Daily Payments and Orders Table */}
             <div className={`p-6 rounded-xl shadow-lg ${cardBaseClasses}`}>
                 <h4 className="text-xl font-bold mb-4 text-cyan-500">Daily Sales and Payments</h4>
-                {/* ⭐️ Table wrapped for horizontal scroll on mobile */}
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead className="bg-gray-100 dark:bg-gray-700">
@@ -1038,7 +991,6 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
             </div>
 
 
-            {/* Refund Validation Queue */}
             <div className={`p-6 rounded-xl shadow-lg ${cardBaseClasses}`}>
                 <h4 className="text-xl font-bold mb-4 text-red-500">Refund Validation Queue</h4>
 
@@ -1075,7 +1027,6 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
             {canValidateCoupons && (
                 <div className={`p-6 rounded-xl shadow-lg ${cardBaseClasses}`}>
                     <h4 className="text-xl font-bold mb-4 text-pink-500">Coupon Validation Queue (Admin Only)</h4>
-                    {/* Mock Coupon Queue logic here, simplified as this is primary for Admin */}
                     <p className="text-sm text-gray-500">Coupons are managed by Admin/Product Manager, approved by Admin or Finance Manager (see dedicated CouponManagement section for creation).</p>
                 </div>
             )}
@@ -1083,18 +1034,15 @@ const FinanceManagement = ({ isDarkMode, cardBaseClasses, userRole, refundQueue,
     );
 };
 
-// --- Coupon Management Section (Product Manager) ---
+// --- Coupon Management Section ---
 const CouponManagement = ({ isDarkMode, cardBaseClasses, userRole }) => {
-    // ... (content of CouponManagement)
     const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
 
-    // Mock state for coupons created by Product Manager
     const [myCoupons, setMyCoupons] = useState([
         { id: 10, code: 'WELCOME10', discount: 10, status: 'Active (Approved)', uses: 50 },
         { id: 11, code: 'SPRING20', discount: 20, status: 'Pending Approval', uses: 0 },
     ]);
 
-    // ⭐️ Handler to add user-defined coupon request
     const handleCouponRequestSave = (formData) => {
         const newCoupon = {
             id: Date.now(),
@@ -1110,7 +1058,6 @@ const CouponManagement = ({ isDarkMode, cardBaseClasses, userRole }) => {
     return (
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
 
-            {/* ⭐️ Coupon Form Modal Integration */}
             <CouponFormModal
                 isOpen={isCouponModalOpen}
                 onClose={() => setIsCouponModalOpen(false)}
@@ -1123,14 +1070,12 @@ const CouponManagement = ({ isDarkMode, cardBaseClasses, userRole }) => {
             {(userRole === 'admin' || userRole === 'product_manager') && (
                 <button
                     className="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-bold transition-colors"
-                    // FIX: Open the modal instead of auto-adding mock data
                     onClick={() => setIsCouponModalOpen(true)}
                 >
                     + Request New Coupon
                 </button>
             )}
 
-            {/* ⭐️ Table wrapped for horizontal scroll on mobile */}
             <div className={`overflow-x-auto ${cardBaseClasses} rounded-xl shadow-lg`}>
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-100 dark:bg-gray-700">
@@ -1159,13 +1104,11 @@ const CouponManagement = ({ isDarkMode, cardBaseClasses, userRole }) => {
     );
 }
 
-// --- User Management Section (Admin Only) ---
+// --- User Management Section ---
 const UserManagement = ({ users, setUsers, isDarkMode, cardBaseClasses }) => {
-    // ... (content of UserManagement)
     return (
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
             <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Customer List</h3>
-            {/* ⭐️ Table wrapped for horizontal scroll on mobile */}
             <div className={`overflow-x-auto ${cardBaseClasses} rounded-xl shadow-lg`}>
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-100 dark:bg-gray-700">
@@ -1195,9 +1138,8 @@ const UserManagement = ({ users, setUsers, isDarkMode, cardBaseClasses }) => {
 };
 
 
-// ⭐️ New Component: Coupon Creation Modal
+// --- Coupon Creation Modal ---
 const CouponFormModal = ({ isOpen, onClose, onSave, isDarkMode }) => {
-    // ... (content of CouponFormModal)
     const [formData, setFormData] = useState({
         code: '',
         discount: 10,
@@ -1220,7 +1162,6 @@ const CouponFormModal = ({ isOpen, onClose, onSave, isDarkMode }) => {
             return;
         }
         onSave(formData);
-        // Reset form after successful submission
         setFormData({ code: '', discount: 10, usageLimit: 100, minOrderValue: 0 });
         onClose();
     };
@@ -1235,7 +1176,6 @@ const CouponFormModal = ({ isOpen, onClose, onSave, isDarkMode }) => {
         <AnimatePresence>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[2000]" onClick={onClose} />
             <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                // ⭐️ Max-w-lg is suitable for this modal on most screens
                 className={`fixed inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto max-w-lg p-4 sm:p-8 rounded-3xl shadow-2xl z-[2001] ${modalBg}`}
                 onClick={e => e.stopPropagation()}
             >
@@ -1246,32 +1186,27 @@ const CouponFormModal = ({ isOpen, onClose, onSave, isDarkMode }) => {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
 
-                    {/* Coupon Code */}
                     <div>
                         <label className=" font-semibold mb-1 flex items-center"><Tag className='w-4 h-4 mr-2 text-pink-500' /> Coupon Code</label>
                         <input type="text" name="code" value={formData.code} onChange={handleChange} className={inputClasses} placeholder="SUMMER20" required maxLength={15} />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        {/* Discount Percentage */}
                         <div>
                             <label className="block font-semibold mb-1">Discount (%)</label>
                             <input type="number" name="discount" value={formData.discount} onChange={handleChange} className={inputClasses} min="1" max="99" required />
                         </div>
-                        {/* Usage Limit */}
                         <div>
                             <label className="block font-semibold mb-1">Usage Limit</label>
                             <input type="number" name="usageLimit" value={formData.usageLimit} onChange={handleChange} className={inputClasses} min="1" required />
                         </div>
                     </div>
 
-                    {/* Min Order Value */}
                     <div>
                         <label className="block font-semibold mb-1">Min. Order Value (₹)</label>
                         <input type="number" name="minOrderValue" value={formData.minOrderValue} onChange={handleChange} className={inputClasses} min="0" />
                     </div>
 
-                    {/* Submit Button */}
                     <div className="pt-4 border-t dark:border-gray-700">
                         <button type="submit" className="w-full py-3 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-xl transition-colors">
                             <Tag className="w-5 h-5 mr-2 inline" /> Submit for Approval
