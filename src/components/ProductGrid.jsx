@@ -242,7 +242,7 @@ export const ProductGrid = ({ onProductClick = () => { }, onAddToCart = () => { 
 useEffect(() => {
     const fetchProducts = async () => {
         try {
-            const response = await fetch("http://localhost:8000/api/v1/products");
+            const response = await fetch("http://192.168.31.3:8000/api/v1/products");
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
