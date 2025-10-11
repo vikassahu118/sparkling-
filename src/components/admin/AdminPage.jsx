@@ -2,9 +2,12 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Users, Package, TrendingUp, X, ChevronRight, Edit3, Trash2, DollarSign, BarChart2, Zap, CornerDownRight, Plus, MapPin, Phone, Mail, Save, Tag, Image as ImageIcon, Menu } from 'lucide-react';
 
-// NOTE: This dashboard uses mock data and pure local state management for preview purposes.
+// --- API INTEGRATION: Define the base URL for your backend API ---
+const API_BASE_URL = 'https://localhost:8000/api/v1';
 
-// Mock Data Structures
+// NOTE: All mock data except products is kept for preview purposes.
+// Product data will now be fetched from your backend.
+
 const MOCK_ORDERS = [
     { id: 'O1001', customer: 'Jane Doe', email: 'jane@example.com', phone: '555-1234', address: '123 Main St, Bubble City', total: 1199, status: 'Shipped', date: '2025-10-01', payment: 'Credit Card', items: [{ name: 'Unicorn Dress', qty: 1, price: 1199 }] },
     { id: 'O1002', customer: 'John Smith', email: 'john@example.com', phone: '555-5678', address: '456 Oak Ave, Sparkle Town', total: 2538, status: 'Pending', date: '2025-10-03', payment: 'PayPal', items: [{ name: 'Dino Set', qty: 2, price: 999 }, { name: 'Sneakers', qty: 1, price: 540 }] },
@@ -16,13 +19,8 @@ const MOCK_USERS = [
     { id: 'U2', name: 'John Smith', email: 'john@example.com', orders: 5 },
 ];
 
-const MOCK_PRODUCTS = [
-     { id: '1', name: 'Rainbow Unicorn Dress', image: 'https://placehold.co/600x400/f871b0/ffffff?text=Product', originalPrice: 1599, discountedPrice: 1199.00, discount: 25, rating: 4.8, reviews: 156, colors: ['pink', 'purple', 'blue'], sizes: ['S', 'M', 'L'], category: 'Tops', isNew: true, isBestseller: true, description: 'A sparkling unicorn dress perfect for parties.', stock: 45 },
-     { id: '2', name: 'Cool Dino T-Shirt Set', image: 'https://placehold.co/600x400/34d399/ffffff?text=Product', originalPrice: 1299, discountedPrice: 999.00, discount: 23, rating: 4.6, reviews: 89, colors: ['green', 'blue', 'orange'], sizes: ['XS', 'S', 'M'], category: 'Shirts', isBestseller: true, description: 'Two cool tees with dinosaur prints.', stock: 12 },
-     { id: '3', name: 'Cute Baby Onesie', image: 'https://placehold.co/600x400/fcd34d/ffffff?text=Product', originalPrice: 799, discountedPrice: 639.00, discount: 20, rating: 4.9, reviews: 234, colors: ['white', 'pink', 'yellow'], sizes: ['XS'], category: 'Cord Sets', isNew: true, description: 'Soft cotton onesie for infants.', stock: 0 },
-     { id: '4', name: 'Colorful Sneakers', image: 'https://placehold.co/600x400/8b5cf6/ffffff?text=Product', originalPrice: 2199, discountedPrice: 1539.00, discount: 30, rating: 4.7, reviews: 67, colors: ['multicolor', 'rainbow', 'black'], sizes: ['M', 'L'], category: 'Culotte', description: 'Vibrant sneakers for active kids.', stock: 7 },
-     { id: '5', name: 'Winter Cozy Jacket', image: 'https://placehold.co/600x400/ef4444/ffffff?text=Product', originalPrice: 2499, discountedPrice: 1749.00, discount: 30, rating: 4.9, reviews: 145, colors: ['navy', 'red', 'green'], sizes: ['M', 'L', 'XL'], category: 'Dresses', isBestseller: true, description: 'Warm puffy jacket with fleece lining.', stock: 3 },
- ];
+// API INTEGRATION: MOCK_PRODUCTS is no longer needed as we will fetch from the API.
+// const MOCK_PRODUCTS = [ ... ];
 
 const MOCK_REFUND_QUEUE = [
     { id: 'R1', orderId: 'O1003', customer: 'User X', amount: 639, reason: 'Wrong size ordered.', requestedBy: 'Order Manager', status: 'Pending Finance' },
@@ -176,7 +174,7 @@ const Dashboard = ({ products, orders, users, setActiveSection, userRole }) => {
 // Product Management Modal Component
 const ProductFormModal = ({ onClose, isDarkMode, product, onSave }) => {
     const isEditing = !!product;
-    const [formData, setFormData] = useState(product ? { ...product, originalPrice: product.originalPrice || product.price, discountedPrice: product.discountedPrice || product.price, images: product.images || [], newImageColor: '', newImageUrl: '' } : { id: Date.now().toString(), name: '', price: 0, stock: 0, category: 'Tops', description: '', images: [], newImageColor: '', newImageUrl: '', discountedPrice: 0, originalPrice: 0, discount: 0, rating: 4.5, reviews: 0, colors: [], sizes: ['S', 'M'] });
+    const [formData, setFormData] = useState(product ? { ...product, originalPrice: product.originalPrice || product.price, discountedPrice: product.discountedPrice || product.price, images: product.images || [], newImageColor: '', newImageUrl: '' } : { id: null, name: '', price: 0, stock: 0, category: 'Tops', description: '', images: [], newImageColor: '', newImageUrl: '', discountedPrice: 0, originalPrice: 0, discount: 0, rating: 4.5, reviews: 0, colors: [], sizes: ['S', 'M'] });
     const AVAILABLE_COLORS = useMemo(() => [{ name: 'Pink', class: 'bg-pink-500', value: 'pink' }, { name: 'Blue', class: 'bg-blue-500', value: 'blue' }, { name: 'Red', class: 'bg-red-500', value: 'red' }, { name: 'Green', class: 'bg-green-500', value: 'green' }, { name: 'Yellow', class: 'bg-yellow-500', value: 'yellow' }, { name: 'Purple', class: 'bg-purple-500', value: 'purple' }, { name: 'White', class: 'bg-white border border-gray-400', value: 'white' }, { name: 'Black', class: 'bg-black', value: 'black' }], []);
     const calculateDiscount = useCallback((original, discounted) => (Number(original) > Number(discounted) && Number(original) > 0) ? Math.floor(((Number(original) - Number(discounted)) / Number(original)) * 100) : 0, []);
 
@@ -298,16 +296,89 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
     const [productToEdit, setProductToEdit] = useState(null);
     const canEditProducts = userRole === 'admin' || userRole === 'product_manager';
 
-    const handleAction = (action, product) => {
+    const handleAction = async (action, product) => {
         if (!canEditProducts) return alert('Permission denied.');
-        if (action === 'Add') { setProductToEdit(null); setIsModalOpen(true); } 
-        else if (action === 'Edit') { setProductToEdit(product); setIsModalOpen(true); } 
-        else if (action === 'Delete') { setProducts(products.filter(p => p.id !== product.id)); }
+        
+        if (action === 'Add') {
+            setProductToEdit(null);
+            setIsModalOpen(true);
+        } else if (action === 'Edit') {
+            setProductToEdit(product);
+            setIsModalOpen(true);
+        } else if (action === 'Delete') {
+            // --- API INTEGRATION: Delete a product ---
+            if (window.confirm(`Are you sure you want to delete ${product.name}?`)) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/products/${product.id}`, {
+                        method: 'DELETE',
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to delete product.');
+                    }
+                    
+                    // Update state after successful deletion
+                    setProducts(products.filter(p => p.id !== product.id));
+                    alert('Product deleted successfully!');
+
+                } catch (error) {
+                    console.error('Error deleting product:', error);
+                    alert('Error: Could not delete product.');
+                }
+            }
+        }
     };
-    const handleProductSave = (formData) => {
-        const savedData = { ...formData, price: Number(formData.discountedPrice), status: formData.stock > 0 ? (formData.stock <= 10 ? 'Low Stock' : 'In Stock') : 'Out of Stock' };
-        if (productToEdit) { setProducts(products.map(p => p.id === savedData.id ? savedData : p)); } 
-        else { setProducts(prev => [...prev, savedData]); }
+
+    const handleProductSave = async (formData) => {
+        const isEditing = !!productToEdit;
+        const savedData = { ...formData, price: Number(formData.discountedPrice) };
+
+        if (isEditing) {
+            // --- API INTEGRATION: Update an existing product ---
+            try {
+                const response = await fetch(`${API_BASE_URL}/products/${savedData.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(savedData),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update product.');
+                }
+
+                const updatedProduct = await response.json();
+                setProducts(products.map(p => (p.id === updatedProduct.id ? updatedProduct : p)));
+                alert('Product updated successfully!');
+
+            } catch (error) {
+                console.error('Error updating product:', error);
+                alert('Error: Could not update product.');
+            }
+        } else {
+            // --- API INTEGRATION: Add a new product ---
+            try {
+                // Remove null ID before sending to backend
+                const { id, ...newProductData } = savedData; 
+
+                const response = await fetch(`${API_BASE_URL}/products`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newProductData),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create product.');
+                }
+                
+                const createdProduct = await response.json();
+                setProducts(prev => [...prev, createdProduct]);
+                alert('Product created successfully!');
+
+            } catch (error) {
+                console.error('Error creating product:', error);
+                alert('Error: Could not create product.');
+            }
+        }
     };
 
     return (
@@ -537,11 +608,32 @@ const UserManagement = ({ users, isDarkMode, cardBaseClasses }) => (
 
 // Main Admin Page Component
 const AdminPage = ({ isDarkMode, onViewChange, userRole, products: initialProducts, setProducts: setAppProducts }) => {
-    const [products, setProducts] = useState(initialProducts);
+    // API INTEGRATION: products state is managed here and passed down.
+    const [products, setProducts] = useState(initialProducts || []); 
     const [refundQueue, setRefundQueue] = useState(MOCK_REFUND_QUEUE);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
     const [currentOfferText, setOfferText] = useState("🎉 Summer Sale! Get 25% Off On All T-Shirts!");
+
+    // API INTEGRATION: Fetch products from the backend when the component mounts.
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/products`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                setProducts(data); // Assuming the API returns an array of products
+            } catch (error) {
+                console.error("Failed to fetch products:", error);
+                alert("Could not load products. Please check the console for details.");
+            }
+        };
+
+        fetchProducts();
+    }, []); // Empty dependency array ensures this runs only once on mount.
+
 
     // Sync local product state with app-level product state
     useEffect(() => { setAppProducts(products) }, [products, setAppProducts]);
@@ -608,7 +700,7 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products: initialProduc
                         {filteredNavItems.map(item => <button key={item.id} onClick={() => handleSectionChange(item.id)} className={`w-full text-left flex items-center p-3 rounded-xl transition-all ${activeSection === item.id ? 'bg-pink-500 text-white shadow-lg' : 'hover:bg-gray-700/50 hover:text-white'}`}><item.icon className="w-5 h-5 mr-3" />{item.label}</button>)}
                     </nav>
                 </motion.div>
-                {/* Desktop Sidebar */}
+                 {/* Desktop Sidebar */}
                 <div className={`w-64 p-6 flex-col h-screen z-10 hidden lg:flex fixed top-0 left-0 overflow-y-auto ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
                     <h1 className={`text-3xl font-extrabold mb-8 bg-gradient-to-r ${isDarkMode ? 'from-purple-400 to-cyan-400' : 'from-pink-500 to-purple-600'} bg-clip-text text-transparent`}>{userRole?.role_name?.toUpperCase().replace('_', ' ') || 'MANAGER'}</h1>
                     <nav className="space-y-2 flex-grow">
@@ -632,31 +724,4 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products: initialProduc
         </div>
     );
 };
-
-
-// Dummy App component to render the AdminPage for preview
-export default function App() {
-    // Simulate a logged-in admin user for preview
-    const mockUserRole = {
-        role_name: 'admin',
-        first_name: 'Vikas',
-        last_name: 'Admin'
-    };
-
-    const [products, setProducts] = useState(MOCK_PRODUCTS);
-    const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark mode for preview
-
-    return (
-      <div className={isDarkMode ? 'dark' : ''}>
-        <AdminPage
-            isDarkMode={isDarkMode}
-            onViewChange={(view) => console.log("Changing view to:", view)}
-            userRole={mockUserRole}
-            products={products}
-            setProducts={setProducts}
-            currentOfferText={"🎉 Summer Sale! Get 25% Off On All T-Shirts!"}
-            setOfferText={(text) => console.log("New offer text:", text)}
-        />
-      </div>
-    );
-}
+export default AdminPage;

@@ -235,38 +235,60 @@ export const ProductGrid = ({ onProductClick = () => { }, onAddToCart = () => { 
   const [error, setError] = useState(null);
 
   // ✅ ADDED: useEffect to fetch products from the backend on component mount
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch("http://localhost:8000/api/v1/products");
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        
-        // ✅ UPDATED LOGIC: Safely access the product array from the response
-        // This handles cases where the API returns a direct array [...]
-        // or an object containing the array, e.g., { data: [...] }
-        const productArray = Array.isArray(data) ? data : data.data;
+ // ✅ REPLACE the existing useEffect in your ProductGrid component with this one
 
-        // Ensure we only try to set the state if we found a valid array
-        if (Array.isArray(productArray)) {
-          setProducts(productArray);
-        } else {
-          // If the format is unexpected, log an error and set products to empty to avoid a crash
-          console.error("Could not find a product array in the API response:", data);
-          setProducts([]);
+// ✅ REPLACE the existing useEffect in your ProductGrid component with this one
+
+useEffect(() => {
+    const fetchProducts = async () => {
+        try {
+            const response = await fetch("http://localhost:8000/api/v1/products");
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const apiResponse = await response.json();
+            
+            if (Array.isArray(apiResponse.data)) {
+                
+                // ⭐ THIS IS THE CRUCIAL MAPPING STEP THAT FIXES THE ISSUE
+                const transformedProducts = apiResponse.data.map(apiProduct => {
+                    const originalPrice = parseFloat(apiProduct.price);
+                    
+                    return {
+                        id: apiProduct.id,
+                        name: apiProduct.name,
+                        description: apiProduct.description,
+                        category: apiProduct.category || 'Uncategorized',
+                        discountedPrice: originalPrice,
+                        originalPrice: Math.round(originalPrice * 1.15),
+                        image: (apiProduct.image_urls && apiProduct.image_urls[0]) || `https://placehold.co/600x400?text=${apiProduct.name.replace(/\s/g,'+')}`,
+                        rating: 4,
+                        reviews: 0,
+                        colors: ['multicolor', 'black'],
+                        sizes: ['S', 'M', 'L'],
+                        isNew: false,
+                        isBestseller: false,
+                        discount: 15
+                    };
+                });
+                
+                setProducts(transformedProducts);
+
+            } else {
+                console.error("API response did not contain a data array:", apiResponse);
+                setProducts([]);
+            }
+        } catch (e) {
+            console.error("Failed to fetch products:", e);
+            setError(e.message || "Could not fetch products. Please try again later.");
+        } finally {
+            setIsLoading(false);
         }
-      } catch (e) {
-        console.error("Failed to fetch products:", e);
-        setError(e.message || "Could not fetch products. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
     };
 
     fetchProducts();
-  }, []); // Empty dependency array means this runs once when the component mounts
+}, []); // Empty dependency array ensures this runs only once // Empty dependency array means this runs once when the component mounts
+//  // Empty dependency array means this runs once when the component mounts
 
   // --- All existing logic below remains unchanged ---
   const dropdownRef = useRef(null);
