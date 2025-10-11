@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-// Import the Phone icon for the mobile number field
 import { LogIn, User, Lock, Mail, UserPlus, Phone } from 'lucide-react'; 
 import authService from './services/authService'; // Make sure this path is correct
 
 const CustomerAuth = ({ isDarkMode, onLoginSuccess }) => {
     const [isLogin, setIsLogin] = useState(true);
     
-    // Add state for new registration fields
+    // Form field states
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [mobile, setMobile] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [age, setAge] = useState('');       // <-- ADDED
+    const [gender, setGender] = useState(''); // <-- ADDED
     
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -26,6 +27,8 @@ const CustomerAuth = ({ isDarkMode, onLoginSuccess }) => {
         setMobile('');
         setEmail('');
         setPassword('');
+        setAge('');       // <-- ADDED
+        setGender('');    // <-- ADDED
     };
 
     const handleSubmit = async (e) => {
@@ -36,27 +39,21 @@ const CustomerAuth = ({ isDarkMode, onLoginSuccess }) => {
         try {
             let response;
             if (isLogin) {
-                // Handle Login
                 response = await authService.login(email, password);
             } else {
-                // Handle Registration
-                const userData = { firstName, lastName, email, mobile, password };
+                // Handle Registration with all required fields
+                const userData = { firstName, lastName, email, mobile, password, age, gender }; // <-- UPDATED
                 response = await authService.register(userData);
             }
             
-            // Your backend will likely return user data and a token.
-            // Adjust the logic below to match your actual API response structure.
-            // Example response: { data: { user: { id: '...', first_name: 'Jane', role_name: 'Customer' }, token: '...' } }
             if (response.data && response.data.user) {
-                // NOTE: Also handle the JWT token here! e.g., localStorage.setItem('token', response.data.token);
                 const userFullName = `${response.data.user.first_name} ${response.data.user.last_name}`;
                 onLoginSuccess(userFullName, response.data.user.role_name);
             } else {
-                 throw new Error("Login failed: Invalid response from server.");
+                 throw new Error("Authentication failed: Invalid response from server.");
             }
 
         } catch (err) {
-            // Display specific error message from the backend if available
             const errorMessage = err.response?.data?.message || err.message || 'An unexpected error occurred.';
             setError(errorMessage);
         } finally {
@@ -110,6 +107,37 @@ const CustomerAuth = ({ isDarkMode, onLoginSuccess }) => {
                             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                             <input type="tel" placeholder="Mobile Number" value={mobile} onChange={(e) => setMobile(e.target.value)} className={`${inputClasses} ${isDarkMode ? darkInputClasses : lightInputClasses} pl-10`} required disabled={isLoading} />
                         </div>
+                        
+                        {/* START: NEWLY ADDED FIELDS */}
+                        <div className="flex gap-4">
+                            {/* Age Input */}
+                            <div className="relative w-1/2">
+                                <input
+                                    type="number"
+                                    placeholder="Age"
+                                    value={age}
+                                    onChange={(e) => setAge(e.target.value)}
+                                    className={`${inputClasses} ${isDarkMode ? darkInputClasses : lightInputClasses} p-3`}
+                                    required
+                                    disabled={isLoading}
+                                />
+                            </div>
+
+                            {/* Gender Selection */}
+                            <fieldset className={`w-1/2 p-3 rounded-lg border flex items-center justify-center gap-x-4 ${isDarkMode ? 'border-gray-600' : 'border-gray-300'}`}>
+                                <legend className="sr-only">Gender</legend>
+                                <label className="flex items-center cursor-pointer text-sm">
+                                    <input type="radio" name="gender" value="Male" checked={gender === 'Male'} onChange={(e) => setGender(e.target.value)} className="h-4 w-4 accent-pink-500" disabled={isLoading} required/>
+                                    <span className="ml-1.5">Male</span>
+                                </label>
+                                <label className="flex items-center cursor-pointer text-sm">
+                                    <input type="radio" name="gender" value="Female" checked={gender === 'Female'} onChange={(e) => setGender(e.target.value)} className="h-4 w-4 accent-pink-500" disabled={isLoading} required/>
+                                    <span className="ml-1.5">Female</span>
+                                </label>
+                            </fieldset>
+                        </div>
+                        {/* END: NEWLY ADDED FIELDS */}
+
                     </motion.div>
                 )}
 
