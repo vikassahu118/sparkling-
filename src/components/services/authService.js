@@ -23,7 +23,7 @@ const register = (userData) => {
  */
 const login = (email, password) => {
     return axios.post(`${API_URL}/auth/login`, {
-        email,
+        emailOrMobile: email,
         password,
     });
 };
