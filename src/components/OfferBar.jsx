@@ -1,11 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-// 1. Receive 'offerText' as a prop
-const OfferBar = ({ offerText }) => {
+const OfferBar = () => {
+  // State for the offer text, loading status, and visibility
+  const [offerText, setOfferText] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(true);
-  // 2. The hardcoded offerText is no longer needed here
+
+  // useEffect to fetch data when the component mounts
+  useEffect(() => {
+    const fetchOffer = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/v1/offers/active');
+        
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+
+        // IMPORTANT: Adjust the next line based on your actual API response structure.
+        // This example assumes your API returns: { offer: { message: "Your text" } }
+        if (data && data.offer && data.offer.message) {
+          setOfferText(data.offer.message);
+        } else {
+           // Handle cases where the data structure is not what's expected
+           throw new Error("Offer text not found in API response");
+        }
+
+      } catch (error) {
+        console.error("Failed to fetch offer:", error);
+        // You could set an error state here if you want to display an error message
+      } finally {
+        setIsLoading(false); // Set loading to false after fetch completes (success or fail)
+      }
+    };
+
+    fetchOffer();
+  }, []); // The empty dependency array [] ensures this effect runs only once
+
   const handleClose = () => setIsVisible(false);
 
+  // Inline styles for the animation
   const styles = `
     @keyframes marquee {
       0% { transform: translateX(0%); }
@@ -15,6 +50,11 @@ const OfferBar = ({ offerText }) => {
       animation: marquee 30s linear infinite;
     }
   `;
+
+  // Don't render the bar if it's loading, there's no text, or it has been closed
+  if (isLoading || !offerText || !isVisible) {
+    return null;
+  }
 
   return (
     <>
@@ -29,7 +69,6 @@ const OfferBar = ({ offerText }) => {
         <div className="relative flex items-center h-10 px-4">
             <div className="flex-1 overflow-hidden">
               <div className="flex whitespace-nowrap animate-marquee">
-                {/* 3. Use the offerText from props */}
                 <span className="mx-12 text-sm font-bold tracking-wider">{offerText}</span>
                 <span className="mx-12 text-sm font-bold tracking-wider" aria-hidden="true">{offerText}</span>
                 <span className="mx-12 text-sm font-bold tracking-wider" aria-hidden="true">{offerText}</span>

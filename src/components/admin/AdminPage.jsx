@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Users, Package, TrendingUp, X, ChevronRight, Edit3, Trash2, DollarSign, BarChart2, Zap, CornerDownRight, Plus, MapPin, Phone, Mail, Save, Tag, Image as ImageIcon, Menu } from 'lucide-react';
 
 // --- API INTEGRATION: Define the base URL for your backend API ---
-const API_BASE_URL = 'https://localhost:8000/api/v1';
+const API_BASE_URL = 'http://localhost:8000/api/v1';
 
 // NOTE: All mock data except products is kept for preview purposes.
 // Product data will now be fetched from your backend.
