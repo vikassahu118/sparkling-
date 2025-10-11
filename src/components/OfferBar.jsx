@@ -17,26 +17,26 @@ const OfferBar = () => {
         }
 
         const data = await response.json();
-
-        // IMPORTANT: Adjust the next line based on your actual API response structure.
-        // This example assumes your API returns: { offer: { message: "Your text" } }
-        if (data && data.offer && data.offer.message) {
-          setOfferText(data.offer.message);
+        
+        // --- THIS IS THE FIX ---
+        // We now check for the correct path: data.data.description
+        if (data && data.data && data.data.description) {
+          setOfferText(data.data.description); // Get text from the correct path
         } else {
-           // Handle cases where the data structure is not what's expected
-           throw new Error("Offer text not found in API response");
+          setOfferText(''); 
+          console.warn("Offer description was not found in the API response structure.");
         }
 
       } catch (error) {
         console.error("Failed to fetch offer:", error);
-        // You could set an error state here if you want to display an error message
+        setIsVisible(false);
       } finally {
-        setIsLoading(false); // Set loading to false after fetch completes (success or fail)
+        setIsLoading(false);
       }
     };
 
     fetchOffer();
-  }, []); // The empty dependency array [] ensures this effect runs only once
+  }, []);
 
   const handleClose = () => setIsVisible(false);
 
@@ -51,7 +51,6 @@ const OfferBar = () => {
     }
   `;
 
-  // Don't render the bar if it's loading, there's no text, or it has been closed
   if (isLoading || !offerText || !isVisible) {
     return null;
   }

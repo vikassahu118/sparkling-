@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Ensure you have this set up, pointing to your backend's URL
 // e.g., 'http://192.168.31.3:8000/api'
-const API_URL = 'http://192.168.31.3:8000/api/v1';
+const API_URL = 'http://localhost:8000/api/v1';
 
 /**
  * Registers a new user.
@@ -23,7 +23,7 @@ const register = (userData) => {
  */
 const login = (email, password) => {
     return axios.post(`${API_URL}/auth/login`, {
-        email,
+        emailOrMobile: email,
         password,
     });
 };
