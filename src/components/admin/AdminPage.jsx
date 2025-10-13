@@ -115,6 +115,16 @@ const SiteSettings = ({ onUpdateOfferClick, currentOfferText, cardBaseClasses })
 // Dashboard Sub-Component
 const Dashboard = ({ products, orders, users, setActiveSection, userRole }) => {
     const canViewFinance = userRole === 'admin' || userRole === 'finance_manager';
+    // The products prop is now guaranteed to be an array, so .filter is safe to use.
+    const stockAlertsCount = useMemo(() => 
+        (Array.isArray(products) ? products : []).filter(p => p.stock <= 10).length, 
+        [products]
+    );
+    const lowStockItems = useMemo(() => 
+        (Array.isArray(products) ? products : []).filter(p => p.stock <= 10), 
+        [products]
+    );
+
     const financeCards = [
         { title: "Total Revenue", value: `₹52,100`, icon: DollarSign, colorClass: "bg-gradient-to-r from-pink-500 to-purple-600 text-white", linkLabel: "View Sales", section: 'finance' },
         { title: "Net Profit", value: `₹18,500`, icon: TrendingUp, colorClass: "bg-gradient-to-r from-green-500 to-teal-600 text-white", linkLabel: "View Reports", section: 'finance' },
@@ -124,7 +134,7 @@ const Dashboard = ({ products, orders, users, setActiveSection, userRole }) => {
     const operationalCards = [
         { title: "Total Orders", value: orders.length, icon: ShoppingBag, colorClass: "bg-gradient-to-r from-cyan-500 to-blue-600 text-white", linkLabel: "Manage Orders", section: 'orders' },
         { title: "Total Sells (Units)", value: `1,250`, icon: Package, colorClass: "bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white", linkLabel: "View Products", section: 'products' },
-        { title: "Stock Alerts", value: products.filter(p => p.stock <= 10).length, icon: Package, colorClass: "bg-gradient-to-r from-orange-500 to-red-600 text-white", linkLabel: "Fix Inventory", section: 'products' },
+        { title: "Stock Alerts", value: stockAlertsCount, icon: Package, colorClass: "bg-gradient-to-r from-orange-500 to-red-600 text-white", linkLabel: "Fix Inventory", section: 'products' },
         { title: "Active Users", value: users.length, icon: Users, colorClass: "bg-gradient-to-r from-green-500 to-teal-600 text-white", linkLabel: "View Users", section: 'users' },
     ];
     const renderedCards = [...financeCards, ...operationalCards].filter(card => {
@@ -144,7 +154,7 @@ const Dashboard = ({ products, orders, users, setActiveSection, userRole }) => {
                     <div className="p-6 rounded-2xl bg-white dark:bg-gray-800 shadow-lg">
                         <h3 className="text-xl font-bold mb-4 text-orange-500 dark:text-orange-400">Low Stock Items</h3>
                         <ul className="space-y-2">
-                            {products.filter(p => p.stock <= 10).map(p => (
+                            {lowStockItems.map(p => (
                                 <li key={p.id} className="flex justify-between items-center text-sm p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
                                     <span>{p.name}</span>
                                     <span className={`font-semibold ${p.stock === 0 ? 'text-red-500' : 'text-orange-500'}`}>Stock: {p.stock}</span>
@@ -606,16 +616,61 @@ const UserManagement = ({ users, isDarkMode, cardBaseClasses }) => (
     </motion.div>
 );
 
+
 // Main Admin Page Component
 const AdminPage = ({ isDarkMode, onViewChange, userRole, products: initialProducts, setProducts: setAppProducts }) => {
-    // API INTEGRATION: products state is managed here and passed down.
-    const [products, setProducts] = useState(initialProducts || []); 
+    const [products, setProducts] = useState(Array.isArray(initialProducts) ? initialProducts : []);
     const [refundQueue, setRefundQueue] = useState(MOCK_REFUND_QUEUE);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
-    const [currentOfferText, setOfferText] = useState("🎉 Summer Sale! Get 25% Off On All T-Shirts!");
+    
+    // --- MODIFICATION START ---
+    // 1. Changed initial state to reflect loading status.
+    const [currentOfferText, setOfferText] = useState("Loading offer...");
 
-    // API INTEGRATION: Fetch products from the backend when the component mounts.
+    // 2. Created a new async function to handle the POST request.
+// AdminPage.jsx
+
+const handleOfferSave = async (newOfferText) => {
+    try {
+        // 1. Get the authentication token from where you stored it (e.g., localStorage)
+        const authToken = localStorage.getItem('yourAuthTokenKey'); // <-- Make sure to use the correct key!
+
+        // If there's no token, you can't make an authorized request.
+        if (!authToken) {
+            alert('You are not logged in. Please log in to continue.');
+            // Optionally, redirect to login page
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/offers`, {
+            method: 'POST',
+            // 2. Add the headers object with the Authorization token
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`, // <-- This is the crucial part
+            },
+            body: JSON.stringify({ message: newOfferText }),
+        });
+
+        if (!response.ok) {
+            // Check specifically for 401 to give a better error message
+            if (response.status === 401) {
+                 throw new Error('Authorization failed. Your session might have expired.');
+            }
+            throw new Error('Failed to update the offer on the server.');
+        }
+
+        setOfferText(newOfferText);
+        alert('Offer bar updated successfully!');
+
+    } catch (error) {
+        console.error('Error updating offer:', error);
+        alert(`Could not save the new offer. Reason: ${error.message}`);
+    }
+};
+    // --- MODIFICATION END ---
+    
     useEffect(() => {
         const fetchProducts = async () => {
             try {
@@ -624,18 +679,40 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products: initialProduc
                     throw new Error('Network response was not ok');
                 }
                 const data = await response.json();
-                setProducts(data); // Assuming the API returns an array of products
+                setProducts(Array.isArray(data) ? data : []);
             } catch (error) {
                 console.error("Failed to fetch products:", error);
-                alert("Could not load products. Please check the console for details.");
+                setProducts([]);
             }
         };
 
+        // --- MODIFICATION START ---
+        // 3. (Bonus) Fetch the current offer when the component loads.
+        const fetchCurrentOffer = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/offers/active`);
+                if (!response.ok) {
+                    throw new Error('Could not fetch the current offer.');
+                }
+                const data = await response.json();
+                // Assuming the API returns an object like { message: "Your offer..." }.
+                // Adjust `data.message` if your API returns a different structure.
+                if (data && data.message) {
+                    setOfferText(data.message);
+                } else {
+                    setOfferText("No active offer set.");
+                }
+            } catch (error) {
+                console.error("Failed to fetch offer text:", error);
+                setOfferText("Could not load the current offer.");
+            }
+        };
+        // --- MODIFICATION END ---
+
         fetchProducts();
-    }, []); // Empty dependency array ensures this runs only once on mount.
+        fetchCurrentOffer(); // Call the new function.
+    }, []); 
 
-
-    // Sync local product state with app-level product state
     useEffect(() => { setAppProducts(products) }, [products, setAppProducts]);
 
     const initialSection = useMemo(() => {
@@ -687,20 +764,20 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products: initialProduc
 
     return (
         <div className={`min-h-screen flex ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-            <AnimatePresence>{isOfferModalOpen && <OfferBarModal isOpen={isOfferModalOpen} onClose={() => setIsOfferModalOpen(false)} onSave={setOfferText} currentOfferText={currentOfferText} isDarkMode={isDarkMode} />}</AnimatePresence>
+             {/* --- MODIFICATION START --- */}
+             {/* 4. Pass the new handleOfferSave function to the modal's onSave prop. */}
+            <AnimatePresence>{isOfferModalOpen && <OfferBarModal isOpen={isOfferModalOpen} onClose={() => setIsOfferModalOpen(false)} onSave={handleOfferSave} currentOfferText={currentOfferText} isDarkMode={isDarkMode} />}</AnimatePresence>
+            {/* --- MODIFICATION END --- */}
             <AnimatePresence>{isSidebarOpen && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-20 lg:hidden" onClick={() => setIsSidebarOpen(false)} />}</AnimatePresence>
             
-            {/* Sidebar */}
             <div className="flex">
-                 {/* Mobile Sidebar */}
-                <motion.div initial={false} animate={isSidebarOpen ? { x: 0 } : { x: '-100%' }} transition={{ ease: "easeInOut" }} className={`fixed top-0 left-0 h-full w-64 p-6 flex-col z-30 lg:hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+               <motion.div initial={false} animate={isSidebarOpen ? { x: 0 } : { x: '-100%' }} transition={{ ease: "easeInOut" }} className={`fixed top-0 left-0 h-full w-64 p-6 flex-col z-30 lg:hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
                     <button onClick={() => setIsSidebarOpen(false)} className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700/50"><X className="w-6 h-6" /></button>
                     <h1 className={`text-3xl font-extrabold mb-8 bg-gradient-to-r ${isDarkMode ? 'from-purple-400 to-cyan-400' : 'from-pink-500 to-purple-600'} bg-clip-text text-transparent`}>{userRole?.role_name?.toUpperCase().replace('_', ' ') || 'MANAGER'}</h1>
                     <nav className="space-y-2 flex-grow">
                         {filteredNavItems.map(item => <button key={item.id} onClick={() => handleSectionChange(item.id)} className={`w-full text-left flex items-center p-3 rounded-xl transition-all ${activeSection === item.id ? 'bg-pink-500 text-white shadow-lg' : 'hover:bg-gray-700/50 hover:text-white'}`}><item.icon className="w-5 h-5 mr-3" />{item.label}</button>)}
                     </nav>
                 </motion.div>
-                 {/* Desktop Sidebar */}
                 <div className={`w-64 p-6 flex-col h-screen z-10 hidden lg:flex fixed top-0 left-0 overflow-y-auto ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
                     <h1 className={`text-3xl font-extrabold mb-8 bg-gradient-to-r ${isDarkMode ? 'from-purple-400 to-cyan-400' : 'from-pink-500 to-purple-600'} bg-clip-text text-transparent`}>{userRole?.role_name?.toUpperCase().replace('_', ' ') || 'MANAGER'}</h1>
                     <nav className="space-y-2 flex-grow">
@@ -712,7 +789,6 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products: initialProduc
                 </div>
             </div>
 
-            {/* Main Content */}
             <main className="p-4 sm:p-8 lg:ml-64 flex-1 overflow-y-auto">
                 <header className="flex justify-between items-center pb-6 mb-8 border-b border-gray-700/50">
                     <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 rounded-full -ml-2"><Menu className="w-6 h-6 text-pink-500" /></button>
