@@ -339,6 +339,8 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
         }
     };
 
+    
+
     const handleProductSave = async (formData) => {
         const isEditing = !!productToEdit;
         const savedData = { ...formData, price: Number(formData.discountedPrice) };
@@ -634,7 +636,8 @@ const AdminPage = ({ isDarkMode, onViewChange, userRole, products: initialProduc
 const handleOfferSave = async (newOfferText) => {
     try {
         // 1. Get the authentication token from where you stored it (e.g., localStorage)
-        const authToken = localStorage.getItem('yourAuthTokenKey'); // <-- Make sure to use the correct key!
+        const authToken = localStorage.getItem('adminToken'); 
+ // <-- Make sure to use the correct key!
 
         // If there's no token, you can't make an authorized request.
         if (!authToken) {
@@ -669,6 +672,16 @@ const handleOfferSave = async (newOfferText) => {
         alert(`Could not save the new offer. Reason: ${error.message}`);
     }
 };
+const handleLogout = () => {
+    if (window.confirm("Are you sure you want to exit?")) {
+        // ✅ Clear the token and user data from storage
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        
+        // Then change the view
+        onViewChange('login'); // It's better to go to 'login' than 'home'
+    }
+}
     // --- MODIFICATION END ---
     
     useEffect(() => {
@@ -784,7 +797,7 @@ const handleOfferSave = async (newOfferText) => {
                         {filteredNavItems.map(item => <button key={item.id} onClick={() => handleSectionChange(item.id)} className={`w-full text-left flex items-center p-3 rounded-xl transition-all ${activeSection === item.id ? 'bg-pink-500 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-700/50 hover:text-white'}`}><item.icon className="w-5 h-5 mr-3" />{item.label}</button>)}
                     </nav>
                      <div className="pt-6 border-t border-gray-700/50">
-                        <button onClick={() => { if(window.confirm("Are you sure you want to exit?")) onViewChange('home')}} className={`w-full text-left flex items-center p-3 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors`}><X className="w-5 h-5 mr-3" />Exit Admin</button>
+                        <button onClick={handleLogout} className={`w-full text-left flex items-center p-3 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors`}><X className="w-5 h-5 mr-3" />Exit Admin</button>
                     </div>
                 </div>
             </div>
