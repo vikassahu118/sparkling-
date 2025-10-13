@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LogIn, User, Lock } from 'lucide-react';
 
-const API_BASE_URL = 'http://192.168.31.3:8000/api/v1';
+const API_BASE_URL = 'http://localhost:8000/api/v1';
 
 const AdminLogin = ({ isDarkMode, onLoginSuccess }) => {
     const [emailOrMobile, setEmailOrMobile] = useState('');
