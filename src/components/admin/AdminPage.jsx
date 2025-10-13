@@ -116,12 +116,12 @@ const SiteSettings = ({ onUpdateOfferClick, currentOfferText, cardBaseClasses })
 const Dashboard = ({ products, orders, users, setActiveSection, userRole }) => {
     const canViewFinance = userRole === 'admin' || userRole === 'finance_manager';
     // The products prop is now guaranteed to be an array, so .filter is safe to use.
-    const stockAlertsCount = useMemo(() => 
-        (Array.isArray(products) ? products : []).filter(p => p.stock <= 10).length, 
+    const stockAlertsCount = useMemo(() =>
+        (Array.isArray(products) ? products : []).filter(p => p.stock <= 10).length,
         [products]
     );
-    const lowStockItems = useMemo(() => 
-        (Array.isArray(products) ? products : []).filter(p => p.stock <= 10), 
+    const lowStockItems = useMemo(() =>
+        (Array.isArray(products) ? products : []).filter(p => p.stock <= 10),
         [products]
     );
 
@@ -256,7 +256,7 @@ const ProductFormModal = ({ onClose, isDarkMode, product, onSave }) => {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block font-semibold">Discount (%)</label>
-                                <input type="number" name="discount" value={formData.discount} className={`w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:text-white font-bold text-green-500 dark:text-green-400`} readOnly />
+                                <input type="number" name="discount" value={formData.discount} className={`w-full p-2 rounded-lg border dark:bg-gray-70 dark:border-gray-600 dark:text-white font-bold text-green-500 `} readOnly />
                             </div>
                             <div>
                                 <label className="block font-semibold">Stock Quantity</label>
@@ -308,7 +308,7 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
 
     const handleAction = async (action, product) => {
         if (!canEditProducts) return alert('Permission denied.');
-        
+
         if (action === 'Add') {
             setProductToEdit(null);
             setIsModalOpen(true);
@@ -326,7 +326,7 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
                     if (!response.ok) {
                         throw new Error('Failed to delete product.');
                     }
-                    
+
                     // Update state after successful deletion
                     setProducts(products.filter(p => p.id !== product.id));
                     alert('Product deleted successfully!');
@@ -370,7 +370,7 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
             // --- API INTEGRATION: Add a new product ---
             try {
                 // Remove null ID before sending to backend
-                const { id, ...newProductData } = savedData; 
+                const { id, ...newProductData } = savedData;
 
                 const response = await fetch(`${API_BASE_URL}/products`, {
                     method: 'POST',
@@ -381,7 +381,7 @@ const ProductManagement = ({ products, setProducts, isDarkMode, cardBaseClasses,
                 if (!response.ok) {
                     throw new Error('Failed to create product.');
                 }
-                
+
                 const createdProduct = await response.json();
                 setProducts(prev => [...prev, createdProduct]);
                 alert('Product created successfully!');
@@ -603,35 +603,250 @@ const CouponManagement = ({ isDarkMode, cardBaseClasses, userRole }) => {
     );
 };
 
+
+
+
+
+
+// --- (NEW) User Form Modal Component for Adding/Editing Managers ---
+const UserFormModal = ({ onClose, onSave, isDarkMode, user, roles }) => {
+    const isEditing = !!user;
+    const [formData, setFormData] = useState(
+        user
+            ? { id: user.id, name: user.name, email: user.email, role_id: user.role_id }
+            : { name: '', email: '', password: '', role_id: '' }
+    );
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: name === 'role_id' ? Number(value) : value }));
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        // Basic validation
+        if (!formData.email || !formData.role_id) {
+            alert('Email and Role are required.');
+            return;
+        }
+        if (!isEditing && !formData.password) {
+            alert('Password is required for new users.');
+            return;
+        }
+        onSave(formData);
+        onClose();
+    };
+
+    return (
+        <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[2000]" onClick={onClose} />
+            <motion.div
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.8 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className={`fixed inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto max-w-lg p-8 rounded-3xl shadow-2xl z-[2001] ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="flex justify-between items-center border-b pb-4 mb-6 dark:border-gray-700">
+                    <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                        {isEditing ? 'Edit Manager' : 'Add New Manager'}
+                    </h3>
+                    <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-700/50"><X className="w-6 h-6" /></button>
+                </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="font-semibold mb-1 block">Full Name</label>
+                        <input type="text" name="name" value={formData.name} onChange={handleChange} className={`w-full p-3 rounded-lg border dark:bg-gray-700 dark:border-gray-600`} required />
+                    </div>
+                    <div>
+                        <label className="font-semibold mb-1 block">Email Address</label>
+                        <input type="email" name="email" value={formData.email} onChange={handleChange} className={`w-full p-3 rounded-lg border dark:bg-gray-700 dark:border-gray-600`} required />
+                    </div>
+                    {!isEditing && (
+                        <div>
+                            <label className="font-semibold mb-1 block">Password</label>
+                            <input type="password" name="password" value={formData.password} onChange={handleChange} className={`w-full p-3 rounded-lg border dark:bg-gray-700 dark:border-gray-600`} placeholder="Set an initial password" required />
+                        </div>
+                    )}
+                    <div>
+                        <label className="font-semibold mb-1 block">Role</label>
+                        <select name="role_id" value={formData.role_id} onChange={handleChange} className={`w-full p-3 rounded-lg border dark:bg-gray-700 dark:border-gray-600`} required>
+                            <option value="" disabled>Select a role...</option>
+                            {roles.map(role => (
+                                <option key={role.id} value={role.id}>{role.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="pt-4 border-t dark:border-gray-700">
+                        <button type="submit" className="w-full py-3 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-xl transition-colors flex items-center justify-center">
+                            <Save className="w-5 h-5 mr-2 inline" /> {isEditing ? 'Save Changes' : 'Create User'}
+                        </button>
+                    </div>
+                </form>
+            </motion.div>
+        </>
+    );
+};
+
 // User Management Section
-const UserManagement = ({ users, isDarkMode, cardBaseClasses }) => (
-    <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
-        <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Customer List</h3>
-        <div className={`overflow-x-auto ${cardBaseClasses} rounded-xl shadow-lg`}>
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-100 dark:bg-gray-700"><tr><th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Name</th><th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Email</th><th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Total Orders</th><th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Actions</th></tr></thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {users.map((u) => (<tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50"><td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{u.name}</td><td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{u.email}</td><td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-500">{u.orders}</td><td className="px-6 py-4 whitespace-nowrap text-right text-sm"><button className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-medium">View Details</button></td></tr>))}
-                </tbody>
-            </table>
-        </div>
-    </motion.div>
-);
+// --- (REVISED) User Management Section ---
+const UserManagement = ({ isDarkMode, cardBaseClasses, userRole }) => {
+    // --- CHANGE 1: Define the roles directly in the component ---
+    // These are the roles an Admin can assign.
+    const MANAGER_ROLES = [
+        { id: 2, name: 'Product Manager' },
+        { id: 3, name: 'Order Manager' },
+        { id: 4, name: 'Finance Manager' }
+    ];
 
+    const [users, setUsers] = useState([]);
+    // --- CHANGE 2: The 'roles' state is no longer needed ---
+    // const [roles, setRoles] = useState([]); 
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [userToEdit, setUserToEdit] = useState(null);
+    const isAdmin = userRole === 'admin';
 
+    // Fetch ONLY users from the API when the component mounts
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const usersResponse = await fetch(`${API_BASE_URL}/users`);
+                if (!usersResponse.ok) {
+                    throw new Error('Failed to fetch users.');
+                }
+                const usersData = await usersResponse.json();
+                // Filter out the Admin role from the list so the admin can't edit themselves here
+                setUsers(usersData.filter(u => u.role_id !== 1)); 
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+                alert("Could not fetch user data. Please check the console for more details.");
+            }
+        };
+
+        if (isAdmin) {
+            fetchUsers();
+        }
+    }, [isAdmin]);
+
+    const handleOpenModal = (user = null) => {
+        setUserToEdit(user);
+        setIsModalOpen(true);
+    };
+
+    const handleSaveUser = async (formData) => {
+        const isEditing = !!formData.id;
+        const url = isEditing ? `${API_BASE_URL}/users/${formData.id}` : `${API_BASE_URL}/users`;
+        const method = isEditing ? 'PATCH' : 'POST';
+
+        try {
+            const authToken = localStorage.getItem('adminToken');
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`,
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Failed to ${isEditing ? 'update' : 'create'} user.`);
+            }
+
+            const savedUser = await response.json();
+
+            if (isEditing) {
+                setUsers(users.map(u => (u.id === savedUser.id ? savedUser : u)));
+            } else {
+                setUsers([...users, savedUser]);
+            }
+            alert(`User successfully ${isEditing ? 'updated' : 'created'}!`);
+        } catch (error) {
+            console.error('Error saving user:', error);
+            alert(`Error: Could not save user. ${error.message}`);
+        }
+    };
+
+    // --- CHANGE 3: Update getRoleName to use our hardcoded list ---
+    // This function helps display the correct role name in the table
+    const getRoleName = (roleId) => {
+        // We add the Admin role here just for display purposes in the table
+        const allRolesForDisplay = [{ id: 1, name: 'Admin' }, ...MANAGER_ROLES];
+        const role = allRolesForDisplay.find(r => r.id === roleId);
+        return role ? role.name : 'Unknown Role';
+    };
+
+    return (
+        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-6">
+            <AnimatePresence>
+                {isModalOpen && (
+                    <UserFormModal
+                        onClose={() => setIsModalOpen(false)}
+                        onSave={handleSaveUser}
+                        isDarkMode={isDarkMode}
+                        user={userToEdit}
+                        // --- CHANGE 4: Pass our hardcoded array to the modal ---
+                        roles={MANAGER_ROLES}
+                    />
+                )}
+            </AnimatePresence>
+
+            <div className="flex justify-between items-center">
+                <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Manager List</h3>
+                {isAdmin && (
+                    <button
+                        onClick={() => handleOpenModal(null)}
+                        className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold transition-colors flex items-center gap-2"
+                    >
+                        <Plus className="w-5 h-5" /> Add New Manager
+                    </button>
+                )}
+            </div>
+
+            <div className={`overflow-x-auto ${cardBaseClasses} rounded-xl shadow-lg`}>
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Email</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Role</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {users.map((u) => (
+                            <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{u.name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{u.email}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-cyan-500">{getRoleName(u.role_id)}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                    <button onClick={() => handleOpenModal(u)} className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                                        <Edit3 className="w-4 h-4" />
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </motion.div>
+    );
+};
 // Main Admin Page Component
 const AdminPage = ({ isDarkMode, onViewChange, userRole, products: initialProducts, setProducts: setAppProducts }) => {
     const [products, setProducts] = useState(Array.isArray(initialProducts) ? initialProducts : []);
     const [refundQueue, setRefundQueue] = useState(MOCK_REFUND_QUEUE);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
-    
+
     // --- MODIFICATION START ---
     // 1. Changed initial state to reflect loading status.
     const [currentOfferText, setOfferText] = useState("Loading offer...");
 
     // 2. Created a new async function to handle the POST request.
-// AdminPage.jsx
+    // AdminPage.jsx
 
 const handleOfferSave = async (newOfferText) => {
     try {
@@ -639,33 +854,33 @@ const handleOfferSave = async (newOfferText) => {
         const authToken = localStorage.getItem('adminToken'); 
  // <-- Make sure to use the correct key!
 
-        // If there's no token, you can't make an authorized request.
-        if (!authToken) {
-            alert('You are not logged in. Please log in to continue.');
-            // Optionally, redirect to login page
-            return;
-        }
-
-        const response = await fetch(`${API_BASE_URL}/offers`, {
-            method: 'POST',
-            // 2. Add the headers object with the Authorization token
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`, // <-- This is the crucial part
-            },
-            body: JSON.stringify({ message: newOfferText }),
-        });
-
-        if (!response.ok) {
-            // Check specifically for 401 to give a better error message
-            if (response.status === 401) {
-                 throw new Error('Authorization failed. Your session might have expired.');
+            // If there's no token, you can't make an authorized request.
+            if (!authToken) {
+                alert('You are not logged in. Please log in to continue.');
+                // Optionally, redirect to login page
+                return;
             }
-            throw new Error('Failed to update the offer on the server.');
-        }
 
-        setOfferText(newOfferText);
-        alert('Offer bar updated successfully!');
+            const response = await fetch(`${API_BASE_URL}/offers`, {
+                method: 'POST',
+                // 2. Add the headers object with the Authorization token
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`, // <-- This is the crucial part
+                },
+                body: JSON.stringify({ message: newOfferText }),
+            });
+
+            if (!response.ok) {
+                // Check specifically for 401 to give a better error message
+                if (response.status === 401) {
+                    throw new Error('Authorization failed. Your session might have expired.');
+                }
+                throw new Error('Failed to update the offer on the server.');
+            }
+
+            setOfferText(newOfferText);
+            alert('Offer bar updated successfully!');
 
     } catch (error) {
         console.error('Error updating offer:', error);
@@ -683,7 +898,7 @@ const handleLogout = () => {
     }
 }
     // --- MODIFICATION END ---
-    
+
     useEffect(() => {
         const fetchProducts = async () => {
             try {
@@ -724,7 +939,7 @@ const handleLogout = () => {
 
         fetchProducts();
         fetchCurrentOffer(); // Call the new function.
-    }, []); 
+    }, []);
 
     useEffect(() => { setAppProducts(products) }, [products, setAppProducts]);
 
@@ -767,8 +982,8 @@ const handleLogout = () => {
         const roleString = userRole?.role_name?.toLowerCase();
         switch (activeSection) {
             case 'products': return <ProductManagement products={products} setProducts={setProducts} isDarkMode={isDarkMode} cardBaseClasses={isDarkMode ? 'bg-gray-800' : 'bg-white'} userRole={roleString} />;
-            case 'orders': return <OrderManagement orders={MOCK_ORDERS} setOrders={()=>{}} setRefundQueue={setRefundQueue} isDarkMode={isDarkMode} cardBaseClasses={isDarkMode ? 'bg-gray-800' : 'bg-white'} userRole={roleString} />;
-            case 'users': return <UserManagement users={MOCK_USERS} setUsers={()=>{}} isDarkMode={isDarkMode} cardBaseClasses={isDarkMode ? 'bg-gray-800' : 'bg-white'} userRole={roleString} />;
+            case 'orders': return <OrderManagement orders={MOCK_ORDERS} setOrders={() => { }} setRefundQueue={setRefundQueue} isDarkMode={isDarkMode} cardBaseClasses={isDarkMode ? 'bg-gray-800' : 'bg-white'} userRole={roleString} />;
+            case 'users': return <UserManagement users={MOCK_USERS} setUsers={() => { }} isDarkMode={isDarkMode} cardBaseClasses={isDarkMode ? 'bg-gray-800' : 'bg-white'} userRole={roleString} />;
             case 'finance': return <FinanceManagement isDarkMode={isDarkMode} cardBaseClasses={isDarkMode ? 'bg-gray-800' : 'bg-white'} userRole={roleString} refundQueue={refundQueue} setRefundQueue={setRefundQueue} />;
             case 'settings': return <SiteSettings isDarkMode={isDarkMode} cardBaseClasses={isDarkMode ? 'bg-gray-800' : 'bg-white'} onUpdateOfferClick={() => setIsOfferModalOpen(true)} currentOfferText={currentOfferText} />;
             default: return <Dashboard products={products} orders={MOCK_ORDERS} users={MOCK_USERS} setActiveSection={setActiveSection} isDarkMode={isDarkMode} userRole={roleString} />;
@@ -777,14 +992,14 @@ const handleLogout = () => {
 
     return (
         <div className={`min-h-screen flex ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-             {/* --- MODIFICATION START --- */}
-             {/* 4. Pass the new handleOfferSave function to the modal's onSave prop. */}
+            {/* --- MODIFICATION START --- */}
+            {/* 4. Pass the new handleOfferSave function to the modal's onSave prop. */}
             <AnimatePresence>{isOfferModalOpen && <OfferBarModal isOpen={isOfferModalOpen} onClose={() => setIsOfferModalOpen(false)} onSave={handleOfferSave} currentOfferText={currentOfferText} isDarkMode={isDarkMode} />}</AnimatePresence>
             {/* --- MODIFICATION END --- */}
             <AnimatePresence>{isSidebarOpen && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-20 lg:hidden" onClick={() => setIsSidebarOpen(false)} />}</AnimatePresence>
-            
+
             <div className="flex">
-               <motion.div initial={false} animate={isSidebarOpen ? { x: 0 } : { x: '-100%' }} transition={{ ease: "easeInOut" }} className={`fixed top-0 left-0 h-full w-64 p-6 flex-col z-30 lg:hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                <motion.div initial={false} animate={isSidebarOpen ? { x: 0 } : { x: '-100%' }} transition={{ ease: "easeInOut" }} className={`fixed top-0 left-0 h-full w-64 p-6 flex-col z-30 lg:hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
                     <button onClick={() => setIsSidebarOpen(false)} className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700/50"><X className="w-6 h-6" /></button>
                     <h1 className={`text-3xl font-extrabold mb-8 bg-gradient-to-r ${isDarkMode ? 'from-purple-400 to-cyan-400' : 'from-pink-500 to-purple-600'} bg-clip-text text-transparent`}>{userRole?.role_name?.toUpperCase().replace('_', ' ') || 'MANAGER'}</h1>
                     <nav className="space-y-2 flex-grow">
