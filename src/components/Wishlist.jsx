@@ -1,18 +1,33 @@
-import React from "react";
+import React, { useState, useEffect } from "react"; // Added useState, useEffect
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, X, Trash2 } from 'lucide-react';
 
-
+// --- Helper Components ---
 const Button = ({ children, onClick, className = '' }) => <button onClick={onClick} className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-200 ${className}`}>{children}</button>;
 const Badge = ({ children, className = '' }) => <span className={`text-xs px-2 py-1 rounded-full font-medium ${className}`}>{children}</span>;
-const ImageWithFallback = ({ src, alt, className = '' }) => (
-    <div className={`flex items-center justify-center bg-gray-200 dark:bg-gray-600 rounded-lg overflow-hidden ${className}`}>
-        <span className="text-gray-500 dark:text-gray-400 text-xs">IMG</span>
-    </div>
-);
+
+// --- ⭐ FIX 1: Add the REAL ImageWithFallback component ---
+const ImageWithFallback = ({ src, alt, className }) => {
+    const [imgSrc, setImgSrc] = useState(src);
+    const placeholder = `https://placehold.co/600x400/f7f7f7/cbd5e0?text=Image+Not+Found`;
+    
+    useEffect(() => { 
+        setImgSrc(src); 
+    }, [src]);
+    
+    return (
+        <img 
+            src={imgSrc || placeholder} 
+            alt={alt} 
+            className={className} 
+            onError={() => setImgSrc(placeholder)} 
+        />
+    );
+};
+// --- End Fix 1 ---
 
 
-const WishlistSidebar = ({ isOpen, onClose, wishlistItems, onRemoveItem, isDarkMode,onMoveAllToCart }) => {
+const WishlistSidebar = ({ isOpen, onClose, wishlistItems, onRemoveItem, isDarkMode, onMoveAllToCart }) => {
     
     // Logic to prevent background scrolling (optional but good for modals)
     React.useEffect(() => {
@@ -47,7 +62,6 @@ const WishlistSidebar = ({ isOpen, onClose, wishlistItems, onRemoveItem, isDarkM
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                        // ⭐️ Apply dark mode background and ensure text color is set
                         className={`fixed right-0 top-0 h-full w-full max-w-md ${sidebarBg} z-[9999] shadow-2xl text-gray-900 dark:text-white`}
                         onClick={e => e.stopPropagation()}
                     >
@@ -65,7 +79,6 @@ const WishlistSidebar = ({ isOpen, onClose, wishlistItems, onRemoveItem, isDarkM
                                     variant="ghost"
                                     size="sm"
                                     onClick={onClose}
-                                    // ⭐️ Update hover colors for dark mode
                                     className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
                                 >
                                     <X className="w-5 h-5" />
@@ -85,28 +98,40 @@ const WishlistSidebar = ({ isOpen, onClose, wishlistItems, onRemoveItem, isDarkM
                                         </p>
                                     </div>
                                 ) : (
+                                    // --- ⭐ FIX 2: Update map to use nested product data ---
                                     wishlistItems.map((item) => (
                                         <div 
-                                            key={item.id} 
-                                            // ⭐️ Item card background and shadow
+                                            key={item.id} // This is the wishlistItemId (e.g., 50)
                                             className="flex gap-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-xl shadow-md items-center transition-colors duration-300"
                                         >
-                                            <ImageWithFallback src={item.image} alt={item.name} className="w-16 h-16 flex-shrink-0" />
+                                            <ImageWithFallback 
+                                                // Use the nested product's image
+                                                src={item.product?.image} 
+                                                alt={item.product?.name} 
+                                                className="w-16 h-16 rounded-lg object-cover flex-shrink-0" 
+                                            />
                                             <div className="flex-1 min-w-0">
-                                                {/* Text color is inherited from the main sidebar, which is white in dark mode */}
-                                                <h3 className="font-medium text-gray-800 dark:text-white truncate">{item.name}</h3>
-                                                <span className="font-bold text-pink-600 dark:text-pink-400">₹{item.price}</span>
+                                                {/* Use the nested product's name */}
+                                                <h3 className="font-medium text-gray-800 dark:text-white truncate">
+                                                    {item.product?.name}
+                                                </h3>
+                                                {/* Use the nested product's price */}
+                                                <span className="font-bold text-pink-600 dark:text-pink-400">
+                                                    ₹{item.product?.discountedPrice}
+                                                </span>
                                             </div>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                onClick={() => onRemoveItem(item.id)}
+                                                // Pass the wishlistItemId to the remove function
+                                                onClick={() => onRemoveItem(item.id)} 
                                                 className="p-2 text-gray-400 hover:text-red-500"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </Button>
                                         </div>
                                     ))
+                                    // --- End Fix 2 ---
                                 )}
                             </div>
                             

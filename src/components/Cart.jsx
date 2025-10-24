@@ -263,18 +263,13 @@
 //     );
 // };
 
-
-
-
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShoppingCart, Minus, Plus, Trash2, Tag, Truck, LoaderCircle } from 'lucide-react';
 
-// --- ⭐ FIX #1: Use the relative URL for the Vite proxy ---
-const API_BASE_URL = 'http://localhost:8000/api/v1/cart';
+const API_BASE_URL = '/api/v1/cart';
 
-// --- Helper Components ---
+// --- Helper Components (No changes) ---
 const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
     <button 
         onClick={onClick} 
@@ -306,7 +301,6 @@ export const Cart = ({
     onApplyDiscount 
 }) => {
     
-    // --- 1. STATE MANAGEMENT ---
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -327,18 +321,31 @@ export const Cart = ({
             });
 
             if (!response.ok) {
-                // Check if the response is HTML (like the "Not Found" page)
                 const errorText = await response.text();
                 if (errorText.trim().startsWith('<')) {
                     throw new Error(`Server Error (${response.status}): Received HTML instead of JSON. Check proxy/API URL.`);
                 }
-                // Try to parse as JSON if it's not HTML
                 const errorData = JSON.parse(errorText);
                 throw new Error(errorData.message || `Failed to fetch cart. Status: ${response.status}`);
             }
             
-            const data = await response.json();
-            setItems(data);
+            const responseText = await response.text();
+            
+            if (!responseText) {
+                setItems([]);
+            } else {
+                const data = JSON.parse(responseText);
+                
+                // --- ⭐ GEMINI FIX #1: Access the .data property from your ApiResponse ---
+                // Your backend sends { "data": [...] }, not just [...]
+                if (data && Array.isArray(data.data)) {
+                    setItems(data.data);
+                } else {
+                    setItems([]);
+                }
+                // --- End Fix ---
+            }
+
         } catch (err) {
             setError(err.message);
         } finally {
@@ -351,9 +358,12 @@ export const Cart = ({
         if (quantity < 1) return;
 
         const originalItems = [...items];
+        
+        // --- ⭐ GEMINI FIX #2: Update state using the correct ID key `cart_item_id` ---
         setItems(currentItems => currentItems.map(item => 
-            item.id === cartItemId ? { ...item, quantity } : item
+            item.cart_item_id === cartItemId ? { ...item, quantity } : item
         ));
+        // --- End Fix ---
 
         try {
             const token = localStorage.getItem('accessToken');
@@ -377,7 +387,11 @@ export const Cart = ({
     // DELETE /api/v1/cart/:cartItemId
     const handleRemoveItem = async (cartItemId) => {
         const originalItems = [...items];
-        setItems(currentItems => currentItems.filter(item => item.id !== cartItemId));
+        
+        // --- ⭐ GEMINI FIX #3: Filter state using the correct ID key `cart_item_id` ---
+        setItems(currentItems => currentItems.filter(item => item.cart_item_id !== cartItemId));
+        // --- End Fix ---
+        
         try {
             const token = localStorage.getItem('accessToken');
             if (!token) throw new Error("Authentication token not found.");
@@ -393,7 +407,7 @@ export const Cart = ({
         }
     };
 
-    // --- 3. EFFECTS ---
+    // --- 3. EFFECTS (No changes) ---
     useEffect(() => {
         if (isOpen) {
             fetchCartItems();
@@ -410,7 +424,16 @@ export const Cart = ({
     // --- 4. PRICE CALCULATION & HELPERS ---
     const shippingCost = 99.00;
     const freeShippingThreshold = 500.00;
-    const subtotal = items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
+    
+    // --- ⭐ GEMINI FIX #4: Calculate subtotal using `discounted_price` ---
+    // Your API sends `discounted_price`, not `price`.
+    const subtotal = items.reduce((sum, item) => {
+        const price = parseFloat(item.discounted_price || 0);
+        const quantity = parseInt(item.quantity || 0);
+        return sum + (price * quantity);
+    }, 0);
+    // --- End Fix ---
+
     const totalDiscountAmount = (appliedDiscounts || []).reduce((sum, discount) => sum + (discount.amount || 0), 0);
     const finalShippingCost = subtotal >= freeShippingThreshold ? 0.00 : shippingCost;
     const finalTotal = subtotal + finalShippingCost - totalDiscountAmount;
@@ -420,9 +443,7 @@ export const Cart = ({
         return `₹${(isNaN(safePrice) ? 0 : safePrice).toFixed(2)}`;
     };
 
-    // --- ⭐ FIX #2: Styling Classes for Animation Fix ---
     const sidebarBg = isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900';
-    // Removed opacity (/70, /50) from bg-black
     const overlayBg = isDarkMode ? 'bg-black backdrop-blur' : 'bg-black backdrop-blur-sm';
     const borderColor = isDarkMode ? 'border-gray-700' : 'border-gray-200';
     
@@ -452,34 +473,36 @@ export const Cart = ({
             );
         }
 
-        if (items.length === 0) {
+        // --- ⭐ GEMINI FIX #5: Check `items` array correctly ---
+        if (!items || items.length === 0) {
             return (
                 <div className="text-center py-12">
                     <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-600 dark:text-gray-300 mb-2">
                         Your cart is empty
                     </h3>
-                    <Button onClick={onClose} className="mt-4 bg-pink-500 hover:bg-pink-600 text-white dark:bg-purple-600 dark:hover:bg-purple-7U00">
+                    <Button onClick={onClose} className="mt-4 bg-pink-500 hover:bg-pink-600 text-white dark:bg-purple-600 dark:hover:bg-purple-700">
                         Start Shopping
                     </Button>
                 </div>
             );
         }
-
+        
+        // --- ⭐ GEMINI FIX #6: Use correct keys `cart_item_id`, `image_url`, `name`, and `discounted_price` ---
         return items.map((item) => (
-            <div key={item.id} className="flex gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-xl shadow-sm items-start">
+            <div key={item.cart_item_id} className="flex gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-xl shadow-sm items-start">
                 <ImageWithFallback 
-                    src={item.image} 
+                    src={item.image_url} 
                     alt={item.name} 
                     className="w-16 h-16 flex-shrink-0" 
                 />
                 <div className="flex-1 min-w-0">
                     <h3 className="font-medium truncate text-gray-800 dark:text-white">{item.name}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatPrice(item.price)}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatPrice(item.discounted_price)}</p>
                     <div className="flex items-center mt-2 space-x-2">
                         <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg">
                             <button 
-                                onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                                onClick={() => handleUpdateQuantity(item.cart_item_id, item.quantity - 1)}
                                 className="p-1 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-l-lg"
                                 aria-label="Decrease quantity"
                                 disabled={item.quantity <= 1}
@@ -488,7 +511,7 @@ export const Cart = ({
                             </button>
                             <span className="w-6 text-center text-sm font-medium">{item.quantity}</span>
                             <button 
-                                onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                                onClick={() => handleUpdateQuantity(item.cart_item_id, item.quantity + 1)}
                                 className="p-1 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-r-lg"
                                 aria-label="Increase quantity"
                             >
@@ -496,10 +519,10 @@ export const Cart = ({
                             </button>
                         </div>
                         <span className="text-sm font-bold text-pink-600 dark:text-cyan-400 ml-auto">
-                            {formatPrice((item.price || 0) * (item.quantity || 0))}
+                            {formatPrice((parseFloat(item.discounted_price) || 0) * (item.quantity || 0))}
                         </span>
                         <button 
-                            onClick={() => handleRemoveItem(item.id)}
+                            onClick={() => handleRemoveItem(item.cart_item_id)}
                             className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
                             aria-label="Remove item"
                         >
@@ -509,6 +532,7 @@ export const Cart = ({
                 </div>
             </div>
         ));
+        // --- End Fix ---
     };
 
 
@@ -516,29 +540,27 @@ export const Cart = ({
         <AnimatePresence>
             {isOpen && (
                 <>
-                    {/* --- ⭐ FIX #2: Overlay Animation --- */}
-                    {/* Animate opacity to the final value, not 1 */}
+                    {/* Overlay */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: isDarkMode ? 0.7 : 0.5 }}
                         exit={{ opacity: 0 }}
-                        className={`fixed inset-0 ${overlayBg} z-[9998]`} // overlayBg has no opacity
+                        className={`fixed inset-0 ${overlayBg} z-[9998]`}
                         onClick={onClose}
                     />
 
-                    {/* --- ⭐ FIX #2: Panel Animation --- */}
-                    {/* This outer div ONLY handles animation */}
+                    {/* Panel */}
                     <motion.div
                         initial={{ x: '100%' }}
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                        className="fixed right-0 top-0 h-full w-full max-w-sm z-[9999]" // Removed all styles
+                        className="fixed right-0 top-0 h-full w-full max-w-sm z-[9999]"
                         onClick={e => e.stopPropagation()}
                     >
-                        {/* This new inner div holds all the styling, preventing the bug */}
                         <div className={`flex flex-col h-full ${sidebarBg} shadow-2xl`}>
                             
+                            {/* Header */}
                             <div className={`flex items-center justify-between p-5 border-b ${borderColor} flex-shrink-0`}>
                                 <div className="flex items-center gap-3">
                                     <ShoppingCart className="w-6 h-6 text-pink-500 dark:text-cyan-400" />
@@ -552,11 +574,14 @@ export const Cart = ({
                                 </Button>
                             </div>
 
+                            {/* Item List */}
                             <div className="flex-1 overflow-y-auto p-5 space-y-4">
                                 {renderContent()}
                             </div>
                             
-                            {!loading && !error && items.length > 0 && (
+                            {/* Footer / Checkout */}
+                            {/* ⭐ GEMINI FIX #7: Check for items.length > 0 */}
+                            {!loading && !error && items && items.length > 0 && (
                                 <div className={`p-5 border-t ${borderColor} flex-shrink-0`}>
                                     <div className="flex mb-4 gap-2">
                                         <input
@@ -599,7 +624,8 @@ export const Cart = ({
                                                 {finalShippingCost === 0 ? 'FREE' : formatPrice(finalShippingCost)}
                                             </span>
                                         </div>
-                                        {finalShippingCost !== 0 && (
+                                        {/* ⭐ GEMINI FIX #8: Check subtotal > 0 */}
+                                        {finalShippingCost !== 0 && subtotal > 0 && (
                                             <p className="text-xs text-center text-gray-500 dark:text-gray-400 pt-1">
                                                 Add {formatPrice(freeShippingThreshold - subtotal)} more for FREE Shipping!
                                             </p>
