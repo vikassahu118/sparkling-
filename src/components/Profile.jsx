@@ -105,6 +105,7 @@ const ProfilePage = ({ user: initialUser, isDarkMode, onLogout }) => {
             <EditProfilePage 
                 isDarkMode={isDarkMode} 
                 isOpen={isEditing} 
+                user={user}
                 onSave={handleSave} 
                 onCancel={() => setIsEditing(false)} 
             />

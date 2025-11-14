@@ -15,19 +15,11 @@ const Button = ({ children, onClick, className = '' }) => (
     </motion.button>
 );
 
-// Mock User Data for Form Initialization
-const MOCK_USER_DATA = {
-    name: "user",
-    email: "user@gmail.com",
-    phone: "9999999999",
-    address: "address"
-};
-
-
-const EditProfilePage = ({ isDarkMode, onSave, onCancel, isOpen }) => {
+const EditProfilePage = ({ user, isDarkMode, onSave, onCancel, isOpen }) => {
     // State to hold form data
-    const [formData, setFormData] = useState(MOCK_USER_DATA);
+    const [formData, setFormData] = useState({ name: '', email: '', phone: '', address: '' });
     const [isSaving, setIsSaving] = useState(false);
+    const [error, setError] = useState(null);
 
     // Logic to prevent background scrolling (optional but good for modals)
     React.useEffect(() => {
@@ -38,14 +30,18 @@ const EditProfilePage = ({ isDarkMode, onSave, onCancel, isOpen }) => {
         }
     }, [isOpen]);
     
-    // ⭐️ FIX: Reset form data when the modal opens to ensure consistency with ProfilePage.jsx data
+    // ⭐ FIX: Initialize form data with the actual user's details when the modal opens.
     React.useEffect(() => {
-        if (isOpen) {
-            // NOTE: In a real app, you would pass the current user data as a prop and use that here.
-            // For now, we rely on MOCK_USER_DATA which ProfilePage uses.
-            setFormData(MOCK_USER_DATA); 
+        if (isOpen && user) {
+            setFormData({
+                name: user.name || `${user.first_name} ${user.last_name}`,
+                email: user.email || '',
+                phone: user.phone || '',
+                address: user.address || ''
+            });
+            setError(null); // Clear previous errors
         }
-    }, [isOpen]);
+    }, [isOpen, user]);
 
     const handleChange = (e) => {
         setFormData({
@@ -54,15 +50,40 @@ const EditProfilePage = ({ isDarkMode, onSave, onCancel, isOpen }) => {
         });
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setIsSaving(true);
-        console.log('Saving profile data:', formData);
-        
-        // Simulate an API save delay
-        setTimeout(() => {
+        setError(null);
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            setError("Authentication error. Please log in again.");
             setIsSaving(false);
-            onSave(formData); 
-        }, 1500);
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:8000/api/v1/users/profile', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    // Assuming API expects first_name, last_name
+                    first_name: formData.name.split(' ')[0] || '',
+                    last_name: formData.name.split(' ').slice(1).join(' ') || '',
+                    phone: formData.phone,
+                    address: formData.address
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to save profile.');
+
+            onSave(formData); // Call parent's onSave to update UI and close modal
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const inputClasses = `w-full p-3 rounded-lg border focus:ring-2 focus:ring-pink-500 transition-colors duration-200`;
@@ -101,6 +122,13 @@ const EditProfilePage = ({ isDarkMode, onSave, onCancel, isOpen }) => {
                         <h2 className={`text-3xl font-extrabold mb-8 text-center bg-gradient-to-r ${isDarkMode ? 'from-purple-400 to-cyan-400' : 'from-pink-500 to-purple-600'} bg-clip-text text-transparent`}>
                             Edit Account Details
                         </h2>
+
+                        {error && (
+                            <motion.div
+                                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                className="text-red-500 text-sm p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-lg text-center"
+                            >{error}</motion.div>
+                        )}
 
                         <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
                             
