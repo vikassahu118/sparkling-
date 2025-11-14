@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // ⬅️ CRITICAL FIX: Restored useState
+import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Settings, LogOut, User } from 'lucide-react';
 // ⬅️ CRITICAL FIX: Restored EditProfilePage import
 import EditProfilePage from './EditProfilePage.jsx';
@@ -10,22 +10,22 @@ const Button = ({ children, onClick, className = '' }) => (
     </button>
 );
 
-// Mock data (Centralized data structure for the user)
-const USER_PROFILE_MOCK = {
-    initial: 'J',
-    name: 'user',
-    email: 'user@gmail.com',
-    ordersCompleted: 3,
-    // Add fields to hold phone/address data for display
-    phone: "9999999999", 
-    address: "address"
-};
-
-const ProfilePage = ({ isDarkMode, onLogout }) => {
+const ProfilePage = ({ user: initialUser, isDarkMode, onLogout }) => {
     // ⭐️ CRITICAL FIX: Restored State management
-    const [user, setUser] = useState(USER_PROFILE_MOCK); 
+    const [user, setUser] = useState(initialUser); 
     const [isEditing, setIsEditing] = useState(false);
     
+    useEffect(() => {
+        if (initialUser) {
+            setUser({
+                ...initialUser,
+                name: `${initialUser.first_name || ''} ${initialUser.last_name || ''}`.trim(),
+                initial: initialUser.first_name ? initialUser.first_name[0].toUpperCase() : 'U',
+                ordersCompleted: initialUser.ordersCompleted || 0,
+            });
+        }
+    }, [initialUser]);
+
     // ⭐️ CRITICAL FIX: Restored handleSave handler
     const handleSave = (newFormData) => {
         // Update local display state with new data from the form
@@ -40,6 +40,10 @@ const ProfilePage = ({ isDarkMode, onLogout }) => {
         })); 
         setIsEditing(false); // Close the modal
     };
+
+    if (!user) {
+        return <div className="text-center py-20">Loading profile...</div>;
+    }
 
     // Default View Mode
     return (

@@ -93,11 +93,11 @@ export default function App() {
         }
     };
 
-    const handleCustomerLoginSuccess = (name, role) => {
-        setCurrentUserName(name);
-        setCurrentUserRole(role);
+    const handleCustomerLoginSuccess = (user) => {
+        setCurrentUserName(user.first_name);
+        setCurrentUserRole(user);
         onViewChange('profile');
-    }
+    };
 
     const handleManagerLoginSuccess = (loginData) => {
         const user = loginData.user;
@@ -303,12 +303,25 @@ const handleAddToCart = async (cartItem) => {
 
     useEffect(() => {
         const path = window.location.pathname.substring(1);
-        if (path) {
-            const normalizedPath = path.includes('/') ? path.split('/')[0] : path;
-            if (['admin_login', 'shop', 'profile', 'user_auth', 'admin', 'checkout'].includes(normalizedPath)) {
-                setCurrentView(normalizedPath);
+        const token = localStorage.getItem('accessToken');
+        const userStr = localStorage.getItem('user');
+
+        if (token && userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                setCurrentUserRole(user);
+                setCurrentUserName(user.first_name);
+                if (path && ['shop', 'profile', 'checkout'].includes(path)) {
+                    setCurrentView(path);
+                } else {
+                    setCurrentView('profile'); // Default to profile if logged in
+                }
+            } catch (e) {
+                setCurrentView('user_auth');
             }
-        }
+        } else if (path && ['admin_login', 'shop', 'user_auth', 'admin'].includes(path)) {
+             setCurrentView(path);
+        } 
     }, []);
 
     const renderView = () => {
@@ -351,7 +364,7 @@ const handleAddToCart = async (cartItem) => {
             case 'categories': return <Categories />;
             case 'deals': return <Deals />;
             case 'about': return <About onViewChange={onViewChange} />;
-            case 'profile': return <ProfilePage isDarkMode={isDarkMode} onLogout={handleLogout} />;
+            case 'profile': return <ProfilePage user={currentUserRole} isDarkMode={isDarkMode} onLogout={handleLogout} />;
             case 'user_auth': return <CustomerAuth isDarkMode={isDarkMode} onLoginSuccess={handleCustomerLoginSuccess} />;
             case 'admin_login':
                 return (

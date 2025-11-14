@@ -80,9 +80,9 @@ const CustomerAuth = ({ isDarkMode = true, onLoginSuccess = () => {} }) => {
                     console.log("Login successful. Token saved to localStorage.");
 
                     // 2. Call the original success function to close modal or redirect
-                    const user = loginData.user;
-                    const userFullName = `${user.first_name} ${user.last_name}`;
-                    onLoginSuccess(userFullName, user.role_name);
+                    localStorage.setItem('user', JSON.stringify(loginData.user));
+
+                    onLoginSuccess(loginData.user);
                 } else {
                     // Handle cases where login succeeds but token is missing
                     throw new Error("Authentication failed: Access token not found in the server response.");
