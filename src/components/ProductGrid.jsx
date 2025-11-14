@@ -375,7 +375,8 @@ export const ProductGrid = ({ onAddToCart = () => { }, onAddToWishlist = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                     {filteredAndSortedProducts.length > 0 ? (
                         filteredAndSortedProducts.map(product => {
-                            const isProductWishlisted = wishlistItems.some(item => item.id === product.id);
+                            // ⭐ FIX: Check against product_id in the nested structure
+                            const isProductWishlisted = wishlistItems.some(item => item.product_id === product.id);
                             return (<ProductCard key={product.id} product={product} onProductClick={handleProductClick} onAddToCart={() => handleProductClick(product)} onAddToWishlist={onAddToWishlist} isWishlisted={isProductWishlisted} />);
                         })
                     ) : (

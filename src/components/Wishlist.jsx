@@ -99,32 +99,32 @@ const WishlistSidebar = ({ isOpen, onClose, wishlistItems, onRemoveItem, isDarkM
                                     </div>
                                 ) : (
                                     // --- ⭐ FIX 2: Update map to use nested product data ---
-                                    wishlistItems.map((item) => (
+                                    wishlistItems.map((wishlistItem) => (
                                         <div 
-                                            key={item.id} // This is the wishlistItemId (e.g., 50)
+                                            key={wishlistItem.id} // This is the wishlistItemId (e.g., 50)
                                             className="flex gap-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-xl shadow-md items-center transition-colors duration-300"
                                         >
                                             <ImageWithFallback 
                                                 // Use the nested product's image
-                                                src={item.product?.image} 
-                                                alt={item.product?.name} 
+                                                src={wishlistItem.product?.image} 
+                                                alt={wishlistItem.product?.name} 
                                                 className="w-16 h-16 rounded-lg object-cover flex-shrink-0" 
                                             />
                                             <div className="flex-1 min-w-0">
                                                 {/* Use the nested product's name */}
                                                 <h3 className="font-medium text-gray-800 dark:text-white truncate">
-                                                    {item.product?.name}
+                                                    {wishlistItem.product?.name}
                                                 </h3>
                                                 {/* Use the nested product's price */}
                                                 <span className="font-bold text-pink-600 dark:text-pink-400">
-                                                    ₹{item.product?.discountedPrice}
+                                                    ₹{wishlistItem.product?.discountedPrice}
                                                 </span>
                                             </div>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
                                                 // Pass the wishlistItemId to the remove function
-                                                onClick={() => onRemoveItem(item.id)} 
+                                                onClick={() => onRemoveItem(wishlistItem.id)} 
                                                 className="p-2 text-gray-400 hover:text-red-500"
                                             >
                                                 <Trash2 className="w-4 h-4" />

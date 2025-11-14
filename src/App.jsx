@@ -229,29 +229,67 @@ const handleAddToCart = async (cartItem) => {
     }
 };
 
-    const handleProductAction = (action, product) => {
-        const actualProduct = product && product.id ? product : {
-            id: 999, name: 'Rainbow Unicorn Dress', price: 1199.00, image: '/mock.jpg'
-        };
-        
-        if (action === 'Add to Wishlist') {
-            setWishlistItems(prev => {
-                const exists = prev.some(item => item.id === actualProduct.id);
-                if (exists) {
-                    return prev.filter(item => item.id !== actualProduct.id);
-                } else {
-                    const newItem = {
-                        ...actualProduct, id: actualProduct.id || Date.now(), name: actualProduct.name, price: actualProduct.price
-                    };
-                    setIsWishlistOpen(true);
-                    return [...prev, newItem];
-                }
-            });
+    // --- REFACTORED: Wishlist Logic with API Integration ---
+    const handleProductAction = async (action, product) => {
+        if (action !== 'Add to Wishlist') return;
+
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            alert("Please log in to manage your wishlist.");
+            onViewChange('user_auth');
+            return;
+        }
+
+        const isWishlisted = wishlistItems.some(item => item.product_id === product.id);
+
+        if (isWishlisted) {
+            // Find the wishlist item ID to delete
+            const wishlistItem = wishlistItems.find(item => item.product_id === product.id);
+            if (wishlistItem) {
+                await handleRemoveWishlistItem(wishlistItem.id);
+            }
+        } else {
+            // Optimistically add to UI
+            const optimisticItem = { id: `temp-${Date.now()}`, product_id: product.id, product: product };
+            setWishlistItems(prev => [...prev, optimisticItem]);
+            setIsWishlistOpen(true);
+
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/wishlist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ product_id: product.id })
+                });
+                if (!response.ok) throw new Error('Failed to add item to wishlist.');
+                // Re-fetch to get the real ID from the database
+                fetchWishlist();
+            } catch (error) {
+                console.error("Error adding to wishlist:", error);
+                alert(error.message);
+                // Revert optimistic update on failure
+                setWishlistItems(prev => prev.filter(item => item.product_id !== product.id));
+            }
         }
     };
 
-    const handleRemoveWishlistItem = (itemId) => {
-        setWishlistItems(prev => prev.filter(item => item.id !== itemId));
+    const handleRemoveWishlistItem = async (wishlistItemId) => {
+        const token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        // Optimistic UI update
+        setWishlistItems(prev => prev.filter(item => item.id !== wishlistItemId));
+
+        try {
+            const response = await fetch(`http://localhost:8000/api/v1/wishlist/${wishlistItemId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) throw new Error('Failed to remove item from wishlist.');
+        } catch (error) {
+            console.error("Error removing from wishlist:", error);
+            alert(error.message);
+            fetchWishlist(); // Re-sync with DB on failure
+        }
     };
 
     const handleUpdateQuantity = (itemId, newQuantity) => {
@@ -282,10 +320,10 @@ const handleAddToCart = async (cartItem) => {
         
         wishlistItems.forEach(wishItem => {
             handleAddToCart({
-                ...wishItem,
+                ...wishItem.product, // Use the nested product data
                 quantity: 1,
-                size: wishItem.size || (products.find(p => p.id === wishItem.id)?.sizes?.[0] || '1y-2y'),
-                color: wishItem.color || (products.find(p => p.id === wishItem.id)?.colors?.[0] || 'multicolor'),
+                size: wishItem.product?.sizes?.[0] || '1y-2y',
+                color: wishItem.product?.colors?.[0] || 'multicolor',
             });
         });
 
@@ -295,6 +333,28 @@ const handleAddToCart = async (cartItem) => {
     };
 
     const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+
+    const fetchWishlist = async () => {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            setWishlistItems([]); // Clear wishlist if not logged in
+            return;
+        }
+        try {
+            const response = await fetch('http://localhost:8000/api/v1/wishlist', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setWishlistItems(data.data || []);
+            } else {
+                setWishlistItems([]);
+            }
+        } catch (error) {
+            console.error("Failed to fetch wishlist:", error);
+            setWishlistItems([]);
+        }
+    };
 
     useEffect(() => {
         setIsPopupVisible(true);
@@ -306,6 +366,7 @@ const handleAddToCart = async (cartItem) => {
         const token = localStorage.getItem('accessToken');
         const userStr = localStorage.getItem('user');
 
+        fetchWishlist(); // Fetch wishlist on initial load
         if (token && userStr) {
             try {
                 const user = JSON.parse(userStr);
@@ -348,7 +409,7 @@ const handleAddToCart = async (cartItem) => {
             case 'shop':
                 return (
                     <ProductGrid
-                        onProductClick={(p) => handleProductAction('View', p)}
+                        onProductClick={(p) => { /* Placeholder for detail view */ }}
                         onAddToCart={handleAddToCart}
                         onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
                         isDarkMode={isDarkMode}
