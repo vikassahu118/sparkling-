@@ -17,12 +17,35 @@ import AdminPage from './components/admin/AdminPage.jsx';
 import CustomerAuth from './components/CustomerAuth.jsx';
 import CheckoutPage from './components/CheckoutPage.jsx';
 
-// --- Placeholder Page Components (Unchanged) ---
+// --- Configuration & Mappings ---
+
+// Map text sizes to Database IDs
+const SIZE_MAP = {
+    '1y-2y': 1, '2y-3y': 2, '3y-4y': 3, '4y-5y': 4,
+    '5y-6y': 5, '6y-7y': 6, '7y-8y': 7, '8y-9y': 8,
+    '9y-10y': 9, '10y-11y': 10, '11y-12y': 11, '12y-13y': 12
+};
+
+// Map text colors to Database IDs (Adjust based on your actual DB table)
+const COLOR_MAP = {
+    'multicolor': 1, 
+    'pink': 2, 
+    'blue': 3, 
+    'red': 4, 
+    'green': 5, 
+    'white': 6, 
+    'yellow': 7, 
+    'purple': 8, 
+    'black': 9
+};
+
+// --- Placeholder Page Components ---
 const Shop = () => <div className="text-center py-40 text-4xl font-bold text-cyan-600">🛍️ Shop All Our Latest Styles!</div>;
 const Categories = () => <div className="text-center py-40 text-4xl font-bold text-pink-600">📂 Explore Categories</div>;
 const Deals = () => <div className="text-center py-40 text-4xl font-bold text-purple-600">🎉 Special Deals Just for You!</div>;
 
-const HomePage = ({ onViewChange, isDarkMode, handleProductAction, wishlistItems, products }) => (
+// Updated HomePage Component
+const HomePage = ({ onViewChange, isDarkMode, handleProductAction, onAddToCart, wishlistItems, products }) => (
     <>
         <HeroSection
             onShopNowClick={() => onViewChange('shop')}
@@ -31,7 +54,7 @@ const HomePage = ({ onViewChange, isDarkMode, handleProductAction, wishlistItems
         <ProductGrid
             products={products}
             onProductClick={(p) => handleProductAction('View', p)}
-            onAddToCart={(p) => handleProductAction('Add to Cart', p)}
+            onAddToCart={onAddToCart}
             onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
             isDarkMode={isDarkMode}
             wishlistItems={wishlistItems}
@@ -41,13 +64,7 @@ const HomePage = ({ onViewChange, isDarkMode, handleProductAction, wishlistItems
 
 const MOCK_PRODUCT_DATA = [
     { id: '1', name: 'Rainbow Unicorn Dress', image: 'https://images.unsplash.com/photo-1560359601-01c9c800ee60?w=600', originalPrice: 1599, discountedPrice: 1199.00, discount: 25, rating: 4.8, reviews: 156, colors: ['pink', 'purple', 'blue'], sizes: ['S', 'M', 'L'], category: 'Tops', isNew: true, isBestseller: true, description: 'A sparkling unicorn dress perfect for parties.', stock: 45 },
-    { id: '2', name: 'Cool Dino T-Shirt Set', image: 'https://images.unsplash.com/photo-1585528761181-2865fc48723f?w=600', originalPrice: 1299, discountedPrice: 999.00, discount: 23, rating: 4.6, reviews: 89, colors: ['green', 'blue', 'orange'], sizes: ['XS', 'S', 'M'], category: 'Shirts', isBestseller: true, description: 'Two cool tees with dinosaur prints.', stock: 12 },
-    { id: '3', name: 'Cute Baby Onesie', image: 'https://images.unsplash.com/photo-1545877872-3e6582cbc37c?w=600', originalPrice: 799, discountedPrice: 639.00, discount: 20, rating: 4.9, reviews: 234, colors: ['white', 'pink', 'yellow'], sizes: ['XS'], category: 'Cord Sets', isNew: true, description: 'Soft cotton onesie for infants.', stock: 0 },
-    { id: '4', name: 'Colorful Sneakers', image: 'https://images.unsplash.com/photo-1669762162480-fb67378e307b?w=600', originalPrice: 2199, discountedPrice: 1539.00, discount: 30, rating: 4.7, reviews: 67, colors: ['multicolor', 'rainbow', 'black'], sizes: ['M', 'L'], category: 'Culotte', description: 'Vibrant sneakers for active kids.', stock: 78 },
-    { id: '5', name: 'Winter Cozy Jacket', image: 'https://images.unsplash.com/photo-1513978121979-75bfaa6a713b?w=600', originalPrice: 2499, discountedPrice: 1749.00, discount: 30, rating: 4.9, reviews: 145, colors: ['navy', 'red', 'green'], sizes: ['M', 'L', 'XL'], category: 'Dresses', isBestseller: true, description: 'Warm puffy jacket with fleece lining.', stock: 3 },
-    { id: '6', name: 'Winter Cozy Jacket', image: 'https://images.unsplash.com/photo-1513978121979-75bfaa6a713b?w=600', originalPrice: 2499, discountedPrice: 1749.00, discount: 30, rating: 4.9, reviews: 145, colors: ['navy', 'red', 'green'], sizes: ['M', 'L', 'XL'], category: 'Pants', isBestseller: true, description: 'Warm puffy jacket with fleece lining.', stock: 3 },
 ];
-
 
 export default function App() {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -63,9 +80,7 @@ export default function App() {
     const [currentView, setCurrentView] = useState('home');
     const [isDarkMode, setIsDarkMode] = useState(false);
 
-    // ✅ FIX 1: This check is now robust. It looks for the role_name property inside the currentUserRole object.
     const isAdminView = currentView === 'admin' && currentUserRole?.role_name;
-
     const isLayoutFreeView = currentView === 'checkout' || currentView === 'admin_login' || isAdminView;
 
     const toggleTheme = () => setIsDarkMode(prev => !prev);
@@ -84,21 +99,17 @@ export default function App() {
         onViewChange('profile');
     }
 
-    // ✅ FIX 2: This function is completely rewritten to handle the login data correctly.
     const handleManagerLoginSuccess = (loginData) => {
         const user = loginData.user;
-        const roleName = user.role_name; // Get the role name string (e.g., "admin")
-
+        const roleName = user.role_name;
         const allowedRoles = ['admin', 'product_manager', 'finance_manager'];
 
-        // Security check: Only allow users with a valid manager role
-if (roleName && allowedRoles.includes(roleName.toLowerCase())) {
+        if (roleName && allowedRoles.includes(roleName.toLowerCase())) {
             setCurrentUserName(user.first_name || roleName.replace('_', ' '));
-            setCurrentUserRole(user); // Store the ENTIRE user object in state
+            setCurrentUserRole(user);
             onViewChange('admin');
             window.history.pushState({}, '', '/');
         } else {
-            // If a regular customer tries to log in here, throw an error
             throw new Error("Access Denied: You do not have manager privileges.");
         }
     };
@@ -122,11 +133,107 @@ if (roleName && allowedRoles.includes(roleName.toLowerCase())) {
         console.log(`Discount code applied: ${code}`);
     };
 
+    // --- CART LOGIC (UPDATED) ---
+    // In src/App.jsx
+
+// In src/App.jsx
+
+// In src/App.jsx
+
+const handleAddToCart = async (cartItem) => {
+    console.log("Adding to cart:", cartItem);
+
+    // 1. Optimistically update the UI
+    setCartItems(prevItems => {
+        const existingItemIndex = prevItems.findIndex(item => 
+            item.id === cartItem.id && 
+            item.size === cartItem.size && 
+            item.color === cartItem.color
+        );
+
+        if (existingItemIndex >= 0) {
+            const newItems = [...prevItems];
+            newItems[existingItemIndex] = {
+                ...newItems[existingItemIndex],
+                quantity: newItems[existingItemIndex].quantity + cartItem.quantity
+            };
+            return newItems;
+        }
+        return [...prevItems, cartItem];
+    });
+    
+    setIsCartOpen(true);
+
+    // 2. Auth Check
+    const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+    if (!token) return;
+
+    // 3. Find Variant ID
+    let variantId = null;
+    const fullProduct = products.find(p => p.id === cartItem.id);
+    
+    if (fullProduct && fullProduct.variants && Array.isArray(fullProduct.variants)) {
+        const match = fullProduct.variants.find(v => {
+            const vSize = v.size?.age_range || v.size; 
+            const vColor = v.color?.name || v.color;
+            return vSize === cartItem.size && vColor?.toLowerCase() === cartItem.color?.toLowerCase();
+        });
+        if (match) variantId = match.id;
+    }
+
+    // Fallback
+    if (!variantId) {
+        console.warn("Using fallback Variant ID: 6");
+        variantId = 6; 
+    }
+
+    try {
+        const response = await fetch('http://localhost:8000/api/v1/cart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            // ✅ THE FIX: Send EVERY common name for the ID
+            body: JSON.stringify({
+                quantity: parseInt(cartItem.quantity),
+                
+                // 1. Snake Case (Most likely for your DB)
+                product_variant_id: variantId, 
+                
+                // 2. Camel Case
+                productVariantId: variantId,
+                
+                // 3. Short Snake
+                variant_id: variantId,
+                
+                // 4. Short Camel
+                variantId: variantId,
+
+                // 5. Explicit IDs just in case
+                product_id: parseInt(cartItem.id),
+                size_id: SIZE_MAP[cartItem.size] || 1,
+                color_id: COLOR_MAP[cartItem.color?.toLowerCase()] || 1
+            })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Server Error:", errorText);
+        } else {
+            console.log("✅ Successfully saved to database!");
+        }
+
+    } catch (error) {
+        console.error("Network Error:", error);
+    }
+};
+
     const handleProductAction = (action, product) => {
         const actualProduct = product && product.id ? product : {
             id: 999, name: 'Rainbow Unicorn Dress', price: 1199.00, image: '/mock.jpg'
         };
-        console.log(`${action} triggered for: ${actualProduct?.name || 'product'} (ID: ${actualProduct.id})`);
+        
         if (action === 'Add to Wishlist') {
             setWishlistItems(prev => {
                 const exists = prev.some(item => item.id === actualProduct.id);
@@ -141,24 +248,6 @@ if (roleName && allowedRoles.includes(roleName.toLowerCase())) {
                 }
             });
         }
-        else if (action === 'Add to Cart') {
-            setCartItems(prevItems => {
-                const existingItem = prevItems.find(item => item.id === actualProduct.id);
-                if (existingItem) {
-                    return prevItems.map(item =>
-                        item.id === actualProduct.id
-                            ? { ...item, quantity: item.quantity + 1 }
-                            : item
-                    );
-                } else {
-                    const newItem = {
-                        id: actualProduct.id, name: actualProduct.name, price: actualProduct.price, quantity: 1
-                    };
-                    return [...prevItems, newItem];
-                }
-            });
-            setIsCartOpen(true);
-        }
     };
 
     const handleRemoveWishlistItem = (itemId) => {
@@ -170,13 +259,9 @@ if (roleName && allowedRoles.includes(roleName.toLowerCase())) {
             handleRemoveItem(itemId);
             return;
         }
-        setCartItems(prevItems => {
-            return prevItems.map(item =>
-                item.id === itemId
-                    ? { ...item, quantity: newQuantity }
-                    : item
-            );
-        });
+        setCartItems(prevItems => prevItems.map(item =>
+            item.id === itemId ? { ...item, quantity: newQuantity } : item
+        ));
     };
 
     const handleRemoveItem = (itemId) => {
@@ -184,33 +269,26 @@ if (roleName && allowedRoles.includes(roleName.toLowerCase())) {
     };
 
     const handleCheckout = () => {
-        console.log('Initiating checkout...');
         setIsCartOpen(false);
         onViewChange('checkout');
     };
 
     const handleApplyDiscount = (discountCode) => {
-        console.log(`Applying discount: ${discountCode}`);
         setDiscounts(prev => [...prev, { code: discountCode, amount: 5.00 }]);
     };
 
     const handleMoveAllToCart = () => {
         if (wishlistItems.length === 0) return;
-        setCartItems(prevCart => {
-            let updatedCart = [...prevCart];
-            wishlistItems.forEach(wishItem => {
-                const existingItemIndex = updatedCart.findIndex(cartItem => cartItem.id === wishItem.id);
-                if (existingItemIndex !== -1) {
-                    updatedCart[existingItemIndex] = {
-                        ...updatedCart[existingItemIndex],
-                        quantity: updatedCart[existingItemIndex].quantity + 1,
-                    };
-                } else {
-                    updatedCart.push({ ...wishItem, quantity: 1 });
-                }
+        
+        wishlistItems.forEach(wishItem => {
+            handleAddToCart({
+                ...wishItem,
+                quantity: 1,
+                size: wishItem.size || (products.find(p => p.id === wishItem.id)?.sizes?.[0] || '1y-2y'),
+                color: wishItem.color || (products.find(p => p.id === wishItem.id)?.colors?.[0] || 'multicolor'),
             });
-            return updatedCart;
         });
+
         setWishlistItems([]);
         setIsWishlistOpen(false);
         setIsCartOpen(true);
@@ -238,7 +316,6 @@ if (roleName && allowedRoles.includes(roleName.toLowerCase())) {
             return <AdminPage 
                 isDarkMode={isDarkMode} 
                 onViewChange={onViewChange} 
-                // ✅ FIX 2: Pass down a specific logout function for admins
                 onLogout={() => handleLogout('admin_login')}
                 userRole={currentUserRole}
                 products={products}
@@ -251,6 +328,7 @@ if (roleName && allowedRoles.includes(roleName.toLowerCase())) {
                     onViewChange={onViewChange}
                     isDarkMode={isDarkMode}
                     handleProductAction={handleProductAction}
+                    onAddToCart={handleAddToCart}
                     wishlistItems={wishlistItems}
                     products={products}
                 />;
@@ -258,7 +336,7 @@ if (roleName && allowedRoles.includes(roleName.toLowerCase())) {
                 return (
                     <ProductGrid
                         onProductClick={(p) => handleProductAction('View', p)}
-                        onAddToCart={(p) => handleProductAction('Add to Cart', p)}
+                        onAddToCart={handleAddToCart}
                         onAddToWishlist={(p) => handleProductAction('Add to Wishlist', p)}
                         isDarkMode={isDarkMode}
                         wishlistItems={wishlistItems}
@@ -282,7 +360,14 @@ if (roleName && allowedRoles.includes(roleName.toLowerCase())) {
                     </div>
                 );
             default:
-                return <HomePage onViewChange={onViewChange} isDarkMode={isDarkMode} handleProductAction={handleProductAction} wishlistItems={wishlistItems} products={products} />;
+                return <HomePage 
+                    onViewChange={onViewChange} 
+                    isDarkMode={isDarkMode} 
+                    handleProductAction={handleProductAction} 
+                    onAddToCart={handleAddToCart}
+                    wishlistItems={wishlistItems} 
+                    products={products} 
+                />;
         }
     };
 
@@ -335,9 +420,6 @@ if (roleName && allowedRoles.includes(roleName.toLowerCase())) {
                     isDarkMode={isDarkMode}
                     isOpen={isCartOpen}
                     onClose={() => setIsCartOpen(false)}
-                    items={cartItems}
-                    onUpdateQuantity={handleUpdateQuantity}
-                    onRemoveItem={handleRemoveItem}
                     onCheckout={handleCheckout}
                     appliedDiscounts={discounts}
                     onApplyDiscount={handleApplyDiscount}
